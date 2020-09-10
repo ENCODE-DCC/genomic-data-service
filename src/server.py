@@ -38,7 +38,7 @@ def validate_search_request(request):
 
 
 @app.route('/regulome-search', methods=['GET'])
-def regulome_search_original():
+def regulome_search():
     """
     Regulome peak analysis for a single region.
     Ex params:
@@ -100,59 +100,20 @@ def regulome_search_original():
         }
         return build_response(result)
 
-    # Start search
-    begin = time.time()  # DEBUG: timing
-    coord = query_coordinates[0]
-    chrom, start_end = coord.split(':')
-    start, end = start_end.split('-')
-    start = int(start)
-    end = int(end)
-
-    try:
-        all_hits = region_get_hits(
-            atlas, assembly, chrom, start, end, peaks_too=True
-        )
-        evidence = atlas.regulome_evidence(
-            all_hits['datasets'], chrom, start, end
-        )
-        result['regulome_score'] = atlas.regulome_score(
-            all_hits['datasets'], evidence
-        )
-        result['features'] = evidence_to_features(evidence)
-    except Exception as e:
-        result['notifications'][coord] = 'Failed: (exception) {}'.format(e)
-    peak_details = []
-    for peak in all_hits.get('peaks', []):
-        peak_details.append({
-            'chrom': peak['_index'],
-            'start': peak['_source']['coordinates']['gte'],
-            'end': peak['_source']['coordinates']['lt'],
-            'strand': peak['_source'].get('strand'),
-            'value': peak['_source'].get('value'),
-
-            'file': peak['resident_detail']['file']['@id'].split('/')[2],
-
-            'dataset': peak['resident_detail']['dataset']['@id'],
-            'documents': peak['resident_detail']['dataset']['documents'],
-            'biosample_ontology': peak['resident_detail']['dataset']['biosample_ontology'],
-            'method': peak['resident_detail']['dataset']['collection_type'],
-            'targets': peak['resident_detail']['dataset'].get('target', []),
-        })
-    result['@graph'] = peak_details
-    result['timing'].append({'regulome_search_scoring': (time.time() - begin)})  # DEBUG: timing
-
-    begin = time.time()  # DEBUG: timing
-    result['nearby_snps'] = atlas.nearby_snps(
-        _GENOME_TO_ALIAS.get(assembly, 'hg19'),
-        chrom,
-        int((start + end) / 2),
-        # No guarentee the query coordinate corresponds to one RefSNP.
-        max_snps=len(result['variants'])+10
+    regulome_score, features, notifications, graph, timing, nearby_snps = search_peaks(
+        query_coordinates,
+        atlas,
+        assembly,
+        len(result['variants'])
     )
-    # Use nearby_snps instead
-    result.pop('variants', None)
-    result['timing'].append({'nearby_snps': (time.time() - begin)})  # DEBUG: timing
-    
+
+    result['regulome_score'] = regulome_score
+    result['features'] = features
+    result['notifications'].update(notifications)
+    result['@graph'] = graph
+    result['timing'] += timing
+    result['nearby_snps'] = nearby_snps
+
     return build_response(result)
 
 
