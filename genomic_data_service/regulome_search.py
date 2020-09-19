@@ -1,15 +1,13 @@
 from datetime import datetime
-from flask import Flask, jsonify, request
-from elasticsearch import Elasticsearch
+from flask import jsonify, request
+from werkzeug.exceptions import BadRequest
 
-from .rsid_coordinates_resolver import get_coordinates, resolve_coordinates_and_variants
-from .constants import GENOME_TO_ALIAS
-from .regulome_atlas_utils import extract_search_params
-from .regulome_atlas import RegulomeAtlas
+from genomic_data_service import es, app
+from genomic_data_service.rsid_coordinates_resolver import get_coordinates, resolve_coordinates_and_variants
+from genomic_data_service.constants import GENOME_TO_ALIAS
+from genomic_data_service.regulome_atlas_utils import extract_search_params
+from genomic_data_service.regulome_atlas import RegulomeAtlas
 
-es = Elasticsearch(port=9201)
-
-app = Flask(__name__)
 
 def build_response(block):
     response = {
@@ -34,7 +32,7 @@ def validate_search_request(request):
     if 'from' in args or 'size' in args:
         return (False, 'Invalid parameters: "from" and "size" are not accepted.')
 
-    return (True)
+    return (True, None)
 
 
 @app.route('/regulome-search', methods=['GET'])
@@ -50,7 +48,7 @@ def regulome_search():
     valid, error_msg = validate_search_request(request)
 
     if not valid:
-        return error_response(error_msg)
+        raise BadRequest(error_msg)
 
     assembly, from_, size, format_, maf, region_queries = extract_search_params(
         request.params
@@ -115,6 +113,3 @@ def regulome_search():
     result['nearby_snps'] = nearby_snps
 
     return build_response(result)
-
-
-app.run(port=5000, debug=True)

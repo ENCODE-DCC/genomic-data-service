@@ -1,6 +1,6 @@
 import requests
 import logging
-from .constants import (
+from genomic_data_service.constants import (
     GENOME_TO_ALIAS,
     GENOME_TO_SPECIES,
     ENSEMBL_URL,

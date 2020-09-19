@@ -1,4 +1,4 @@
-from .constants import GENOME_TO_ALIAS
+from genomic_data_service.constants import GENOME_TO_ALIAS
 
 def extract_search_params(params):
     assembly = params.get('genome', 'GRCh37')

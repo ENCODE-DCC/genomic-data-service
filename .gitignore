@@ -128,5 +128,6 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-genomic-server/
+genomic_data_service.egg-info/
+venv/
 *~
