@@ -1,30 +1,22 @@
+import time
+import re
 from datetime import datetime
 from flask import jsonify, request
 from werkzeug.exceptions import BadRequest
 
 from genomic_data_service import es, app
-from genomic_data_service.rsid_coordinates_resolver import get_coordinates, resolve_coordinates_and_variants
+from genomic_data_service.rsid_coordinates_resolver import get_coordinates, resolve_coordinates_and_variants, search_peaks
 from genomic_data_service.constants import GENOME_TO_ALIAS
-from genomic_data_service.regulome_atlas_utils import extract_search_params
 from genomic_data_service.regulome_atlas import RegulomeAtlas
 
-
 def build_response(block):
-    response = {
+    return {
+        **block, **{
         '@context': '/terms',
         '@id': request.full_path,
         '@type': ['regulome-search'],
         'title': 'RegulomeDB search',
-    }
-
-    return jsonify(response.update(block))
-
-def error_response(error_msg):
-    return build_response({
-        'notifications': {
-            'Failed': error_msg
-        }
-    })
+    }}
 
 def validate_search_request(request):
     args = request.args
@@ -34,8 +26,29 @@ def validate_search_request(request):
 
     return (True, None)
 
+def extract_search_params(params):
+    assembly = params.get('genome', 'GRCh37')
+    if assembly not in GENOME_TO_ALIAS.keys():
+        assembly = 'GRCh37'
 
-@app.route('/regulome-search', methods=['GET'])
+    from_   = params.get('from', type=int) or 0
+    format  = params.get('format', 'json')
+    maf     = params.get('maf', None)
+
+    regions = params.get('regions', None)
+    if regions:
+        regions = regions.split(' ')
+
+    size = params.get('limit', 200)
+
+    region_queries = [region_query
+                      for query in regions
+                      for region_query in re.split(r'[\r\n]+', query)
+                      if not re.match(r'^(#.*)|(\s*)$', region_query)]
+
+    return assembly, from_, size, format, maf, region_queries
+
+@app.route('/regulome-search/', methods=['GET'])
 def regulome_search():
     """
     Regulome peak analysis for a single region.
@@ -45,18 +58,22 @@ def regulome_search():
        format=json
     """
 
+    begin = time.time()
+
     valid, error_msg = validate_search_request(request)
 
     if not valid:
         raise BadRequest(error_msg)
-
+    
     assembly, from_, size, format_, maf, region_queries = extract_search_params(
-        request.params
+        request.args
     )
 
     atlas = RegulomeAtlas(es)
     
-    variants, query_coordinates, notifications = resolve_coordinates_and_variants(region_queries, assembly, atlas, maf)
+    variants, query_coordinates, notifications = resolve_coordinates_and_variants(
+        region_queries, assembly, atlas, maf
+    )
 
     total = len(variants)
     from_ = max(from_, 0)
@@ -66,7 +83,7 @@ def regulome_search():
     else:
         try:
             size = int(size)
-        except ValueError:
+        except:
             size = 200
         to_ = min(from_ + max(size, 0), total)
 
@@ -86,7 +103,7 @@ def regulome_search():
             }
             for chrom, start, end in sorted(variants)[from_:to_]
         ],
-        'notifications': notifications,
+        'notifications': notifications
     }
 
     if len(result['query_coordinates']) != 1:
@@ -96,7 +113,7 @@ def regulome_search():
                 len(result['query_coordinates'])
             )
         }
-        return build_response(result)
+        return jsonify(build_response(result))
 
     regulome_score, features, notifications, graph, timing, nearby_snps = search_peaks(
         query_coordinates,
@@ -112,4 +129,4 @@ def regulome_search():
     result['timing'] += timing
     result['nearby_snps'] = nearby_snps
 
-    return build_response(result)
+    return jsonify(build_response(result))

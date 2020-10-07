@@ -1,4 +1,6 @@
+import re
 import requests
+import time
 import logging
 from genomic_data_service.constants import (
     GENOME_TO_ALIAS,
@@ -165,6 +167,59 @@ def resolve_coordinates_and_variants(region_queries, assembly, atlas, maf):
 
     return (variants, query_coordinates, notifications)
 
+
+def region_get_hits(atlas, assembly, chrom, start, end, peaks_too=False):
+    '''Returns a list of file uuids AND dataset paths for chromosome location'''
+
+    all_hits = {}  # { 'dataset_paths': [], 'files': {}, 'datasets': {}, 'peaks': [], 'message': ''}
+
+    (peaks, peak_details) = atlas.find_peaks_filtered(GENOME_TO_ALIAS[assembly], chrom, start, end,
+                                                      peaks_too)
+    if not peaks:
+        return {'message': 'No hits found in this location'}
+    if peak_details is None:
+        return {'message': 'Error during peak filtering'}
+    if not peak_details:
+        return {'message': 'No %s sources found' % atlas.type()}
+
+    all_hits['peak_count'] = len(peaks)
+    if peaks_too:
+        all_hits['peaks'] = peaks  # For "download_elements", contains 'inner_hits' with positions
+    # NOTE: peak['inner_hits']['positions']['hits']['hits'] may exist with uuids but to same file
+
+    (all_hits['datasets'], all_hits['files']) = atlas.details_breakdown(peak_details)
+    all_hits['dataset_paths'] = list(all_hits['datasets'].keys())
+    all_hits['file_count'] = len(all_hits['files'])
+    all_hits['dataset_count'] = len(all_hits['datasets'])
+
+    all_hits['message'] = ('%d peaks in %d files belonging to %s datasets in this region' %
+                           (all_hits['peak_count'], all_hits['file_count'],
+                            all_hits['dataset_count']))
+
+    return all_hits
+
+
+# TODO: refactor
+def evidence_to_features(evidence):
+    features = {
+        'ChIP': False,
+        'DNase': False,
+        'PWM': False,
+        'Footprint': False,
+        'QTL': False,
+        'PWM_matched': False,
+        'Footprint_matched': False,
+        'IC_matched_max': 0.0,
+        'IC_max': 0.0,
+    }
+    for k in features:
+        if isinstance(features[k], float):
+            features[k] = evidence.get(k, 0.0)
+        else:
+            features[k] = k in evidence
+    return features
+
+
 def search_peaks(query_coordinates, atlas, assembly, num_variants):
     coord = query_coordinates[0]
     chrom, start_end = coord.split(':')
@@ -181,7 +236,7 @@ def search_peaks(query_coordinates, atlas, assembly, num_variants):
     timing = []
 
     begin = time.time()
-    
+
     try:
         all_hits = region_get_hits(
             atlas, assembly, chrom, start, end, peaks_too=True
@@ -194,6 +249,7 @@ def search_peaks(query_coordinates, atlas, assembly, num_variants):
         )
         features = evidence_to_features(evidence)
     except Exception as e:
+        all_hits = {}
         notifications[coord] = 'Failed: (exception) {}'.format(e)
 
     for peak in all_hits.get('peaks', []):

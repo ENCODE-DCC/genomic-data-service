@@ -41,15 +41,15 @@ REGDB_NUM_SCORES = [1000, 950, 900, 850, 800, 750, 600, 550, 500, 450, 400, 300,
 
 # Make prediction on query data with trained random forest model load trained model
 TRAINED_REG_MODEL = pickle.load(
-    open('./models/rf_model.sav', 'rb')
+    open('./ml_models/rf_model.sav', 'rb')
 )
 
 LOCAL_BIGWIGS = {
     'IC_matched_max': pyBigWig.open(
-        './models/bigwig_files/IC_matched_max.bw'
+        './ml_models/bigwig_files/IC_matched_max.bw'
     ),
     'IC_max': pyBigWig.open(
-        './models/bigwig_files/IC_max.bw'
+        './ml_models/bigwig_files/IC_max.bw'
     )
 }
 
