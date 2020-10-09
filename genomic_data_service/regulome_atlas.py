@@ -66,8 +66,6 @@ class RegulomeAtlas(object):
         try:
             results = self.es.search(index=self.snp_es_index_name(assembly), doc_type=chrom,
                                             _source=True, body=range_query, size=max_results)
-        except NotFoundError:
-            return []
         except Exception:
             return []
 
@@ -80,8 +78,6 @@ class RegulomeAtlas(object):
         try:
             results = self.es.search(index=chrom.lower(), doc_type=assembly, _source=True,
                                             body=range_query, size=max_results)
-        except NotFoundError:
-            return None
         except Exception:
             return None
 
