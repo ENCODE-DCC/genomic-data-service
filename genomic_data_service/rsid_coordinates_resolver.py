@@ -77,7 +77,7 @@ def get_rsid_coordinates_from_ensembl(assembly, rsid):
 
 def get_rsid_coordinates(rsid, assembly, atlas=None, webfetch=True):
     if atlas and assembly in ['GRCh38', 'hg19', 'GRCh37']:
-        chrom, start, end = get_rsid_coordinates_from_atlas(atlas, assembly, rsid, webfetch)
+        chrom, start, end = get_rsid_coordinates_from_atlas(atlas, assembly, rsid)
 
         if chrom is None and webfetch:
             raise ValueError("Could not find %s on %s, using ensemble" % (rsid, assembly))
@@ -171,7 +171,7 @@ def resolve_coordinates_and_variants(region_queries, assembly, atlas, maf):
 def region_get_hits(atlas, assembly, chrom, start, end, peaks_too=False):
     '''Returns a list of file uuids AND dataset paths for chromosome location'''
 
-    all_hits = {}  # { 'dataset_paths': [], 'files': {}, 'datasets': {}, 'peaks': [], 'message': ''}
+    all_hits = {}
 
     (peaks, peak_details) = atlas.find_peaks_filtered(GENOME_TO_ALIAS[assembly], chrom, start, end,
                                                       peaks_too)
@@ -188,10 +188,10 @@ def region_get_hits(atlas, assembly, chrom, start, end, peaks_too=False):
     # NOTE: peak['inner_hits']['positions']['hits']['hits'] may exist with uuids but to same file
 
     (all_hits['datasets'], all_hits['files']) = atlas.details_breakdown(peak_details)
+
     all_hits['dataset_paths'] = list(all_hits['datasets'].keys())
     all_hits['file_count'] = len(all_hits['files'])
     all_hits['dataset_count'] = len(all_hits['datasets'])
-
     all_hits['message'] = ('%d peaks in %d files belonging to %s datasets in this region' %
                            (all_hits['peak_count'], all_hits['file_count'],
                             all_hits['dataset_count']))
@@ -212,11 +212,13 @@ def evidence_to_features(evidence):
         'IC_matched_max': 0.0,
         'IC_max': 0.0,
     }
+
     for k in features:
         if isinstance(features[k], float):
             features[k] = evidence.get(k, 0.0)
         else:
             features[k] = k in evidence
+
     return features
 
 
@@ -283,3 +285,50 @@ def search_peaks(query_coordinates, atlas, assembly, num_variants):
     timing.append({'nearby_snps': (time.time() - begin)})
 
     return (regulome_score, features, notifications, graph, timing, nearby_snps)
+
+
+def score_regions(variants, es, atlas, assembly):
+    if result['format'] in ['tsv', 'bed']:
+        table = []
+
+    timings = []
+        
+    for variant in result['variants']:
+        begin = time.time()
+        chrom = variant['chrom']
+        start = variant['start']
+        end = variant['end']
+        # parse_region_query makes sure variants returned are all scorable
+
+        try:
+            all_hits = region_get_hits(atlas, assembly, chrom, start, end)
+            evidence = atlas.regulome_evidence(all_hits['datasets'], chrom, int(start), int(end))
+            regulome_score = atlas.regulome_score(all_hits['datasets'], evidence)
+            features = evidence_to_features(evidence)
+        except Exception as e:
+            features = {}
+            regulome_score = {}
+            raise e # testing
+
+        if result['format'] in ['tsv', 'bed']:
+            if not table:
+                columns = ['chrom', 'start', 'end', 'rsids']
+                columns.extend(sorted(regulome_score.keys()))
+                columns.extend(sorted(features.keys()))
+                if result['format'] == 'tsv':
+                    table.append('\t'.join(columns).encode())
+            row = [chrom, start, end, ', '.join(variant['rsids'])]
+            row.extend([
+                str(features.get(col, '')) or str(regulome_score.get(col, ''))
+                for col in columns
+                if col in regulome_score or col in features
+            ])
+            table.append('\t'.join(row).encode())
+            continue
+        else:
+            variant['features'] = features
+            variant['regulome_score'] = regulome_score
+        timings.append(
+            {'{}:{}-{}'.format(chrom, start, end): (time.time() - begin)}
+        )
+

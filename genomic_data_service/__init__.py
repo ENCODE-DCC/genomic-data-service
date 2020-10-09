@@ -9,3 +9,4 @@ es = Elasticsearch(port=app.config['ES_PORT'], hosts=app.config['ES_HOSTS'])
 
 
 import genomic_data_service.regulome_search
+import genomic_data_service.regulome_summary

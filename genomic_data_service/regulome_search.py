@@ -1,52 +1,21 @@
 import time
-import re
-from datetime import datetime
 from flask import jsonify, request
 from werkzeug.exceptions import BadRequest
-
 from genomic_data_service import es, app
-from genomic_data_service.rsid_coordinates_resolver import get_coordinates, resolve_coordinates_and_variants, search_peaks
-from genomic_data_service.constants import GENOME_TO_ALIAS
 from genomic_data_service.regulome_atlas import RegulomeAtlas
+from genomic_data_service.rsid_coordinates_resolver import get_coordinates, resolve_coordinates_and_variants, search_peaks
+from genomic_data_service.request_utils import validate_search_request, extract_search_params
+
 
 def build_response(block):
     return {
         **block, **{
-        '@context': '/terms',
+        '@context': '/terms/',
         '@id': request.full_path,
         '@type': ['regulome-search'],
         'title': 'RegulomeDB search',
-    }}
-
-def validate_search_request(request):
-    args = request.args
-
-    if 'from' in args or 'size' in args:
-        return (False, 'Invalid parameters: "from" and "size" are not accepted.')
-
-    return (True, None)
-
-def extract_search_params(params):
-    assembly = params.get('genome', 'GRCh37')
-    if assembly not in GENOME_TO_ALIAS.keys():
-        assembly = 'GRCh37'
-
-    from_   = params.get('from', type=int) or 0
-    format  = params.get('format', 'json')
-    maf     = params.get('maf', None)
-
-    regions = params.get('regions', None)
-    if regions:
-        regions = regions.split(' ')
-
-    size = params.get('limit', 200)
-
-    region_queries = [region_query
-                      for query in regions
-                      for region_query in re.split(r'[\r\n]+', query)
-                      if not re.match(r'^(#.*)|(\s*)$', region_query)]
-
-    return assembly, from_, size, format, maf, region_queries
+        }
+    }
 
 @app.route('/regulome-search/', methods=['GET'])
 def regulome_search():
