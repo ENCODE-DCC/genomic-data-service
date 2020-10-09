@@ -13,18 +13,9 @@ SEARCH_MAX = 100 # FIND IT from snovault
 
 RESIDENT_REGIONSET_KEY = 'resident_regionsets'  # keeps track of what datsets are resident
 FOR_REGULOME_DB = 'regulomedb'
-REGULOME_ALLOWED_STATUSES = ['released', 'archived']  # no 'in progress' permission!
+REGULOME_ALLOWED_STATUSES = ['released', 'archived']
 REGULOME_DATASET_TYPES = ['Experiment', 'Annotation', 'Reference']
-SNP_INDEX_PREFIX = 'snp_'
 
-def snp_index_key(assembly):
-    return SNP_INDEX_PREFIX + assembly.lower()
-
-
-# ##################################
-# RegionAtlas and RegulomeAtlas classes encapsulate the methods
-# for querying regions and SNPs from the region_index.
-# ##################################
 
 # when iterating scored snps or bases, chunk calls to index for efficiency
 # NOTE: failures seen when chunking is too large
@@ -34,12 +25,6 @@ REGDB_SCORE_CHUNK_SIZE = 30000
 REGDB_STR_SCORES = ['1a', '1b', '1c', '1d', '1e', '1f', '2a', '2b', '2c', '3a', '3b', '4', '5', '6']
 REGDB_NUM_SCORES = [1000, 950, 900, 850, 800, 750, 600, 550, 500, 450, 400, 300, 200, 100]
 
-# def includeme(config):
-#    config.scan(__name__)
-#    registry = config.registry
-#    registry['region'+INDEXER] = RegionIndexer(registry)
-
-# Make prediction on query data with trained random forest model load trained model
 TRAINED_REG_MODEL = pickle.load(
     open('./ml_models/rf_model.sav', 'rb')
 )
@@ -55,41 +40,71 @@ LOCAL_BIGWIGS = {
 
 
 class RegulomeAtlas(object):
-    '''Methods for getting stuff out of the region_index.'''
+    def __init__(self, es):
+        self.es = es
+        self.bw_signal_map = LOCAL_BIGWIGS
 
-    def __init__(
-        self,
-        region_es,
-        bw_signal_map=LOCAL_BIGWIGS,
-    ):
-        self.region_es = region_es
-        self.bw_signal_map = bw_signal_map
+    def snp_es_index_name(self, assembly):
+        return 'snp_' + assembly.lower()
 
-    def type(self):
-        return 'regulome'
-
-    def allowed_statuses(self):
-        return REGULOME_ALLOWED_STATUSES
-
-    def set_type(self):
-        return ['Dataset']
-
-    def set_indices(self):
-        indices = [set_type.lower() for set_type in REGULOME_DATASET_TYPES]
-        return indices
-
-    # def snp_suggest(self, assembly, text):
-    # Using suggest with 60M of rsids leads to es crashing during SNP indexing
-
-    def snp(self, assembly, rsid):
-        '''Return single SNP by rsid and assembly'''
+    def find_snp(self, assembly, rsid):
         try:
-            res = self.region_es.get(index=snp_index_key(assembly), doc_type='_all', id=rsid)
-            #TODO _all is deprecated
+            res = self.es.get(index=self.snp_es_index_name(assembly), doc_type='_all', id=rsid)
         except Exception:
             return None
 
         return res['_source']
+
+    def find_snps(self, assembly, chrom, start, end, max_results=SEARCH_MAX, maf=None):
+        '''Return all SNPs in a region.'''
+        range_query = self._range_query(start, end, snps=True)
+        if maf is not None:
+            range_query['query']['bool']['filter'].append(
+                {'range': {'maf': {'gte': maf}}}
+            )
+
+        try:
+            results = self.es.search(index=self.snp_es_index_name(assembly), doc_type=chrom,
+                                            _source=True, body=range_query, size=max_results)
+        except NotFoundError:
+            return []
+        except Exception:
+            return []
+
+        return [hit['_source'] for hit in results['hits']['hits']]
+
+    def find_peaks(self, assembly, chrom, start, end, peaks_too=False, max_results=SEARCH_MAX):
+        '''Return all peaks intersecting a point'''
+        range_query = self._range_query(start, end, False, peaks_too, max_results)
+
+        try:
+            results = self.es.search(index=chrom.lower(), doc_type=assembly, _source=True,
+                                            body=range_query, size=max_results)
+        except NotFoundError:
+            return None
+        except Exception:
+            return None
+
+        return list(results['hits']['hits'])
+
+    def find_peaks_filtered(self, assembly, chrom, start, end, peaks_too=False):
+        '''Return peaks in a region and resident details'''
+        #TODO I don't know why this also returns details it's not ever used productively
+        peaks = self.find_peaks(assembly, chrom, start, end, peaks_too=peaks_too)
+        if not peaks:
+            return (peaks, None)
+        uuids = list(set([peak['_source']['uuid'] for peak in peaks]))
+        details = self._resident_details(uuids)
+        if not details:
+            return ([], details)
+        filtered_peaks = []
+        while peaks:
+            peak = peaks.pop(0)
+            uuid = peak['_source']['uuid']
+            if uuid in details:
+                peak['resident_detail'] = details[uuid]
+                filtered_peaks.append(peak)
+        return (filtered_peaks, details)
 
     @staticmethod
     def _range_query(start, end, snps=False, with_inner_hits=False, max_results=SEARCH_MAX):
@@ -140,48 +155,11 @@ class RegulomeAtlas(object):
 
         return query
 
-    def find_snps(
-        self, assembly, chrom, start, end, max_results=SEARCH_MAX, maf=None
-    ):
-        '''Return all SNPs in a region.'''
-        range_query = self._range_query(start, end, snps=True)
-        if maf is not None:
-            range_query['query']['bool']['filter'].append(
-                {'range': {'maf': {'gte': maf}}}
-            )
-
-        try:
-            results = self.region_es.search(index=snp_index_key(assembly), doc_type=chrom,
-                                            _source=True, body=range_query, size=max_results)
-        except NotFoundError:
-            return []
-        except Exception:
-            return []
-
-        return [hit['_source'] for hit in results['hits']['hits']]
-
-    # def snp_suggest(self, assembly, text):
-    # Using suggest with 60M of rsids leads to es crashing during SNP indexing
-
-    def find_peaks(self, assembly, chrom, start, end, peaks_too=False, max_results=SEARCH_MAX):
-        '''Return all peaks intersecting a point'''
-        range_query = self._range_query(start, end, False, peaks_too, max_results)
-
-        try:
-            results = self.region_es.search(index=chrom.lower(), doc_type=assembly, _source=True,
-                                            body=range_query, size=max_results)
-        except NotFoundError:
-            return None
-        except Exception:
-            return None
-
-        return list(results['hits']['hits'])
-
     def _resident_details(self, uuids, max_results=SEARCH_MAX):
         '''private: returns resident details filtered by use.'''
         try:
             id_query = {"query": {"ids": {"values": uuids}}}
-            res = self.region_es.search(index=RESIDENT_REGIONSET_KEY, body=id_query,
+            res = self.es.search(index=RESIDENT_REGIONSET_KEY, body=id_query,
                                         doc_type=[FOR_REGULOME_DB], size=max_results)
         except Exception:
             return None
@@ -191,25 +169,6 @@ class RegulomeAtlas(object):
             details[hit["_source"]["uuid"]] = hit["_source"]
 
         return details
-
-    def find_peaks_filtered(self, assembly, chrom, start, end, peaks_too=False):
-        '''Return peaks in a region and resident details'''
-        #TODO I don't know why this also returns details it's not ever used productively
-        peaks = self.find_peaks(assembly, chrom, start, end, peaks_too=peaks_too)
-        if not peaks:
-            return (peaks, None)
-        uuids = list(set([peak['_source']['uuid'] for peak in peaks]))
-        details = self._resident_details(uuids)
-        if not details:
-            return ([], details)
-        filtered_peaks = []
-        while peaks:
-            peak = peaks.pop(0)
-            uuid = peak['_source']['uuid']
-            if uuid in details:
-                peak['resident_detail'] = details[uuid]
-                filtered_peaks.append(peak)
-        return (filtered_peaks, details)
 
     @staticmethod
     def _peak_uuids_in_overlap(peaks, chrom, start, end=None):
@@ -592,12 +551,10 @@ class RegulomeAtlas(object):
             range_start = 0
 
         if scores:
-            snps = self._scored_snps(assembly, chrom, range_start, range_end)
+            return self._scored_snps(assembly, chrom, range_start, range_end)
         else:
             snps = self.find_snps(assembly, chrom, range_start, range_end)
-            snps = self._snp_window(snps, max_snps, pos)
-
-        return snps
+            return self._snp_window(snps, max_snps, pos)
 
     def iter_scored_snps(self, assembly, chrom, start, end, base_level=False):
         '''For a region, iteratively yields all SNPs with scores.'''

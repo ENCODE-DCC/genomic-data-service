@@ -34,7 +34,7 @@ def ensembl_assembly_mapper(location, species, input_assembly, output_assembly):
 
 
 def get_rsid_coordinates_from_atlas(atlas, assembly, rsid):
-    snp = atlas.snp(GENOME_TO_ALIAS.get(assembly), rsid)
+    snp = atlas.find_snp(GENOME_TO_ALIAS.get(assembly), rsid)
 
     chrom = snp.get('chrom', None)
     coordinates = snp.get('coordinates', {})

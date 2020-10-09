@@ -75,11 +75,11 @@ def regulome_search():
         'notifications': notifications
     }
 
-    if len(result['query_coordinates']) != 1:
+    if len(query_coordinates) != 1:
         result['notifications'] = {
             'Failed': 'Received {} region queries. Exact one region or one '
             'variant can be processed by regulome-search'.format(
-                len(result['query_coordinates'])
+                len(query_coordinates)
             )
         }
         return jsonify(build_response(result))
