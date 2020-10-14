@@ -1,21 +1,10 @@
 import pickle
-from pkg_resources import resource_filename
-
-from operator import itemgetter
-
-from elasticsearch.exceptions import (
-    NotFoundError
-)
 import math
 import pyBigWig
 
-SEARCH_MAX = 100 # FIND IT from snovault
-
 RESIDENT_REGIONSET_KEY = 'resident_regionsets'  # keeps track of what datsets are resident
 FOR_REGULOME_DB = 'regulomedb'
-REGULOME_ALLOWED_STATUSES = ['released', 'archived']
-REGULOME_DATASET_TYPES = ['Experiment', 'Annotation', 'Reference']
-
+EVIDENCE_CATEGORIES = ['QTL', 'ChIP', 'DNase', 'PWM', 'Footprint', 'PWM_matched', 'Footprint_matched']
 
 # when iterating scored snps or bases, chunk calls to index for efficiency
 # NOTE: failures seen when chunking is too large
@@ -40,9 +29,11 @@ LOCAL_BIGWIGS = {
 
 
 class RegulomeAtlas(object):
+    SEARCH_MAX = 100
+
     def __init__(self, es):
         self.es = es
-        self.bw_signal_map = LOCAL_BIGWIGS
+        self.bigwig_signal_map = LOCAL_BIGWIGS
 
     def snp_es_index_name(self, assembly):
         return 'snp_' + assembly.lower()
@@ -56,12 +47,7 @@ class RegulomeAtlas(object):
         return res['_source']
 
     def find_snps(self, assembly, chrom, start, end, max_results=SEARCH_MAX, maf=None):
-        '''Return all SNPs in a region.'''
-        range_query = self._range_query(start, end, snps=True)
-        if maf is not None:
-            range_query['query']['bool']['filter'].append(
-                {'range': {'maf': {'gte': maf}}}
-            )
+        range_query = self._range_query(start, end, maf=maf)
 
         try:
             results = self.es.search(index=self.snp_es_index_name(assembly), doc_type=chrom,
@@ -72,8 +58,7 @@ class RegulomeAtlas(object):
         return [hit['_source'] for hit in results['hits']['hits']]
 
     def find_peaks(self, assembly, chrom, start, end, peaks_too=False, max_results=SEARCH_MAX):
-        '''Return all peaks intersecting a point'''
-        range_query = self._range_query(start, end, False, peaks_too, max_results)
+        range_query = self._range_query(start, end, max_results)
 
         try:
             results = self.es.search(index=chrom.lower(), doc_type=assembly, _source=True,
@@ -84,82 +69,117 @@ class RegulomeAtlas(object):
         return list(results['hits']['hits'])
 
     def find_peaks_filtered(self, assembly, chrom, start, end, peaks_too=False):
-        '''Return peaks in a region and resident details'''
-        #TODO I don't know why this also returns details it's not ever used productively
         peaks = self.find_peaks(assembly, chrom, start, end, peaks_too=peaks_too)
+
         if not peaks:
             return (peaks, None)
+
         uuids = list(set([peak['_source']['uuid'] for peak in peaks]))
         details = self._resident_details(uuids)
+        import pdb; pdb.set_trace()
         if not details:
             return ([], details)
+
         filtered_peaks = []
-        while peaks:
-            peak = peaks.pop(0)
+        for peak in peaks:
             uuid = peak['_source']['uuid']
             if uuid in details:
                 peak['resident_detail'] = details[uuid]
                 filtered_peaks.append(peak)
+
         return (filtered_peaks, details)
 
+    def regulome_evidence(self, datasets, chrom, start, end):
+        '''Returns evidence for scoring: datasets in a characterized dict'''
+
+        evidence = {}
+        targets = {'ChIP': [], 'PWM': [], 'Footprint': []}
+
+        for dataset in datasets.values():
+            character = self._score_category(dataset)
+            if character is None:
+                continue
+            if character not in evidence:
+                evidence[character] = []
+            evidence[character].append(dataset)
+            target = dataset.get('target')
+            if target and character in ['ChIP', 'PWM', 'Footprint']:
+                if isinstance(target, str):
+                    targets[character].append(target)
+                elif isinstance(target, list):  # rare but PWM targets might be list
+                    for targ in target:
+                        targets[character].append(targ)
+
+        # For each ChIP target, there could be a PWM and/or Footprint to match
+        for target in targets['ChIP']:
+            if target in targets['PWM']:
+                if 'PWM_matched' not in evidence:
+                    evidence['PWM_matched'] = []
+                evidence['PWM_matched'].append(target)
+            if target in targets['Footprint']:
+                if 'Footprint_matched' not in evidence:
+                    evidence['Footprint_matched'] = []
+                evidence['Footprint_matched'].append(target)
+
+        # Get values/signals from bigWig
+        for k, bw in self.bigwig_signal_map.items():
+            values = bw.values(chrom, start, end)
+            average = sum(values) / max(len(values), 1)
+            evidence[k] = 0.0 if math.isnan(average) else average
+
+        return evidence
+
     @staticmethod
-    def _range_query(start, end, snps=False, with_inner_hits=False, max_results=SEARCH_MAX):
-        '''private: return peak query'''
+    def _range_query(start, end, maf=None, max_results=SEARCH_MAX):
         # get all peaks that overlap requested point
         # only single point intersection
         # use start not end for 0-base open ended
-        start = int(start)
-        end = int(end)
-        # We don't need match score here so filter context in the bool query is
-        # preferred over query context
-        # https://www.elastic.co/guide/en/elasticsearch/reference/current/query-filter-context.html
-        # Filter clause is an array for potential multiple filters
-        if abs(end - start) == 1:
-            query = {
-                'query': {
-                    'bool': {
-                        'filter': [
-                            {
-                                'term': {
-                                    'coordinates': start
-                                }
-                            }
-                        ]
-                    }
-                },
-                'size': max_results,
+
+        query = {
+            'query': {
+                'bool': {
+                    'filter': []
+                }
+            },
+            'size': max_results
+        }
+
+        if abs(int(end) - int(start)) == 1:
+            query_filter = {
+                'term': {
+                    'coordinates': start
+                }
             }
         else:
-            query = {
-                'query': {
-                    'bool': {
-                        'filter': [
-                            {
-                                'range': {
-                                    'coordinates': {
-                                        'gte': start,
-                                        'lt': end,
-                                        'relation': 'intersects',
-                                    }
-                                }
-                            }
-                        ]
+            query_filter = {
+                'range': {
+                    'coordinates': {
+                        'gte': start,
+                        'lt': end,
+                        'relation': 'intersects',
                     }
-                },
-                'size': max_results,
+                }
             }
+
+        query['query']['bool']['filter'].append(query_filter)
+
+        if maf is not None:
+            query['query']['bool']['filter'].append(
+                {'range': {'maf': {'gte': maf}}}
+            )
 
         return query
 
     def _resident_details(self, uuids, max_results=SEARCH_MAX):
-        '''private: returns resident details filtered by use.'''
         try:
             id_query = {"query": {"ids": {"values": uuids}}}
             res = self.es.search(index=RESIDENT_REGIONSET_KEY, body=id_query,
                                         doc_type=[FOR_REGULOME_DB], size=max_results)
         except Exception:
             return None
+
         details = {}
+
         hits = res.get("hits", {}).get("hits", [])
         for hit in hits:
             details[hit["_source"]["uuid"]] = hit["_source"]
@@ -213,8 +233,7 @@ class RegulomeAtlas(object):
 
     @staticmethod
     def evidence_categories():
-        '''Returns a list of regulome evidence categories'''
-        return ['QTL', 'ChIP', 'DNase', 'PWM', 'Footprint', 'PWM_matched', 'Footprint_matched']
+        return EVIDENCE_CATEGORIES
 
     @staticmethod
     def _score_category(dataset):
@@ -249,44 +268,6 @@ class RegulomeAtlas(object):
         if score_category == 'QTL':
             return 'Single_Nucleotides'
         return '???'
-
-    def regulome_evidence(self, datasets, chrom, start, end):
-        '''Returns evidence for scoring: datasets in a characterized dict'''
-        evidence = {}
-        targets = {'ChIP': [], 'PWM': [], 'Footprint': []}
-        for dataset in datasets.values():
-            character = self._score_category(dataset)
-            if character is None:
-                continue
-            if character not in evidence:
-                evidence[character] = []
-            evidence[character].append(dataset)
-            target = dataset.get('target')
-            if target and character in ['ChIP', 'PWM', 'Footprint']:
-                if isinstance(target, str):
-                    targets[character].append(target)
-                elif isinstance(target, list):  # rare but PWM targets might be list
-                    for targ in target:
-                        targets[character].append(targ)
-
-        # Targets... For each ChIP target, there could be a PWM and/or Footprint to match
-        for target in targets['ChIP']:
-            if target in targets['PWM']:
-                if 'PWM_matched' not in evidence:
-                    evidence['PWM_matched'] = []
-                evidence['PWM_matched'].append(target)
-            if target in targets['Footprint']:
-                if 'Footprint_matched' not in evidence:
-                    evidence['Footprint_matched'] = []
-                evidence['Footprint_matched'].append(target)
-
-        # Get values/signals from bigWig
-        for k, bw in self.bw_signal_map.items():
-            values = bw.values(chrom, start, end)
-            average = sum(values) / max(len(values), 1)
-            evidence[k] = 0.0 if math.isnan(average) else average
-
-        return evidence
 
     def _write_a_brief(self, category, snp_evidence):
         '''private: given evidence for a category make a string that summarizes it'''
