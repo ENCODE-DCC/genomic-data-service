@@ -4,3 +4,5 @@ requests
 pyBigWig
 sklearn
 pytest
+gunicorn
+boto3
