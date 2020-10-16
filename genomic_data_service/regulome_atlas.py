@@ -58,7 +58,7 @@ class RegulomeAtlas(object):
         return [hit['_source'] for hit in results['hits']['hits']]
 
     def find_peaks(self, assembly, chrom, start, end, peaks_too=False, max_results=SEARCH_MAX):
-        range_query = self._range_query(start, end, max_results)
+        range_query = self._range_query(start, end, max_results=max_results)
 
         try:
             results = self.es.search(index=chrom.lower(), doc_type=assembly, _source=True,
@@ -76,7 +76,6 @@ class RegulomeAtlas(object):
 
         uuids = list(set([peak['_source']['uuid'] for peak in peaks]))
         details = self._resident_details(uuids)
-        import pdb; pdb.set_trace()
         if not details:
             return ([], details)
 
