@@ -17,4 +17,4 @@ test:
 	FLASK_APP=$(APP_NAME) FLASK_ENV=test GENOMIC_DATA_SERVICE_SETTINGS=../config/test.cfg pytest
 
 prod:
-	GENOMIC_DATA_SERVICE_SETTINGS=../config/development.cfg gunicorn -w 4 -b 127.0.0.1:4000 genomic_data_service:app
+	GENOMIC_DATA_SERVICE_SETTINGS=../config/development.cfg gunicorn -w 4 -b 127.0.0.1:4000 wsgi:app
