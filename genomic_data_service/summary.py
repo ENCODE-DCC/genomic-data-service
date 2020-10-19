@@ -12,8 +12,8 @@ def build_response(block):
         **block, **{
             '@context': '/terms/',
             '@id': request.full_path,
-            '@type': ['regulome-summary'],
-            'title': 'Regulome summary'
+            '@type': ['summary'],
+            'title': 'Genomic Summary'
         }
     }
 
@@ -33,11 +33,11 @@ def build_redirect_to_search(variants, assembly):
         for v in variants
     ][0]
 
-    return redirect(url_for('regulome_search', genome=assembly, regions=regions), code=302)
+    return redirect(url_for('search', genome=assembly, regions=regions), code=302)
 
 
-@app.route('/regulome-summary/', methods=['GET', 'POST'])
-def regulome_summary():
+@app.route('/summary/', methods=['GET', 'POST'])
+def summary():
     begin = time.time()
 
     valid, error_msg = validate_search_request(request)
@@ -105,14 +105,14 @@ def regulome_summary():
         end = variant['end']
 
         # parse_region_query makes sure variants returned are all scorable
-        try:
-            all_hits = region_get_hits(atlas, assembly, chrom, start, end)
-            evidence = atlas.regulome_evidence(all_hits['datasets'], chrom, int(start), int(end))
-            regulome_score = atlas.regulome_score(all_hits['datasets'], evidence)
-            features = evidence_to_features(evidence)
-        except Exception as e:
-            features = {}
-            regulome_score = {}
+#        try:
+        all_hits = region_get_hits(atlas, assembly, chrom, start, end)
+        evidence = atlas.regulome_evidence(all_hits['datasets'], chrom, int(start), int(end))
+        regulome_score = atlas.regulome_score(all_hits['datasets'], evidence)
+        features = evidence_to_features(evidence)
+#        except Exception as e:
+#            features = {}
+#            regulome_score = {}
 
         if table_download:
             if not table:

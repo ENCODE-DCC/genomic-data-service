@@ -12,15 +12,15 @@ def build_response(block):
         **block, **{
         '@context': '/terms/',
         '@id': request.full_path,
-        '@type': ['regulome-search'],
-        'title': 'RegulomeDB search',
+        '@type': ['search'],
+        'title': 'Genomic Region Search',
         }
     }
 
-@app.route('/regulome-search/', methods=['GET'])
-def regulome_search():
+@app.route('/search/', methods=['GET'])
+def search():
     """
-    Regulome peak analysis for a single region.
+    Peak analysis for a single region.
     Ex params:
        genome=GRCh37
        regions=chr2%3A754011-754012
