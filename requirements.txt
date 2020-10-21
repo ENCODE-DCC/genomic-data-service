@@ -6,3 +6,6 @@ sklearn
 pytest
 gunicorn
 boto3
+redis
+celery==4.4.6
+flower

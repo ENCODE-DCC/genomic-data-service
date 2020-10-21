@@ -131,3 +131,6 @@ dmypy.json
 genomic_data_service.egg-info/
 venv/
 *~
+dump.rdb
+indexer_logs
+ml_models/
