@@ -389,7 +389,5 @@ def index_file(uuid=None, file_properties=None, dataset=None, es_port=9201, es_h
 
     index_regions_from_file(es, uuid, file_properties, dataset)
 
-    import pdb; pdb.set_trace()
-
     print("File " + str(uuid) + " was indexed via " + file_properties['s3_uri'])
 

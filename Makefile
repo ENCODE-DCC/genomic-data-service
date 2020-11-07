@@ -3,7 +3,7 @@ export APP_NAME := genomic_data_service
 build:
 	python3 -m venv venv
 	source venv/bin/activate
-	pip install -e .
+	pip3 install -r requirements.txt
 	deactivate & source venv/bin/activate
 	python3 ./utils/download_ml_models.py
 

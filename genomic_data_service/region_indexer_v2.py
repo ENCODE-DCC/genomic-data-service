@@ -1,5 +1,3 @@
-from elasticsearch import Elasticsearch
-
 from genomic_data_service import app
 from genomic_data_service.region_indexer_task import index_file
 
@@ -9,8 +7,6 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.mutable import MutableDict
 from sqlalchemy.sql.expression import cast
-
-es = Elasticsearch(port=app.config['ES_PORT'], hosts=app.config['ES_HOSTS'])
 
 engine = create_engine("postgresql://postgres@:5432/postgres?host=/tmp/snovault/pgdata")
 Base = declarative_base()
@@ -269,7 +265,7 @@ def index_regions():
             file_properties = f.properties
             file_properties['@id'] = '/files/' + file_properties['accession'] + '/' # PEDRO TODO: refactor out
 
-            index_file(uuid=str(f.rid), file_properties=f.properties, dataset=dataset)
+            index_file.delay(uuid=str(f.rid), file_properties=f.properties, dataset=dataset)
 
             num_files_indexed += 1
 
