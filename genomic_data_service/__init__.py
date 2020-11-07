@@ -1,7 +1,5 @@
 from flask import Flask
-from elasticsearch import Elasticsearch
 from os import environ
-
 
 app = Flask(__name__)
 
@@ -12,9 +10,11 @@ else:
     app.config.from_pyfile('../config/development.cfg')
 
 
-es = Elasticsearch(port=app.config['ES_PORT'], hosts=app.config['ES_HOSTS'])
+if 'FLASK_APP' in environ:
+    from elasticsearch import Elasticsearch
+    
+    es = Elasticsearch(port=app.config['ES_PORT'], hosts=app.config['ES_HOSTS'])
 
-
-# Enabled endpoints:
-import genomic_data_service.search
-import genomic_data_service.summary
+    # Enabled endpoints:
+    import genomic_data_service.search
+    import genomic_data_service.summary
