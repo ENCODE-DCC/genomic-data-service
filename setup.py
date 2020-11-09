@@ -10,6 +10,14 @@ setup(
         'requests',
         'pyBigWig',
         'sklearn',
-        'pytest'
+        'pytest',
+        'gunicorn',
+        'boto3',
+        'redis',
+        'celery==4.4.6',
+        'flower',
+        'sqlalchemy',
+        'psycopg2',
+        'boto3'
     ],
 )

@@ -4,6 +4,7 @@ build:
 	python3 -m venv venv
 	source venv/bin/activate
 	pip3 install -r requirements.txt
+	pip3 install -e .
 	deactivate & source venv/bin/activate
 	python3 ./utils/download_ml_models.py
 
@@ -24,3 +25,6 @@ worker:
 
 flower:
 	flower -A genomic_data_service.region_indexer_task --address=127.0.0.1 --port=5555 --persistent=True --db=indexer_logs --max_tasks=5
+
+index:
+	python3 genomic_data_service/region_indexer_v2.py
