@@ -1,0 +1,18 @@
+# sample service config for Celery - edit it according to your deployment env
+
+[Unit]
+Description=Celery Service
+After=network.target
+
+[Service]
+Type=forking
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/home/ubuntu/genomic-data-service
+ExecStart=/bin/sh -c 'celery multi start worker -A genomic_data_service.region_indexer_task --loglevel=INFO --pidfile="$HOME/run/celery/%n.pid" --logfile="$HOME/log/celery_%n.log"'
+ExecStop=/bin/sh -c 'celery multi stopwait worker --pidfile="$HOME/run/celery/%n.pid" --logfile="$HOME/log/celery_%n.log"'
+ExecReload=/bin/sh -c 'celery multi restart worker -A genomic_data_service.region_indexer_task --pidfile="$HOME/run/celery/%n.pid" --loglevel=INFO --logfile="$HOME/log/celery_%n%I.log"'
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

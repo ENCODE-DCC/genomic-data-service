@@ -1,10 +1,11 @@
-# sample service config for Flower - edit accordingly
+# sample service config for Flower - edit it according to your deployment env
 
 [Unit]
 Description=Flower Celery Service
 
 [Service]
 User=ubuntu
+Group=ubuntu
 WorkingDirectory=/home/ubuntu/genomic-data-service
 ExecStart=flower -A genomic_data_service.region_indexer_task --address=127.0.0.1 --port=5555 --persistent=True --db=indexer_logs --max_tasks=5
 Restart=on-failure
