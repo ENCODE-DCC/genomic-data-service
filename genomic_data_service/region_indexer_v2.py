@@ -1,6 +1,8 @@
 from genomic_data_service import app
 from genomic_data_service.region_indexer_task import index_file
 
+from os import environ
+
 from sqlalchemy import create_engine, Column, Integer, String, JSON, text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.dialects.postgresql import UUID
@@ -8,7 +10,12 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.mutable import MutableDict
 from sqlalchemy.sql.expression import cast
 
-engine = create_engine("postgresql://postgres@:5432/postgres?host=/tmp/snovault/pgdata")
+if 'DB' in environ:
+    database_uri = environ['DB']
+else:
+    database_uri = "postgresql://postgres@:5432/postgres?host=/tmp/snovault/pgdata"
+
+engine = create_engine(database_uri)
 Base = declarative_base()
 Session = sessionmaker(bind=engine)
 
