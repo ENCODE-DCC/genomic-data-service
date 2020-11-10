@@ -26,11 +26,11 @@ class S3BedFileRemoteReader():
     def download_file_from_s3(self):
         config = Config(region_name='us-west-1', retries={'max_attempts': 2})
         s3 = boto3.client('s3', config=config)
-        href = 's3://encode-files/2010/12/06/54d7cfca-d4bf-456a-b12b-42105552f2ac/ENCFF001VRG.narrowPeak.gz' #self.file_properties['s3_uri']
+        href = self.file_properties['href']
 
         parsed_href = urlparse(href, allow_fragments=False)
-        s3_bucket = 'regulome-ml-models' #parsed_href.netloc
-        s3_path   = 'test/ENCFF001VRG.bed.gz' #parsed_href.path
+        s3_bucket = parsed_href.netloc
+        s3_path   = parsed_href.path
         if parsed_href.query:
             s3_path = parsed_href.path + '?' + prased_href.query
 

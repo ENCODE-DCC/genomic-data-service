@@ -110,12 +110,31 @@ def fetch_bed_files():
     file_rids = session.query(Resources.rid).filter(Resources.item_type == 'file').order_by(Resources.rid).all()
 
     def chunks(lst):
-        per_page = 5000
+        per_page = 10
         for i in range(0, len(lst), per_page):
             yield lst[i:i + per_page]
 
     for chunk in chunks(file_rids):
-        yield session.query(Propsheets).filter(text("properties->>'file_format' in ('bed', 'narrowPeak', 'bed narrowPeak')")).filter(Propsheets.rid.in_(chunk)).all()
+        results = session.query(CurrentPropsheets, Propsheets).filter(CurrentPropsheets.sid == Propsheets.sid).filter(CurrentPropsheets.rid.in_(chunk)).all()
+
+        bed_files = {}
+        for result in results:
+            current_propsheet = result.CurrentPropsheets
+            propsheet = result.Propsheets
+            file_id = str(propsheet.rid)
+
+            data_to_add = {}
+            if current_propsheet.name == 'external':
+                data_to_add = { 'href': 's3://{bucket}/{key}'.format(**propsheet.properties) }
+            else:
+                data_to_add = propsheet.properties
+
+            if file_id in bed_files:
+                bed_files[file_id] = { **bed_files[file_id], **data_to_add }
+            else:
+                bed_files[file_id] = data_to_add
+
+        yield [{'uuid': uuid, **properties} for uuid, properties in bed_files.items()]
 
 
 def fetch_target(target_id):
@@ -187,23 +206,26 @@ def check_embedded_targets(dataset):
     return None
 
 
-def file_dataset_allowed_to_index(file):
-    uuid = str(file.rid)
-    properties = file.properties
+def file_dataset_allowed_to_index(file_properties):
+    uuid = file_properties['uuid']
 
-    if properties.get('href') is None:
+    if file_properties.get('file_format') != 'bed':
+        print('File ' + uuid + ' has unaccepted file format ' + file_properties.get('file_format'))
+        return None
+
+    if file_properties.get('href') is None:
         print('File ' + uuid + ' refused because href is null')
         return None
 
-    if properties.get('status') not in REGULOME_ALLOWED_STATUSES:
-        print('File ' + uuid + ' refused because status is ' + properties.get('status'))
+    if file_properties.get('status') not in REGULOME_ALLOWED_STATUSES:
+        print('File ' + uuid + ' refused because status is ' + file_properties.get('status'))
         return None
 
-    if properties.get('assembly', 'unkown') not in REGULOME_SUPPORTED_ASSEMBLIES:
-        print('File ' + uuid + ' refused because assembly is not accepted: ' + properties.get('assembly'))
+    if file_properties.get('assembly', 'unkown') not in REGULOME_SUPPORTED_ASSEMBLIES:
+        print('File ' + uuid + ' refused because assembly is not accepted: ' + file_properties.get('assembly'))
         return None
 
-    dataset_id = properties.get('dataset')
+    dataset_id = file_properties.get('dataset')
 
     if dataset_id is None:
         print('File ' + uuid + ' has no dataset id')
@@ -236,7 +258,7 @@ def file_dataset_allowed_to_index(file):
 
     requirements = REGULOME_REGION_REQUIREMENTS[dataset_collection_type]
     for key, values in requirements.items():
-        if properties.get(key) not in values:
+        if file_properties.get(key) not in values:
             print('File ' + uuid + ' dataset collection type does not satisfy all requirements')
             return None        
 
@@ -274,10 +296,9 @@ def index_regions():
         for f in files:
             dataset = file_dataset_allowed_to_index(f)
             if dataset:
-                file_properties = f.properties
-                file_properties['@id'] = '/files/' + file_properties['accession'] + '/' # PEDRO TODO: refactor out
+                f['@id'] = '/files/' + f['accession'] + '/' # PEDRO TODO: refactor out
 
-                index_file.delay(uuid=str(f.rid), file_properties=f.properties, dataset=dataset)
+                index_file.delay(f, dataset, es_port=9201)
 
                 num_files_indexed += 1
 

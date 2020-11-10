@@ -374,20 +374,22 @@ def file_in_es(uuid, es):
     return None
 
 
-celery_app.task(bind=True, autoretry_for=(Exception,), retry_kwargs={'max_retries': 5, 'countdown': 2})
-def index_file(uuid=None, file_properties=None, dataset=None, es_port=9201, es_hosts=['localhost'], force_reindex=False):
+@celery_app.task(bind=True, autoretry_for=(Exception,), retry_kwargs={'max_retries': 5, 'countdown': 2})
+def index_file(file_properties, dataset, es_port=9201, es_hosts=['localhost'], force_reindex=False):
     es = Elasticsearch(port=es_port, hosts=es_hosts)
-    
-    indexed_file = file_in_es(uuid, es)
+
+    file_uuid = file_properties['uuid']
+
+    indexed_file = file_in_es(file_uuid, es)
 
     if indexed_file:
         if force_reindex:
-            remove_from_es(indexed_file, uuid, es)
+            remove_from_es(indexed_file, file_uuid, es)
         else:
-            print("File " + uuid + " is already indexed")
+            print("File " + file_uuid + " is already indexed")
             return
 
-    index_regions_from_file(es, uuid, file_properties, dataset)
+    index_regions_from_file(es, file_uuid, file_properties, dataset)
 
-    print("File " + str(uuid) + " was indexed via " + file_properties['s3_uri'])
+    print("File " + file_uuid + " was indexed via " + file_properties['s3_uri'])
 
