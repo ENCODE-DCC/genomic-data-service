@@ -109,7 +109,13 @@ def fetch_dataset(dataset_id):
 def fetch_bed_files():
     file_rids = session.query(Resources.rid).filter(Resources.item_type == 'file').order_by(Resources.rid).all()
 
-    return session.query(Propsheets).filter(text("properties->>'file_format' in ('bed', 'narrowPeak', 'bed narrowPeak')")).filter(Propsheets.rid.in_(file_rids)).all()
+    def chunks(lst):
+        per_page = 5000
+        for i in range(0, len(lst), per_page):
+            yield lst[i:i + per_page]
+
+    for chunk in chunks(file_rids):
+        yield session.query(Propsheets).filter(text("properties->>'file_format' in ('bed', 'narrowPeak', 'bed narrowPeak')")).filter(Propsheets.rid.in_(chunk)).all()
 
 
 def fetch_target(target_id):
@@ -262,21 +268,18 @@ def file_dataset_allowed_to_index(file):
 
 
 def index_regions():
-    files = fetch_bed_files()
+    for files in fetch_bed_files():
+        num_files_indexed = 0
 
-    num_files_indexed = 0
+        for f in files:
+            dataset = file_dataset_allowed_to_index(f)
+            if dataset:
+                file_properties = f.properties
+                file_properties['@id'] = '/files/' + file_properties['accession'] + '/' # PEDRO TODO: refactor out
 
-    for f in files:
-        dataset = file_dataset_allowed_to_index(f)
-        if dataset:
-            file_properties = f.properties
-            file_properties['@id'] = '/files/' + file_properties['accession'] + '/' # PEDRO TODO: refactor out
+                index_file.delay(uuid=str(f.rid), file_properties=f.properties, dataset=dataset)
 
-            index_file.delay(uuid=str(f.rid), file_properties=f.properties, dataset=dataset)
-
-            num_files_indexed += 1
-
-    print(str(num_files_indexed) + " files scheduled for indexing.")
+                num_files_indexed += 1
 
 
 if __name__ == "__main__":
