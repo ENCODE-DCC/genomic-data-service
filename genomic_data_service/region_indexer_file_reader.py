@@ -1,8 +1,8 @@
 import csv
-import boto3
-from botocore.config import Config
 import gzip
+import boto3
 import tempfile
+from botocore.config import Config
 from urllib.parse import urlparse
 
 
@@ -24,13 +24,13 @@ class S3BedFileRemoteReader():
         return self.file_properties.get('file_size', 0) <= self.MAX_IN_MEMORY_FILE_SIZE
 
     def download_file_from_s3(self):
-        config = Config(region_name='us-west-1', retries={'max_attempts': 2})
+        config = Config(region_name='us-west-2', retries={'max_attempts': 2})
         s3 = boto3.client('s3', config=config)
         href = self.file_properties['href']
 
         parsed_href = urlparse(href, allow_fragments=False)
         s3_bucket = parsed_href.netloc
-        s3_path   = parsed_href.path
+        s3_path   = parsed_href.path.lstrip('/')
         if parsed_href.query:
             s3_path = parsed_href.path + '?' + prased_href.query
 

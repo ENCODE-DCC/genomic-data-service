@@ -15,6 +15,11 @@ if 'DB' in environ:
 else:
     database_uri = "postgresql://postgres@:5432/postgres?host=/tmp/snovault/pgdata"
 
+if 'ES' in environ:
+    elastic_search_uri = [environ['ES']]
+else:
+    elastic_search_uri = ['localhost']
+
 engine = create_engine(database_uri)
 Base = declarative_base()
 Session = sessionmaker(bind=engine)
@@ -276,7 +281,7 @@ def file_dataset_allowed_to_index(file_properties):
         print('File ' + uuid + ' dataset collection type chromatin has no Regulome tag')
         return None
 
-    dataset['@id'] = '/' + dataset_type + '/' + dataset['accession'] + '/' # PEDRO TODO: refactor out
+    dataset['@id'] = '/' + dataset_type + '/' + dataset['accession'] + '/'
     dataset['@type'] = [dataset_type] # TODO: this is incomplete and have to export from snovault somehow
     dataset['uuid'] = str(dataset_id)
     target = check_embedded_targets(dataset)
@@ -296,9 +301,9 @@ def index_regions():
         for f in files:
             dataset = file_dataset_allowed_to_index(f)
             if dataset:
-                f['@id'] = '/files/' + f['accession'] + '/' # PEDRO TODO: refactor out
+                f['@id'] = '/files/' + f['accession'] + '/'
 
-                index_file.delay(f, dataset, es_port=9201)
+                index_file.delay(f, dataset, elastic_search_uri, 9201)
 
                 num_files_indexed += 1
 

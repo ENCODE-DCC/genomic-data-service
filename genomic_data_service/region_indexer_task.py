@@ -237,7 +237,7 @@ def index_regions_from_file(es, uuid, file_properties, dataset, snp=False):
 
     readable_file = S3BedFileRemoteReader(file_properties, dataset_type, regulome_strand, snp_set=snp_set)
 
-    if file_properties['file_format'] == 'bed':  # TODO: inspect this if. If format is not bed, it will fail for everything else, it should be placed in the beginning. Check that with Ben and Yunhai.
+    if file_properties['file_format'] == 'bed':
         for (chrom, doc) in readable_file.parse():
             if chrom not in SUPPORTED_CHROMOSOMES:
                 continue
@@ -375,7 +375,7 @@ def file_in_es(uuid, es):
 
 
 @celery_app.task(bind=True, autoretry_for=(Exception,), retry_kwargs={'max_retries': 5, 'countdown': 2})
-def index_file(file_properties, dataset, es_port=9201, es_hosts=['localhost'], force_reindex=False):
+def index_file(self, file_properties, dataset, es_hosts, es_port, force_reindex=False):
     es = Elasticsearch(port=es_port, hosts=es_hosts)
 
     file_uuid = file_properties['uuid']
@@ -386,10 +386,9 @@ def index_file(file_properties, dataset, es_port=9201, es_hosts=['localhost'], f
         if force_reindex:
             remove_from_es(indexed_file, file_uuid, es)
         else:
-            print("File " + file_uuid + " is already indexed")
-            return
+            return "File " + file_uuid + " is already indexed"
 
     index_regions_from_file(es, file_uuid, file_properties, dataset)
 
-    print("File " + file_uuid + " was indexed via " + file_properties['s3_uri'])
+    return "File " + file_uuid + " was indexed via " + file_properties['href']
 
