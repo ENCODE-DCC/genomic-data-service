@@ -7,7 +7,7 @@ Description=Flower Celery Service
 User=ubuntu
 Group=ubuntu
 WorkingDirectory=/home/ubuntu/genomic-data-service
-ExecStart=flower -A genomic_data_service.region_indexer_task --address=127.0.0.1 --port=5555 --persistent=True --db=indexer_logs --max_tasks=5
+ExecStart=flower -A genomic_data_service.region_indexer_task --address=127.0.0.1 --port=5555 --persistent=True --db=indexer_logs --max_tasks=1000000
 Restart=on-failure
 Type=simple
 
