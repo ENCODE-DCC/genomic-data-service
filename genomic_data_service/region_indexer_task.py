@@ -13,7 +13,7 @@ celery_app.config_from_object('config.celeryconfig')
 RESIDENTS_INDEX = 'resident_regionsets'
 FOR_REGULOME_DB = 'regulomedb'
 
-# PEDRO TODO: import this from a centralized place
+# PEDRO TODO: move constants to centralized file
 REGULOME_COLLECTION_TYPES = ['assay_term_name', 'annotation_type', 'reference_type']
 REGULOME_DATASET_TYPES = ['experiment', 'annotation', 'reference']
 
@@ -59,90 +59,10 @@ VALUE_STRAND_COL = {
 }
 
 
-def index_settings():
-    return {
-        'index': {
-            'number_of_shards': REGION_INDEXER_SHARDS,
-            'max_result_window': SEARCH_MAX
-        }
-    }
-
-
-def get_chrom_index_mapping(assembly_name='hg19'):
-    return {
-        assembly_name: {
-            '_source': {
-                'enabled': True
-            },
-            'properties': {
-                'uuid': {
-                    'type': 'keyword'
-                },
-                'coordinates': {
-                    'type': 'integer_range'
-                },
-                'strand': {
-                    'type': 'string'  # + - .
-                },
-                'value': {
-                    'type': 'string'
-                },
-            }
-        }
-    }
-
-
-def get_snp_index_mapping(chrom='chr1'):
-    return {
-        chrom: {
-            '_all': {
-                'enabled': False
-            },
-            '_source': {
-                'enabled': True
-            },
-            'properties': {
-                'rsid': {
-                    'type': 'keyword'
-                },
-                'chrom': {
-                    'type': 'keyword'
-                },
-                'coordinates': {
-                    'type': 'integer_range'
-                },
-                'maf': {
-                    'type': 'float',
-                },
-                'ref_allele_freq': {
-                    'enabled': False,
-                },
-                'alt_allele_freq': {
-                    'enabled': False,
-                },
-            }
-        }
-    }
-
-
-def get_resident_mapping(use_type=FOR_REGULOME_DB):
-    return {use_type: {"enabled": False}}
-
-
 def add_to_residence(es, file_doc):
     uuid = file_doc['uuid']
 
-    # Only splitting on doc_type=use in order to easily count them
     use_type = FOR_REGULOME_DB
-
-    # Make sure there is an index set up to handle whether uuids are resident
-    if not es.indices.exists(RESIDENTS_INDEX):
-        es.indices.create(index=RESIDENTS_INDEX, body=index_settings())
-
-    if not es.indices.exists_type(index=RESIDENTS_INDEX, doc_type=use_type):
-        mapping = get_resident_mapping(use_type)
-        es.indices.put_mapping(index=RESIDENTS_INDEX, doc_type=use_type,
-                               body=mapping)
 
     es.index(index=RESIDENTS_INDEX, doc_type=use_type, body=file_doc, id=str(uuid))
     return True
@@ -159,19 +79,12 @@ def index_snps(es, snps, metadata, chroms=None):
 
     metadata['index'] = snp_index
 
-    if not es.indices.exists(snp_index):
-        es.indices.create(index=snp_index, body=index_settings())
-
     if chroms is None:
         chroms = list(snps.keys())
 
     for chrom in chroms:
         if len(snps[chrom]) == 0:
             continue
-
-        if not es.indices.exists_type(index=snp_index, doc_type=chrom):
-            mapping = get_snp_index_mapping(chrom)
-            es.indices.put_mapping(index=snp_index, doc_type=chrom, body=mapping)
 
         bulk(es, snps_bulk_iterator(snp_index, chrom, snps[chrom]), chunk_size=500000)
 
@@ -200,13 +113,6 @@ def index_regions(es, regions, metadata, chroms):
 
     for chrom in list(regions.keys()):
         chrom_lc = chrom.lower()
-
-        if not es.indices.exists(chrom_lc):
-            es.indices.create(index=chrom_lc, body=index_settings())
-
-        if not es.indices.exists_type(index=chrom_lc, doc_type=assembly):
-            mapping = get_chrom_index_mapping(assembly)
-            es.indices.put_mapping(index=chrom_lc, doc_type=assembly, body=mapping)
 
         if len(regions[chrom]) == 0:
             continue

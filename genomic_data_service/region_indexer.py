@@ -1,5 +1,6 @@
 from genomic_data_service import app
 from genomic_data_service.region_indexer_task import index_file
+from genomic_data_service.region_indexer_elastic_search import RegionIndexerElasticSearch
 
 from os import environ
 
@@ -16,9 +17,10 @@ else:
     database_uri = "postgresql://postgres@:5432/postgres?host=/tmp/snovault/pgdata"
 
 if 'ES' in environ:
-    elastic_search_uri = [environ['ES']]
+    es_uri = [environ['ES']]
 else:
-    elastic_search_uri = ['localhost']
+    es_uri = ['localhost']
+es_port = 9201
 
 engine = create_engine(database_uri)
 Base = declarative_base()
@@ -26,8 +28,15 @@ Session = sessionmaker(bind=engine)
 
 session = Session()
 
+
+SUPPORTED_CHROMOSOMES = [
+    'chr1', 'chr2', 'chr3', 'chr4', 'chr5', 'chr6', 'chr7', 'chr8', 'chr9',
+    'chr10', 'chr11', 'chr12', 'chr13', 'chr14', 'chr15', 'chr16', 'chr17',
+    'chr18', 'chr19', 'chr20', 'chr21', 'chr22', 'chrX', 'chrY'
+]
+
+SUPPORTED_ASSEMBLIES = ['hg19', 'GRCh38']
 REGULOME_ALLOWED_STATUSES = ['released', 'archived']
-REGULOME_SUPPORTED_ASSEMBLIES = ['hg19', 'GRCh38']
 REGULOME_COLLECTION_TYPES = ['assay_term_name', 'annotation_type', 'reference_type']
 REGULOME_DATASET_TYPES = ['experiment', 'annotation', 'reference']
 REGULOME_REGION_REQUIREMENTS = {
@@ -226,7 +235,7 @@ def file_dataset_allowed_to_index(file_properties):
         print('File ' + uuid + ' refused because status is ' + file_properties.get('status'))
         return None
 
-    if file_properties.get('assembly', 'unkown') not in REGULOME_SUPPORTED_ASSEMBLIES:
+    if file_properties.get('assembly', 'unkown') not in SUPPORTED_ASSEMBLIES:
         print('File ' + uuid + ' refused because assembly is not accepted: ' + file_properties.get('assembly'))
         return None
 
@@ -295,6 +304,9 @@ def file_dataset_allowed_to_index(file_properties):
 
 
 def index_regions():
+    es_indexer = RegionIndexerElasticSearch(es_uri, es_port, SUPPORTED_CHROMOSOMES, SUPPORTED_ASSEMBLIES)
+    es_indexer.setup_indices()
+
     for files in fetch_bed_files():
         num_files_indexed = 0
 
@@ -303,7 +315,7 @@ def index_regions():
             if dataset:
                 f['@id'] = '/files/' + f['accession'] + '/'
 
-                index_file.delay(f, dataset, elastic_search_uri, 9201)
+                index_file.delay(f, dataset, es_uri, es_port)
 
                 num_files_indexed += 1
 
