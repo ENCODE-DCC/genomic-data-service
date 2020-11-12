@@ -27,4 +27,4 @@ flower:
 	flower -A genomic_data_service.region_indexer_task --address=127.0.0.1 --port=5555 --persistent=True --db=indexer_logs --max_tasks=5
 
 index:
-	python3 genomic_data_service/region_indexer_v2.py
+	python3 genomic_data_service/region_indexer.py > region_indexer.log
