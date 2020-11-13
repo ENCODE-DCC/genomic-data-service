@@ -16,16 +16,33 @@ class RegionIndexerElasticSearch():
         }
     }
 
-    def __init__(self, es_uri, es_port, supported_chroms, supported_assemblies, use_type=FOR_REGULOME_DB):
+    def __init__(self, es_uri, es_port, supported_chroms, supported_assemblies, use_type=FOR_REGULOME_DB, force_delete=False):
         self.es = Elasticsearch(port=es_port, hosts=es_uri)
         self.use_type = use_type
         self.chroms = [chrom.lower() for chrom in supported_chroms]
         self.assemblies = [assembly.lower() for assembly in supported_assemblies]
+        self.force_delete = force_delete
 
-    def setup_indices(self):
+    def setup_indices(self, force_delete=False):
+        if self.force_delete:
+            self.destroy_indices()
+
         self.setup_residents_index()
         self.setup_snps_index()
         self.setup_regions_index()
+
+    def destroy_indices(self):
+        if self.es.indices.exists(self.RESIDENTS_INDEX):
+            self.es.indices.delete(index=self.RESIDENTS_INDEX)
+
+        for assembly in self.assemblies:
+            snp_index = 'snp_' + assembly
+            if self.es.indices.exists(snp_index):
+                self.es.indices.delete(index=snp_index)
+
+        for chrom in self.chroms:
+            if self.es.indices.exists(chrom):
+                self.es.indices.delete(index=chrom)
 
     def setup_residents_index(self):
         if not self.es.indices.exists(self.RESIDENTS_INDEX):
