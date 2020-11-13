@@ -30,6 +30,8 @@ class S3BedFileRemoteReader():
 
         parsed_href = urlparse(href, allow_fragments=False)
         s3_bucket = parsed_href.netloc
+        if s3_bucket == "encode-files":
+            s3_bucket = "encode-public"
         s3_path   = parsed_href.path.lstrip('/')
         if parsed_href.query:
             s3_path = parsed_href.path + '?' + prased_href.query
