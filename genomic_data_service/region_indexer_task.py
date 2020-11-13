@@ -90,11 +90,6 @@ def index_snps(es, snps, metadata, chroms=None):
 
         metadata['chroms'].append(chrom)
 
-        try:
-            es.indices.flush_synced(index=snp_index)
-        except Exception:
-            pass
-
     return True
 
 
@@ -120,11 +115,6 @@ def index_regions(es, regions, metadata, chroms):
         bulk(es, region_bulk_iterator(chrom_lc, assembly, uuid, regions[chrom]), chunk_size=500000)
 
         metadata['chroms'].append(chrom)
-
-        try:
-            es.indices.flush_synced(index=chrom)
-        except Exception:
-            pass
 
     return True
 
