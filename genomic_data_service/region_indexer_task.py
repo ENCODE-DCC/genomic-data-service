@@ -24,6 +24,12 @@ SUPPORTED_CHROMOSOMES = [
     'chr18', 'chr19', 'chr20', 'chr21', 'chr22', 'chrX', 'chrY'
 ]
 
+# TODO: refactor
+ASSEMBLIES_MAPPING = {
+    'grch37': 'hg19',
+    'hg38': 'grch38'
+}
+
 # Max number of SNP docs hold in memory before putting into the index
 MAX_SNP_BULK = 3e6
 
@@ -70,7 +76,7 @@ def add_to_residence(es, file_doc):
 
 def snps_bulk_iterator(snp_index, chrom, snps_for_chrom):
     for snp in snps_for_chrom:
-        yield {'_index': snp_index, '_type': chrom, '_id': snp['rsid'], '_source': snp}
+        yield {'_index': snp_index.lower(), '_type': chrom.lower(), '_id': snp['rsid'], '_source': snp}
 
 
 def index_snps(es, snps, metadata, chroms=None):
@@ -94,9 +100,11 @@ def index_snps(es, snps, metadata, chroms=None):
 
 
 def region_bulk_iterator(chrom, assembly, uuid, docs_for_chrom):
+    assembly = ASSEMBLIES_MAPPING.get(assembly, assembly).lower()
+
     for idx, doc in enumerate(docs_for_chrom):
         doc['uuid'] = uuid
-        yield {'_index': chrom, '_type': assembly, '_id': uuid+'-'+str(idx), '_source': doc}
+        yield {'_index': chrom.lower(), '_type': assembly, '_id': uuid+'-'+str(idx), '_source': doc}
 
 
 def index_regions(es, regions, metadata, chroms):

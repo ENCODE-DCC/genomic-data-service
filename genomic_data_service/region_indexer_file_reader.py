@@ -45,16 +45,6 @@ class S3BedFileRemoteReader():
                 s3.download_fileobj(s3_bucket, s3_path, f)
             return gzip.open(self.temp_file, mode='rt')
 
-    def test_csv(self, trem):
-        reader = csv.reader(trem, delimiter='\t')
-        count = 1
-        for row in reader:
-            print(row)
-            count +=1
-            if count == 10:
-                return
-        
-
     def parse(self):
         value_col  = self.strand_values.get('value_col')
         strand_col = self.strand_values.get('strand_col')
@@ -75,8 +65,7 @@ class S3BedFileRemoteReader():
                 continue
 
             yield (chrom, doc)
-        
-        
+
     def region(self, row, value_col=None, strand_col=None):
         chrom, start, end = row[0], int(row[1]), int(row[2])
         doc = {
