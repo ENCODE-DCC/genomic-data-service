@@ -303,6 +303,37 @@ def file_dataset_allowed_to_index(file_properties):
     return dataset
 
 
+def index_regions_from_uuid(uuid, sync=True):
+    results = session.query(CurrentPropsheets, Propsheets).filter(CurrentPropsheets.sid == Propsheets.sid).filter(CurrentPropsheets.rid == uuid).all()
+
+    bed_files = {}
+    for result in results:
+        current_propsheet = result.CurrentPropsheets
+        propsheet = result.Propsheets
+        file_id = str(propsheet.rid)
+
+        data_to_add = {}
+        if current_propsheet.name == 'external':
+            data_to_add = { 'href': 's3://{bucket}/{key}'.format(**propsheet.properties) }
+        else:
+            data_to_add = propsheet.properties
+
+        if file_id in bed_files:
+            bed_files[file_id] = { **bed_files[file_id], **data_to_add }
+        else:
+            bed_files[file_id] = data_to_add
+
+    for f in [{'uuid': uuid, **properties} for uuid, properties in bed_files.items()]:
+        dataset = file_dataset_allowed_to_index(f)
+        if dataset:
+            f['@id'] = '/files/' + f['accession'] + '/'
+
+            if sync:
+                index_file(f, dataset, es_uri, es_port)
+            else:
+                index_file.delay(f, dataset, es_uri, es_port)
+
+
 def index_regions():
     es_indexer = RegionIndexerElasticSearch(es_uri, es_port, SUPPORTED_CHROMOSOMES, SUPPORTED_ASSEMBLIES)
     es_indexer.setup_indices()
