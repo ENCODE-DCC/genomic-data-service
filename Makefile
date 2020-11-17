@@ -18,13 +18,13 @@ test:
 	FLASK_APP=$(APP_NAME) FLASK_ENV=test GENOMIC_DATA_SERVICE_SETTINGS=../config/test.cfg pytest
 
 prod:
-	GENOMIC_DATA_SERVICE_SETTINGS=../config/development.cfg gunicorn -w 4 -b 127.0.0.1:4000 wsgi:app
+	GENOMIC_DATA_SERVICE_SETTINGS=../config/production.cfg gunicorn -w 4 -b 127.0.0.1:4000 wsgi:app
 
 worker:
 	celery -A genomic_data_service.region_indexer_task worker --loglevel=INFO
 
 flower:
-	flower -A genomic_data_service.region_indexer_task --address=127.0.0.1 --port=5555 --persistent=True --db=indexer_logs --max_tasks=5
+	flower -A genomic_data_service.region_indexer_task --address=127.0.0.1 --port=5555 --persistent=True --db=indexer_logs --max_tasks=1000000
 
 index:
-	python3 genomic_data_service/region_indexer.py > region_indexer.log
+	python3 genomic_data_service/region_indexer.py
