@@ -7,7 +7,7 @@ from urllib.parse import urlparse
 
 
 class S3BedFileRemoteReader():
-    MAX_IN_MEMORY_FILE_SIZE = (700 * 1024 * 1024)
+    MAX_IN_MEMORY_FILE_SIZE = (25 * 1024 * 1024)
 
     def __init__(self, file_properties, dataset_type, strand_col_values, snp_set=False):
         self.file_properties = file_properties

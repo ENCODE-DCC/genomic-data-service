@@ -30,16 +30,16 @@ session = Session()
 
 
 LARGE_FILES = [
-    '32beeff4-0424-4ba4-b958-4717d8c79d90', #14.3GB
-    'c96a5857-3475-4513-87ad-dc9c0965297c', #13.9GB
-    '4b71e56d-705e-41ec-8a1d-3da52fa6277e', #684 MB
-    '7bb27876-3038-46c2-bf56-a51cb5a278eb', #200MB
-    '9ed95b89-09ec-4fec-85c3-1cc8659a51ca', #200MB
-    'bba128f1-6d89-451b-84c1-af477708a098', #400MB
-    'e0fe54c3-4b21-4682-882b-d9ca4d03cdd9', #644MB
-    'eb7dbe80-dbc1-4b35-9ef9-244a4598c07e', #118MB
-    'f8d0d8bd-a9a9-4423-977f-876e00e7dae0', #191MB
-    'cbd9be2e-b721-4baa-8a37-b67dca2c4033' #178MB
+    'cbd9be2e-b721-4baa-8a37-b67dca2c4033',
+    'f8d0d8bd-a9a9-4423-977f-876e00e7dae0',
+    'eb7dbe80-dbc1-4b35-9ef9-244a4598c07e',
+    'e0fe54c3-4b21-4682-882b-d9ca4d03cdd9',
+    'bba128f1-6d89-451b-84c1-af477708a098',
+    '9ed95b89-09ec-4fec-85c3-1cc8659a51ca',
+    '7bb27876-3038-46c2-bf56-a51cb5a278eb',
+    '4b71e56d-705e-41ec-8a1d-3da52fa6277e',
+    'c96a5857-3475-4513-87ad-dc9c0965297c',
+    '32beeff4-0424-4ba4-b958-4717d8c79d90'
 ]
 
 
