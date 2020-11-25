@@ -5,9 +5,10 @@ After=network.target
 [Service]
 User=ubuntu
 Group=ubuntu
-WorkingDirectory=/home/ubuntu/genomic_data_service
-ExecStart=GENOMIC_DATA_SERVICE_SETTINGS=../config/production.cfg gunicorn -w 4 --bind unix:genomic.sock -m 007 wsgi:app
-Restart=on-failure
+WorkingDirectory=/home/ubuntu/genomic-data-service
+Environment=FLASK_APP=genomic_data_service
+Environment=GENOMIC_DATA_SERVICE_SETTINGS=../config/production.cfg
+ExecStart=gunicorn -w 4 --bind unix:genomic.sock -m 007 wsgi:app
 Type=simple
 
 [Install]
