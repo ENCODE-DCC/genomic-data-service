@@ -18,7 +18,7 @@ test:
 	FLASK_APP=$(APP_NAME) FLASK_ENV=test GENOMIC_DATA_SERVICE_SETTINGS=../config/test.cfg pytest
 
 prod:
-	GENOMIC_DATA_SERVICE_SETTINGS=../config/production.cfg gunicorn -w 4 -b 127.0.0.1:4000 wsgi:app
+	FLASK_APP=$(APP_NAME) GENOMIC_DATA_SERVICE_SETTINGS=../config/production.cfg gunicorn -w 4 -b 127.0.0.1:4000 wsgi:app
 
 worker:
 	celery -A genomic_data_service.region_indexer_task worker --loglevel=INFO

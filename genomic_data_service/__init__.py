@@ -18,3 +18,7 @@ if 'FLASK_APP' in environ:
     # Enabled endpoints:
     import genomic_data_service.search
     import genomic_data_service.summary
+
+    @app.route('/healthcheck/', methods=['GET'])
+    def healthcheck():
+        return 'ok'
