@@ -15,7 +15,7 @@ setup(
         'boto3',
         'redis',
         'celery==4.4.6',
-        'flower',
+        'flower==0.9.4',
         'sqlalchemy',
         'psycopg2',
         'boto3'
