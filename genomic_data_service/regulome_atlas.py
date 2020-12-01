@@ -29,7 +29,7 @@ LOCAL_BIGWIGS = {
 
 
 class RegulomeAtlas(object):
-    SEARCH_MAX = 100
+    SEARCH_MAX = 9999
 
     def __init__(self, es):
         self.es = es
