@@ -9,7 +9,7 @@ setup(
         'elasticsearch',
         'requests',
         'pyBigWig',
-        'sklearn',
+        'scikit-learn==0.20.3',
         'pytest',
         'gunicorn',
         'boto3',
