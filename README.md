@@ -16,7 +16,7 @@ Installation Requirements:
     ```
     $ cd your-work-dir
     $ python3 -m venv genomic-venv
-    $ source encoded-venv/bin/activate
+    $ source genomic-venv/bin/activate
     ```
 
 2. Clone the repo and install requirements
