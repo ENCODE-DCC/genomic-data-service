@@ -255,23 +255,26 @@ def search_peaks(query_coordinates, atlas, assembly, num_variants):
         notifications[coord] = 'Failed: (exception) {}'.format(e)
 
     for peak in all_hits.get('peaks', []):
+        documents =[resolve_relative_hrefs(document, 'document') for document in peak['resident_detail']['dataset']['documents']]
+
         peak_details.append({
             'chrom': peak['_index'],
             'start': peak['_source']['coordinates']['gte'],
             'end': peak['_source']['coordinates']['lt'],
             'strand': peak['_source'].get('strand'),
             'value': peak['_source'].get('value'),
-
             'file': peak['resident_detail']['file']['@id'].split('/')[2],
-
-            'dataset': peak['resident_detail']['dataset']['@id'],
-            'documents': peak['resident_detail']['dataset']['documents'],
-            'biosample_ontology': peak['resident_detail']['dataset']['biosample_ontology'],
-            'method': peak['resident_detail']['dataset']['collection_type'],
             'targets': peak['resident_detail']['dataset'].get('target', []),
+            'method': peak['resident_detail']['dataset']['collection_type'],
+
+            'documents': documents,
+            'dataset': resolve_relative_hrefs(peak['resident_detail']['dataset']['@id'], 'dataset'),
+            'dataset_rel': peak['resident_detail']['dataset']['@id'],
+            'biosample_ontology': resolve_relative_hrefs(peak['resident_detail']['dataset']['biosample_ontology'], 'biosample_ontology'),
         })
 
     graph = peak_details
+
     timing.append({'regulome_search_scoring': (time.time() - begin)})
 
     begin = time.time()
@@ -285,6 +288,27 @@ def search_peaks(query_coordinates, atlas, assembly, num_variants):
     timing.append({'nearby_snps': (time.time() - begin)})
 
     return (regulome_score, features, notifications, graph, timing, nearby_snps)
+
+
+def resolve_relative_hrefs(obj, obj_type=''):
+    path = 'https://regulomedb.org'
+
+    if not obj:
+        return obj
+
+    if obj_type == 'dataset':
+        return path + obj
+
+    if obj_type == 'document':
+        obj['@id'] = path + obj['@id']
+        obj['award'] = path + obj['award']
+        obj['lab'] = path + obj['lab']
+        obj['submitted_by'] = path + obj['submitted_by']
+        return obj
+
+    if obj_type == 'biosample_ontology':
+        obj['@id'] = path + obj['@id']
+        return obj
 
 
 def score_regions(variants, es, atlas, assembly):
