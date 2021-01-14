@@ -188,6 +188,7 @@ def fetch_target(target_id):
     
     return target
 
+
 def fetch_biosample_ontology(dataset):
     ontology_id = dataset.get('biosample_ontology')
     if ontology_id:
@@ -348,12 +349,16 @@ def index_regions_from_uuid(uuid, sync=True):
                 index_file.delay(f, dataset, es_uri, es_port)
 
 
+def index_large_files(sync=True):
+    for f in LARGE_FILES:
+        index_regions_from_uuid(f, sync=sync)
+
+
 def index_regions():
     es_indexer = RegionIndexerElasticSearch(es_uri, es_port, SUPPORTED_CHROMOSOMES, SUPPORTED_ASSEMBLIES)
     es_indexer.setup_indices()
 
-    for f in LARGE_FILES:
-        index_regions_from_uuid(f, sync=False)
+    index_large_files()
 
     for files in fetch_bed_files():
         num_files_indexed = 0
@@ -373,3 +378,4 @@ def index_regions():
 
 if __name__ == "__main__":
     index_regions()
+    index_large_files()
