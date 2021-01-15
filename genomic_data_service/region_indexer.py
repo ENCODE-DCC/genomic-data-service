@@ -355,9 +355,6 @@ def index_large_files(sync=True):
 
 
 def index_regions():
-    es_indexer = RegionIndexerElasticSearch(es_uri, es_port, SUPPORTED_CHROMOSOMES, SUPPORTED_ASSEMBLIES)
-    es_indexer.setup_indices()
-
     index_large_files()
 
     for files in fetch_bed_files():
@@ -377,5 +374,9 @@ def index_regions():
 
 
 if __name__ == "__main__":
+    es_indexer = RegionIndexerElasticSearch(es_uri, es_port, SUPPORTED_CHROMOSOMES, SUPPORTED_ASSEMBLIES)
+
+    es_indexer.setup_indices()
+
     index_regions()
     index_large_files()
