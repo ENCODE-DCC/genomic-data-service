@@ -21,6 +21,7 @@ if is_web_app:
     # Enabled endpoints:
     import genomic_data_service.search
     import genomic_data_service.summary
+    import genomic_data_service.rna_seq
 
     @app.route('/healthcheck/', methods=['GET'])
     def healthcheck():
