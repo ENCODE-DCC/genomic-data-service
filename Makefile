@@ -27,3 +27,8 @@ flower:
 
 index:
 	python3 genomic_data_service/region_indexer.py
+
+db:
+	FLASK_APP=$(APP_NAME) FLASK_ENV=development python3 migrate.py db init
+	FLASK_APP=$(APP_NAME) FLASK_ENV=development python3 migrate.py db migrate
+	FLASK_APP=$(APP_NAME) FLASK_ENV=development python3 migrate.py db upgrade

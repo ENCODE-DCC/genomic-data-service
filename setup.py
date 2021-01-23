@@ -6,6 +6,9 @@ setup(
     include_package_data=True,
     install_requires=[
         'Flask==1.1.2',
+        'Flask-SQLAlchemy',
+        'Flask-Migrate',
+        'Flask-Script',
         'elasticsearch',
         'requests',
         'pyBigWig',

@@ -134,3 +134,4 @@ venv/
 dump.rdb
 indexer_logs
 ml_models/
+migrations/
