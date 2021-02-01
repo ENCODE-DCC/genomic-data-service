@@ -20,12 +20,12 @@ if is_web_app:
     es = Elasticsearch(port=app.config['ES_PORT'], hosts=app.config['ES_HOSTS'])
     db = SQLAlchemy(app)
 
+    import genomic_data_service.models
+
     # Enabled endpoints:
     import genomic_data_service.search
     import genomic_data_service.summary
     import genomic_data_service.rna_seq
-
-    import genomic_data_service.models
     
     @app.route('/healthcheck/', methods=['GET'])
     def healthcheck():
