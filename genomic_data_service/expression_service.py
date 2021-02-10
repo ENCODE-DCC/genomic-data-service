@@ -13,11 +13,11 @@ class ExpressionService():
         self.sample_ids = params.get('sampleIDList')
         self.file_id = params.get('expression_id')
 
-        if self.gene_names:
-            self.gene_names = self.gene_names.split(",")
-
         if self.gene_ids:
             self.gene_ids = self.gene_ids.split(",")
+
+        if self.gene_names:
+            self.resolve_gene_ids(self.gene_names.split(","))
 
         if self.sample_ids:
             self.sample_ids = self.sample_ids.split(",")
@@ -27,8 +27,15 @@ class ExpressionService():
         else:
             self.fetch_file_ids()
 
-        self.fetch_transcript_ids()
+        self.transcript_ids = []
+            
         self.fetch_expressions()
+
+
+    def resolve_gene_ids(self, gene_names):
+        features = Feature.query.with_entities(Feature.gene_id).filter(Feature.gene_name.in_(self.gene_names)).all()
+
+        self.gene_ids += [feature.gene_id for feature in features]
 
 
     def get_expressions(self):
@@ -124,7 +131,9 @@ class ExpressionService():
             expressions = Expression.query
 
         if len(self.transcript_ids) > 0:
-            expressions = expressions.filter(Expression.transcript_id.in_(self.transcript_ids))
+            expressions = expressions.filter(Expression.feature_id.in_(self.transcript_ids))
+        else:
+            expressions = expressions.filter(Expression.feature_id.in_(self.gene_ids))
 
         if len(self.file_ids) > 0:
             expressions = expressions.filter(Expression.file_id.in_(self.file_ids))
