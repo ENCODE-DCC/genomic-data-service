@@ -2,6 +2,7 @@ from genomic_data_service import db
 import csv
 import datetime
 import requests
+import redis
 import uuid
 
 import os.path
@@ -178,15 +179,19 @@ class File(db.Model):
 
         header = next(parsed_file)
 
-        fields = {
-            'gene_id': header.index('gene_id'),
-            'transcript_ids': header.index('transcript_id(s)'),
-            'tpm': header.index('TPM'),
-            'fpkm': header.index('FPKM')
-        }
+        try:
+            fields = {
+                'gene_id': header.index('gene_id'),
+                'transcript_ids': header.index('transcript_id(s)'),
+                'tpm': header.index('TPM'),
+                'fpkm': header.index('FPKM')
+            }
+        except ValueError:
+            raise ValueError("File " + self.study_id + " has an invalid format")
+
+        cache = redis.Redis()
 
         expressions = []
-        features = []
 
         existing_feature_ids = self.existing_feature_ids()
 
@@ -210,27 +215,11 @@ class File(db.Model):
                 )
             )
 
-            existing_transcripts = Feature.query.with_entities(Feature.transcript_id).filter(Feature.gene_id == gene_id).all()
-            existing_transcripts = [transcript[0] for transcript in existing_transcripts]
-            
             for transcript_id in transcript_ids:
-                p_transcript_id = Feature.prefix_id(transcript_id)
-
-                if p_transcript_id in existing_transcripts:
-                    continue
-
-                features.append(
-                    Feature(
-                        gene_id=gene_id,
-                        transcript_id=p_transcript_id
-                    )
-                )
+                cache.sadd(gene_id, transcript_id)
 
         for expression in expressions:
             db.session.add(expression)
-
-        for feature in features:
-            db.session.add(feature)
 
         self.file_indexed_at = str(datetime.datetime.now())
         db.session.add(self)
