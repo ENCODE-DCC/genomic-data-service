@@ -2,7 +2,6 @@ from genomic_data_service import db
 from genomic_data_service.models import Feature, Expression, File, Project, Study
 import requests
 import csv
-import uuid
 import pickle
 
 import os.path
@@ -144,6 +143,12 @@ def process_accession(self, accession):
     db.session.commit()
 
 
+@celery_app.task(bind=True, name='genomic_data_service.rna_seq_ingestion.process_expressions', autoretry_for=(Exception,), retry_kwargs={'max_retries': 3})
+def process_expressions(self, file_id):
+    file = File.query.filter(File.id == file_id).first()
+    file.import_expressions()
+    
+
 def index_all_accessions():
     accessions = sorted(list(get_all_accessions()))
 
@@ -151,6 +156,11 @@ def index_all_accessions():
         process_accession.delay(accession)
 
 
+def index_all_expressions():
+    for file in File.query.all():
+        process_expressions.delay(file.id)
+
+
 if __name__ == "__main__":
-    index_all_accessions()
+    index_all_expressions()
 

@@ -9,6 +9,7 @@ setup(
         'Flask-SQLAlchemy',
         'Flask-Migrate',
         'Flask-Script',
+        'Flask-Excel',
         'elasticsearch',
         'requests',
         'pyBigWig',

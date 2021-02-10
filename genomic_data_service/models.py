@@ -1,6 +1,11 @@
 from genomic_data_service import db
 import csv
 import datetime
+import requests
+import uuid
+
+import os.path
+from os import path
 
 
 class Project(db.Model):
@@ -60,6 +65,14 @@ class Feature(db.Model):
     gene_name = db.Column(db.String(), nullable=True)
     transcript_name = db.Column(db.String(), nullable=True)
 
+    @staticmethod
+    def prefix_id(id):
+        try:
+            int(id)
+            return 'tRNAscan:' + str(id)
+        except ValueError:
+            return id
+
 
 class Expression(db.Model):
     __tablename__ = 'expressions'
@@ -95,6 +108,7 @@ class File(db.Model):
     DEFAULT_UNITS = 'TPM'
     DEFAULT_FORMAT = 'tsv'
     ACCEPTED_FORMATS = ['tsv']
+    REJECT_LIST_ASSAYS_INGESTION = ['CAGE', 'RAMPAGE']
 
     id = db.Column(db.String(), primary_key=True)
 
@@ -115,11 +129,25 @@ class File(db.Model):
 
 
     def fetch_and_parse(self):
+        filedir = "/tmp/" # TODO: make it configurable
+        filename = self.id + "." + self.file_type
+
+        if path.exists(filedir + filename):
+            disk_file = open(filedir + filename, 'r')
+
+            if self.file_type == 'tsv':
+                return csv.reader(disk_file, delimiter="\t", quotechar='"')
+
+        print("Downloading " + self.url)
+
         file = requests.get(self.url)
 
         if file.status_code != 200:
             print("Failed to download file " + self.url)
             return None
+
+        with open(filedir + filename, 'wb') as disk_file:
+            disk_file.write(file.content)
 
         if self.file_type == 'tsv':
             expression_data = file.content.decode("utf-8").splitlines()
@@ -128,8 +156,19 @@ class File(db.Model):
         return None
 
 
+    def existing_feature_ids(self):
+        existing_expressions = Expression.query.with_entities(Expression.feature_id).filter(Expression.dataset_accession == self.study_id).all()
+
+        return [expression[0] for expression in existing_expressions]
+
+
     def import_expressions(self):
-        if file_indexed_at:
+        if self.file_indexed_at:
+            print("Expressions already indexed.")
+            return
+
+        if self.assay in File.REJECT_LIST_ASSAYS_INGESTION:
+            print("Assay currently not supported.")
             return
 
         parsed_file = self.fetch_and_parse()
@@ -149,8 +188,14 @@ class File(db.Model):
         expressions = []
         features = []
 
+        existing_feature_ids = self.existing_feature_ids()
+
         for row in parsed_file:
-            gene_id = row[fields['gene_id']]
+            gene_id = Feature.prefix_id(row[fields['gene_id']])
+
+            if gene_id in existing_feature_ids:
+                continue
+            
             transcript_ids = row[fields['transcript_ids']].split(',')
 
             expressions.append(
@@ -161,17 +206,23 @@ class File(db.Model):
                     dataset_accession=self.study_id,
                     tpm=row[fields['tpm']],
                     fpkm=row[fields['fpkm']],
-                    file_id=self.id,
-                    assembly=self.assembly,
-                    assembly_version=self.assembly_version
+                    file_id=self.id
                 )
             )
 
+            existing_transcripts = Feature.query.with_entities(Feature.transcript_id).filter(Feature.gene_id == gene_id).all()
+            existing_transcripts = [transcript[0] for transcript in existing_transcripts]
+            
             for transcript_id in transcript_ids:
+                p_transcript_id = Feature.prefix_id(transcript_id)
+
+                if p_transcript_id in existing_transcripts:
+                    continue
+
                 features.append(
                     Feature(
                         gene_id=gene_id,
-                        transcript_id=transcript_id
+                        transcript_id=p_transcript_id
                     )
                 )
 
