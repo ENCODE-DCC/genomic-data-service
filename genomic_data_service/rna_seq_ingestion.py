@@ -3,6 +3,7 @@ from genomic_data_service.models import Feature, Expression, File, Project, Stud
 import requests
 import csv
 import pickle
+import json
 
 import os.path
 from os import path
@@ -147,6 +148,17 @@ def process_accession(self, accession):
 def process_expressions(self, file_id):
     file = File.query.filter(File.id == file_id).first()
     file.import_expressions()
+
+
+def index_features_from_json(json_filename):
+    transcript_maps = json.loads(open(json_filename, 'r').read())[0]
+
+    for gene_id in transcript_maps:
+        transcripts = transcript_maps[gene_id]
+        for transcript in transcripts:
+            feature = Feature(gene_id=gene_id, transcript_id=transcript)
+            db.session.add(feature)
+    db.session.commit()
     
 
 def index_all_accessions():
