@@ -132,7 +132,7 @@ class ExpressionService():
 
         if len(self.transcript_ids) > 0:
             expressions = expressions.filter(Expression.feature_id.in_(self.transcript_ids))
-        else:
+        elif (self.gene_ids and len(self.gene_ids) > 0):
             expressions = expressions.filter(Expression.feature_id.in_(self.gene_ids))
 
         if len(self.file_ids) > 0:

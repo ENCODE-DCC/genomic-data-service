@@ -1,4 +1,4 @@
-from genomic_data_service import es, app
+from genomic_data_service import app
 from flask import jsonify, abort, request, send_file, redirect
 import flask_excel as excel
 from genomic_data_service.models import Project, Study, File, Expression
