@@ -20,6 +20,8 @@ if is_web_app:
     es = Elasticsearch(port=app.config['ES_PORT'], hosts=app.config['ES_HOSTS'])
     db = SQLAlchemy(app)
 
+    app.url_map.strict_slashes = False
+
     import genomic_data_service.models
 
     # Enabled endpoints:
