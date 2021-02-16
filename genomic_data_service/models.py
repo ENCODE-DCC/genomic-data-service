@@ -79,21 +79,22 @@ class Expression(db.Model):
     __tablename__ = 'expressions'
 
     id = db.Column(db.String(), primary_key=True)
-    feature_id = db.Column(db.String(), nullable=False)
+    feature_id = db.Column(db.String(), nullable=False, index=True)
     feature_type = db.Column(db.String(), nullable=False)
     dataset_accession = db.Column(db.String())
-    file_id = db.Column(db.String(), db.ForeignKey('files.id'))
+    file_id = db.Column(db.String(), db.ForeignKey('files.id'), index=True)
 
     tpm = db.Column(db.String())
     fpkm = db.Column(db.String())
 
     FILTERS = []
-    TSV_HEADERS = ['featureID', 'tpm']
+    TSV_HEADERS = ['featureID', 'tpm', 'expressionID']
 
     # tsv column name => object key
     TSV_MAP = {
         'featureID': 'feature_id',
-        'tpm': 'tpm'
+        'tpm': 'tpm',
+        'expressionID': 'file_id'
     }
     
     file = db.relationship('File',
