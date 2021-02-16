@@ -76,7 +76,7 @@ class ExpressionService():
         }
 
         if self.study_id:
-            ticket['studyID'] = self.studyID
+            ticket['studyID'] = self.study_id
 
         return ticket
 
