@@ -137,4 +137,33 @@ def expressions_id_bytes(expression_id):
     return excel.make_response_from_array(service.get_expressions(), service.file_type, file_name=file_name)
 
 
+@app.route('/service-info', methods=['GET'])
+def service_info():
+    info = {
+        'id': 'org.ga4gh.encodeproject',
+        'name': 'ENCODE',
+        'type': {
+            'group': 'org.encodeproject',
+            'artifact': 'rnaget',
+            'version': '0.0.1'
+        },
+        'description': 'This service provides and implementation of GA4GH RNA-Get API for ENCODE data',
+        'organization': {
+            'name': 'the ENCODE Consortium',
+            'url': 'https://encodeproject.org'
+        },
+        'contactUrl': 'mailto:encode-help@lists.stanford.edu',
+        'documentationUrl': 'https://dataservices.encodeproject.org',
+        'createdAt': '2019-06-04T12:58:19Z',
+        'updatedAt': '2019-06-04T12:58:19Z',
+        'environment': 'test',
+        'version': '1.0.0',
+        'supported': {
+            'projects': True,
+            'studies': True,
+            'expressions': True,
+            'continuous': False
+        }
+    }
 
+    return jsonify(info)
