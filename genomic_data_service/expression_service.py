@@ -40,12 +40,16 @@ class ExpressionService():
         self.gene_ids += [feature.gene_id for feature in features]
 
 
+    def get_tsv_headers(self):
+        if self.expression_metadata:
+            return [Expression.TSV_HEADERS + File.TSV_HEADERS]
+
+        return [Expression.TSV_HEADERS]
+
+
     def get_expressions(self):
         if self.file_type == 'tsv':
-            headers = Expression.TSV_HEADERS
-            if self.expression_metadata:
-                headers += File.TSV_HEADERS
-            return ([headers] + self.expressions)
+            return (self.get_tsv_headers() + self.expressions)
         else:
             return self.expressions
 
