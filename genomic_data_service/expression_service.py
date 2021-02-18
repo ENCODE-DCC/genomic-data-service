@@ -13,6 +13,8 @@ class ExpressionService():
         self.sample_ids = params.get('sampleIDList')
         self.file_id = params.get('expression_id')
 
+        self.expression_metadata = True
+
         if self.gene_ids:
             self.gene_ids = self.gene_ids.split(",")
 
@@ -40,7 +42,10 @@ class ExpressionService():
 
     def get_expressions(self):
         if self.file_type == 'tsv':
-            return ([Expression.TSV_HEADERS] + self.expressions)
+            headers = Expression.TSV_HEADERS
+            if self.expression_metadata:
+                headers += File.TSV_HEADERS
+            return ([headers] + self.expressions)
         else:
             return self.expressions
 
@@ -137,5 +142,9 @@ class ExpressionService():
 
         if len(self.file_ids) > 0:
             expressions = expressions.filter(Expression.file_id.in_(self.file_ids))
+
+        if self.expression_metadata:
+            file_attributes = [getattr(File, attr) for attr in File.TSV_MAP.values()]
+            expressions = expressions.join(File).add_columns(*file_attributes)
 
         self.expressions = expressions.all()

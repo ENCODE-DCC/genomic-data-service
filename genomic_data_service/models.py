@@ -81,7 +81,7 @@ class Expression(db.Model):
     id = db.Column(db.String(), primary_key=True)
     feature_id = db.Column(db.String(), nullable=False, index=True)
     feature_type = db.Column(db.String(), nullable=False)
-    dataset_accession = db.Column(db.String())
+    dataset_accession = db.Column(db.String(), index=True)
     file_id = db.Column(db.String(), db.ForeignKey('files.id'), index=True)
 
     tpm = db.Column(db.String())
@@ -128,6 +128,12 @@ class File(db.Model):
                          nullable=False)
     study = db.relationship('Study',
         backref=db.backref('files', lazy=True))
+
+    TSV_HEADERS = ['sampleID', 'assayType']
+    TSV_MAP = {
+        'sampleID': 'study_id',
+        'assayType': 'assay'
+    }
 
 
     def fetch_and_parse(self):
