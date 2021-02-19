@@ -168,26 +168,32 @@ def service_info():
 
     return jsonify(info)
 
+
 # Explicit unsupported endpoints
 @app.route('/continuous/<continuous_id>/ticket', methods=['GET'])
 def continuous_id_ticket(continuous_id):
     return abort(501)
 
+
 @app.route('/continuous/<continuous_id>/bytes', methods=['GET'])
 def continuous_id_bytes(continuous_id):
     return abort(501)
+
 
 @app.route('/continuous/ticket', methods=['GET'])
 def continuous_ticket():
     return abort(501)
 
+
 @app.route('/continuous/bytes', methods=['GET'])
 def continuous_bytes():
     return abort(501)
 
+
 @app.route('/continuous/formats', methods=['GET'])
 def continuous_formats():
     return abort(501)
+
 
 @app.route('/continuous/filters', methods=['GET'])
 def continuous_filters():
