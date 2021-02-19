@@ -19,6 +19,11 @@ def resource_not_found(e):
     return jsonify(message=str(e)), 404
 
 
+@app.errorhandler(501)
+def resource_not_found(e):
+    return jsonify(message=str(e)), 501
+
+
 @app.route('/projects', methods=['GET'])
 def projects():
     version = request.args.get('version')
