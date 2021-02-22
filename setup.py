@@ -13,7 +13,7 @@ setup(
         'elasticsearch',
         'requests',
         'pyBigWig',
-        'scikit-learn==0.20.3',
+        #'scikit-learn==0.20.3',
         'pytest',
         'gunicorn',
         'boto3',
