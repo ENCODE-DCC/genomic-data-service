@@ -4,7 +4,8 @@ Flask based web service providing genomic region search, based on regulomedb.org
 
 Installation Requirements:
 
-* python 3.7+
+* python 3.7
+  * Newer versions may work but will require compiling `scikit-learn` from source
 * postgres
 * elasticsearch
 
@@ -52,7 +53,7 @@ In addition to the steps above, and assuming the application is located on: /hom
 1. Install the following packages:
     ```
     $ sudo apt-get update
-    $ sudo apt-get install python3-psycopg2 redis-server apache2-utils nginx
+    $ sudo apt-get install build-essential libpq-dev python3-dev python3-psycopg2 redis-server apache2-utils nginx
     ```
 
 2. Create a password for accessing the indexer:
@@ -65,7 +66,7 @@ In addition to the steps above, and assuming the application is located on: /hom
     ```
     $ sudo ln -s /home/ubuntu/genomic-data-service/deploy/flower.service /etc/systemd/system/flower.service
     $ sudo ln -s /home/ubuntu/genomic-data-service/deploy/celery.service /etc/systemd/system/celery.service
-    $ sudo ln -s /home/ubuntu/genomic-data-service/deploy/genomic.servie /etc/systemd/system/genomic.service
+    $ sudo ln -s /home/ubuntu/genomic-data-service/deploy/genomic.service /etc/systemd/system/genomic.service
     $ sudo systemctl daemon-reload
     ```
 
