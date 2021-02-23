@@ -10,9 +10,11 @@ class RegionIndexerElasticSearch():
     FOR_REGULOME_DB = 'regulomedb'
 
     INDEX_SETTINGS = {
-        'index': {
-            'number_of_shards': REGION_INDEXER_SHARDS,
-            'max_result_window': SEARCH_MAX
+        "settings": {
+            'index': {
+                'number_of_shards': REGION_INDEXER_SHARDS,
+                'max_result_window': SEARCH_MAX
+            }
         }
     }
 
