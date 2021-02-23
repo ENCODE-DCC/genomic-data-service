@@ -239,6 +239,10 @@ def check_embedded_targets(dataset):
 def file_dataset_allowed_to_index(file_properties):
     uuid = file_properties['uuid']
 
+    if not file_properties.get("preferred_default"):
+        print(f"File {uuid} is not preferred_default")
+        return None
+
     if file_properties.get('file_format') != 'bed':
         print('File ' + uuid + ' has unaccepted file format ' + file_properties.get('file_format'))
         return None
@@ -265,29 +269,6 @@ def file_dataset_allowed_to_index(file_properties):
 
     if dataset is None or dataset_type is None:
         print('File ' + uuid + ' dataset and/or resource not found ' + dataset_id)
-        return None
-
-    if dataset_type not in REGULOME_DATASET_TYPES:
-        print('File ' + uuid + ' dataset type not allowed: ' + dataset_type)
-        return None
-
-    dataset_collection_type = None
-    for collection_type in REGULOME_COLLECTION_TYPES:
-        if collection_type in dataset:
-            dataset_collection_type = dataset.get(collection_type, None)
-            if dataset_collection_type is not None:
-                break
-
-    if dataset_collection_type is None:
-        print('File ' + uuid + ' dataset has no required collection type.')
-        return None
-    
-    if dataset_collection_type not in REGULOME_REGION_REQUIREMENTS:
-        print('File ' + uuid + ' collection type not allowed: ' + collection_type)
-        return None
-
-    if not file_properties.get("preferred_default"):
-        print(f"File {uuid} is not preferred_default")
         return None
 
     dataset['@id'] = '/' + dataset_type + '/' + dataset['accession'] + '/'
