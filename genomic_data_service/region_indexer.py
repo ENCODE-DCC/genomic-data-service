@@ -20,7 +20,8 @@ if 'ES' in environ:
     es_uri = [environ['ES']]
 else:
     es_uri = ['localhost']
-es_port = 9201
+
+es_port = environ.get("ES_PORT", 9201)
 
 engine = create_engine(database_uri)
 Base = declarative_base()
@@ -250,7 +251,7 @@ def file_dataset_allowed_to_index(file_properties):
         print('File ' + uuid + ' refused because status is ' + file_properties.get('status'))
         return None
 
-    if file_properties.get('assembly', 'unkown') not in SUPPORTED_ASSEMBLIES:
+    if file_properties.get('assembly', 'unknown') not in SUPPORTED_ASSEMBLIES:
         print('File ' + uuid + ' refused because assembly is not accepted: ' + file_properties.get('assembly'))
         return None
 
@@ -285,24 +286,8 @@ def file_dataset_allowed_to_index(file_properties):
         print('File ' + uuid + ' collection type not allowed: ' + collection_type)
         return None
 
-    requirements = REGULOME_REGION_REQUIREMENTS[dataset_collection_type]
-    for key, values in requirements.items():
-        if file_properties.get(key) not in values:
-            print('File ' + uuid + ' dataset collection type does not satisfy all requirements')
-            return None        
-
-    # REG-14 special case for indexing dbSNP v153 only
-    if dataset_collection_type == 'index' and (
-        'RegulomeDB' not in dataset.get('internal_tags', [])
-        or dataset['status'] != 'released'
-    ):
-        print('File ' + uuid + ' dataset collection type index has no Regulome tag')
-        return None
-    
-    # REG-186 special case for chromatin state data since new data is not
-    # compatible with current regulome model.
-    if dataset_collection_type == 'chromatin state' and ('RegulomeDB' not in dataset.get('internal_tags', [])):
-        print('File ' + uuid + ' dataset collection type chromatin has no Regulome tag')
+    if not file_properties.get("preferred_default"):
+        print(f"File {uuid} is not preferred_default")
         return None
 
     dataset['@id'] = '/' + dataset_type + '/' + dataset['accession'] + '/'
@@ -355,15 +340,10 @@ def index_large_files(sync=True):
 
 
 def index_regions():
-    index_large_files()
-
     for files in fetch_bed_files():
         num_files_indexed = 0
 
         for f in files:
-            if f['uuid'] in LARGE_FILES:
-                continue
-
             dataset = file_dataset_allowed_to_index(f)
             if dataset:
                 f['@id'] = '/files/' + f['accession'] + '/'
@@ -379,4 +359,3 @@ if __name__ == "__main__":
     es_indexer.setup_indices()
 
     index_regions()
-    index_large_files()
