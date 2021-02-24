@@ -85,24 +85,22 @@ class RegionIndexerElasticSearch():
 
     def get_chrom_index_mapping(self):
         return {
-            "properties": {
-                '_source': {
-                    'enabled': True
+            '_source': {
+                'enabled': True
+            },
+            'properties': {
+                'uuid': {
+                    'type': 'keyword'
                 },
-                'properties': {
-                    'uuid': {
-                        'type': 'keyword'
-                    },
-                    'coordinates': {
-                        'type': 'integer_range'
-                    },
-                    'strand': {
-                        'type': 'string'  # + - .
-                    },
-                    'value': {
-                        'type': 'string'
-                    },
-                }
+                'coordinates': {
+                    'type': 'integer_range'
+                },
+                'strand': {
+                    'type': 'string'  # + - .
+                },
+                'value': {
+                    'type': 'string'
+                },
             }
         }
 
