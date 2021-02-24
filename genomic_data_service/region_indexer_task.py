@@ -107,7 +107,6 @@ def region_bulk_iterator(chrom, assembly, uuid, docs_for_chrom):
         doc['uuid'] = uuid
         yield {
             '_index': get_region_index(assembly, chrom),
-            '_type': assembly,
             '_id': uuid+'-'+str(idx),
             '_source': doc,
         }

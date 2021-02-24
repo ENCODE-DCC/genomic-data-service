@@ -7,7 +7,7 @@ Installation Requirements:
 * python 3.7
   * Newer versions may work but will require compiling `scikit-learn` from source
 * postgres
-* elasticsearch
+* elasticsearch 7
 
 
 ## Application Installation
