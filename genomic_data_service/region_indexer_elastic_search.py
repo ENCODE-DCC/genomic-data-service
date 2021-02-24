@@ -77,7 +77,7 @@ class RegionIndexerElasticSearch():
                 if not self.es.indices.exists(index=index):
                     self.es.indices.create(index=index, body=self.INDEX_SETTINGS)
                     mapping = self.get_chrom_index_mapping()
-                    self.es.indices.put_mapping(index=chrom, body=mapping)
+                    self.es.indices.put_mapping(index=index, body=mapping)
 
 
     def get_resident_mapping(self):
