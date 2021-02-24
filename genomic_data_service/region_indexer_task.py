@@ -3,6 +3,7 @@ from elasticsearch import Elasticsearch
 from elasticsearch.exceptions import NotFoundError
 from elasticsearch.helpers import bulk
 
+from genomic_data_service.region_indexer_elastic_search import get_region_index
 from genomic_data_service.region_indexer_file_reader import S3BedFileRemoteReader
 
 
@@ -70,7 +71,7 @@ def add_to_residence(es, file_doc):
 
     use_type = FOR_REGULOME_DB
 
-    es.index(index=RESIDENTS_INDEX, doc_type=use_type, body=file_doc, id=str(uuid))
+    es.index(index=RESIDENTS_INDEX, body=file_doc, id=str(uuid))
     return True
 
 
@@ -104,7 +105,12 @@ def region_bulk_iterator(chrom, assembly, uuid, docs_for_chrom):
 
     for idx, doc in enumerate(docs_for_chrom):
         doc['uuid'] = uuid
-        yield {'_index': chrom.lower(), '_type': assembly, '_id': uuid+'-'+str(idx), '_source': doc}
+        yield {
+            '_index': get_region_index(assembly, chrom),
+            '_type': assembly,
+            '_id': uuid+'-'+str(idx),
+            '_source': doc,
+        }
 
 
 def index_regions(es, regions, metadata, chroms):
@@ -260,9 +266,12 @@ def remove_from_es(indexed_file, uuid, es):
         es.delete(index=indexed_file['index'])
     else:
         for chrom in indexed_file['chroms']:
-            es.delete(index=chrom.lower(), doc_type=indexed_file['assembly'], id=str(uuid))
+            es.delete(
+                index=get_region_index(indexed_file['assembly'], chrom),
+                id=str(uuid)
+            )
 
-        es.delete(index=RESIDENTS_INDEX, doc_type=use_type, id=str(uuid))
+        es.delete(index=RESIDENTS_INDEX, id=str(uuid))
         
         return True
 

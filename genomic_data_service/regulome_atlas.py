@@ -2,6 +2,8 @@ import pickle
 import math
 import pyBigWig
 
+from genomic_data_service.region_indexer_elastic_search import get_region_index
+
 RESIDENT_REGIONSET_KEY = 'resident_regionsets'  # keeps track of what datsets are resident
 FOR_REGULOME_DB = 'regulomedb'
 EVIDENCE_CATEGORIES = ['QTL', 'ChIP', 'DNase', 'PWM', 'Footprint', 'PWM_matched', 'Footprint_matched']
@@ -61,7 +63,7 @@ class RegulomeAtlas(object):
         range_query = self._range_query(start, end, max_results=max_results)
 
         try:
-            results = self.es.search(index=chrom.lower(), doc_type=assembly, _source=True,
+            results = self.es.search(index=get_region_index(assembly, chrom), _source=True,
                                             body=range_query, size=max_results)
         except Exception:
             return None
@@ -172,8 +174,11 @@ class RegulomeAtlas(object):
     def _resident_details(self, uuids, max_results=SEARCH_MAX):
         try:
             id_query = {"query": {"ids": {"values": uuids}}}
-            res = self.es.search(index=RESIDENT_REGIONSET_KEY, body=id_query,
-                                        doc_type=[FOR_REGULOME_DB], size=max_results)
+            res = self.es.search(
+                index=RESIDENT_REGIONSET_KEY,
+                body=id_query,
+                size=max_results
+            )
         except Exception:
             return None
 

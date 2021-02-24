@@ -332,6 +332,7 @@ def index_regions():
                 index_file.delay(f, dataset, es_uri, es_port)
 
                 num_files_indexed += 1
+        break
 
 
 if __name__ == "__main__":

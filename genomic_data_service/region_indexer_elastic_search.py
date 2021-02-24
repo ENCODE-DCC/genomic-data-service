@@ -30,7 +30,7 @@ class RegionIndexerElasticSearch():
             self.destroy_indices()
 
         self.setup_residents_index()
-        self.setup_snps_index()
+        # self.setup_snps_index()
         self.setup_regions_index()
 
     def destroy_indices(self):
@@ -42,17 +42,19 @@ class RegionIndexerElasticSearch():
             if self.es.indices.exists(snp_index):
                 self.es.indices.delete(index=snp_index)
 
-        for chrom in self.chroms:
-            if self.es.indices.exists(chrom):
-                self.es.indices.delete(index=chrom)
+        for assembly in self.assemblies:
+            for chrom in self.chroms:
+                index = get_region_index(assembly, chrom)
+                if self.es.indices.exists(index):
+                    self.es.indices.delete(index=index)
 
     def setup_residents_index(self):
         if not self.es.indices.exists(self.RESIDENTS_INDEX):
             self.es.indices.create(index=self.RESIDENTS_INDEX, body=self.INDEX_SETTINGS)
 
-        if not self.es.indices.exists_type(index=self.RESIDENTS_INDEX, doc_type=self.use_type):
+        if not self.es.indices.exists(index=self.RESIDENTS_INDEX):
             mapping = self.get_resident_mapping()
-            self.es.indices.put_mapping(index=self.RESIDENTS_INDEX, doc_type=self.use_type, body=mapping)
+            self.es.indices.put_mapping(index=self.RESIDENTS_INDEX, body=mapping)
 
 
     def setup_snps_index(self):
@@ -70,23 +72,20 @@ class RegionIndexerElasticSearch():
 
     def setup_regions_index(self):
         for chrom in self.chroms:
-            if not self.es.indices.exists(chrom):
-                self.es.indices.create(index=chrom, body=self.INDEX_SETTINGS)
-
-            for assembly in self.assemblies:                
-                if not self.es.indices.exists_type(index=chrom, doc_type=assembly):
-                    mapping = self.get_chrom_index_mapping(assembly)
-                    self.es.indices.put_mapping(index=chrom, doc_type=assembly, body=mapping)
+            for assembly in self.assemblies:
+                index = get_region_index(assembly=assembly, chromosome=chrom)
+                if not self.es.indices.exists(index=index):
+                    self.es.indices.create(index=index, body=self.INDEX_SETTINGS)
+                    mapping = self.get_chrom_index_mapping()
+                    self.es.indices.put_mapping(index=chrom, body=mapping)
 
 
     def get_resident_mapping(self):
-        return {
-            self.use_type: { "enabled": False }
-        }
+        return { "enabled": False }
 
-    def get_chrom_index_mapping(self, assembly='hg19'):
+    def get_chrom_index_mapping(self):
         return {
-            assembly: {
+            "properties": {
                 '_source': {
                     'enabled': True
                 },
@@ -140,3 +139,5 @@ class RegionIndexerElasticSearch():
         }
 
 
+def get_region_index(assembly: str, chromosome: str) -> str:
+    return f"{assembly.lower()}_{chromosome.lower()}"
