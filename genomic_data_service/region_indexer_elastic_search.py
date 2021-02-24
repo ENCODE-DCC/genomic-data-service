@@ -96,10 +96,10 @@ class RegionIndexerElasticSearch():
                     'type': 'integer_range'
                 },
                 'strand': {
-                    'type': 'string'  # + - .
+                    'type': 'keyword'  # + - .
                 },
                 'value': {
-                    'type': 'string'
+                    'type': 'float'
                 },
             }
         }
