@@ -252,7 +252,7 @@ def search_peaks(query_coordinates, atlas, assembly, num_variants):
         features = evidence_to_features(evidence)
     except Exception as e:
         all_hits = {}
-        notifications[coord] = 'Failed: (exception) {}'.format(e)
+        notifications[coord] = 'Failed: (exception) {}'.format(str(e))
 
     for peak in all_hits.get('peaks', []):
         documents =[resolve_relative_hrefs(document, 'document') for document in peak['resident_detail']['dataset']['documents']]
