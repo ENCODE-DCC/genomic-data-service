@@ -45,6 +45,7 @@ class Study(db.Model):
         backref=db.backref('studies', lazy=True))
 
     FILTERS = []
+    PER_PAGE = 1000
 
     def to_dict(self):
         return {
@@ -89,6 +90,7 @@ class Expression(db.Model):
 
     FILTERS = []
     TSV_HEADERS = ['featureID', 'tpm', 'expressionID']
+    PER_PAGE = 1000
 
     # tsv column name => object key
     TSV_MAP = {

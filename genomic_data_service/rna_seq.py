@@ -48,10 +48,15 @@ def project_filters():
 @app.route('/studies', methods=['GET'])
 def studies():
     version = request.args.get('version')
-    if version:
-        return jsonify([study.to_dict() for study in Study.query.filter_by(version=version)])
+    page = request.args.get('page', 1, type=int)
 
-    return jsonify([study.to_dict() for study in Study.query.all()])
+    studies = Study.query
+
+    if version:
+        studies = studies.filter_by(version=version)
+
+    studies = studies.paginate(page, Study.PER_PAGE, False)
+    return jsonify([study.to_dict() for study in studies.items])
 
 
 @app.route('/studies/<study_id>', methods=['GET'])
@@ -87,7 +92,7 @@ def expressions_formats():
 
 
 def extract_expression_params(request, params_list=None, expression_id=None):
-    params = params_list or ['format', 'projectID', 'studyID', 'version', 'sampleIDList', 'featureIDList', 'featureNameList']
+    params = params_list or ['format', 'projectID', 'studyID', 'version', 'sampleIDList', 'featureIDList', 'featureNameList', 'page']
     params_dict = {}
     for param in params:
         params_dict[param] = request.args.get(param)
@@ -121,7 +126,7 @@ def expressions_bytes():
 
 @app.route('/expressions/<expression_id>/ticket', methods=['GET'])
 def expressions_id_ticket(expression_id):
-    params = extract_expression_params(request, params_list=['featureIDList', 'featureNameList'], expression_id=expression_id)
+    params = extract_expression_params(request, params_list=['featureIDList', 'featureNameList', 'page'], expression_id=expression_id)
     service = ExpressionService(params)
 
     if not service.valid_expression_id():
@@ -132,7 +137,7 @@ def expressions_id_ticket(expression_id):
 
 @app.route('/expressions/<expression_id>/bytes', methods=['GET'])
 def expressions_id_bytes(expression_id):
-    params = extract_expression_params(request, params_list=['featureIDList', 'featureNameList'], expression_id=expression_id)
+    params = extract_expression_params(request, params_list=['featureIDList', 'featureNameList', 'page'], expression_id=expression_id)
     service = ExpressionService(params)
 
     if not service.valid_expression_id():

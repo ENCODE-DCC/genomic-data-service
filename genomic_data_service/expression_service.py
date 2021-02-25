@@ -12,6 +12,7 @@ class ExpressionService():
         self.gene_ids = params.get('featureIDList')
         self.sample_ids = params.get('sampleIDList')
         self.file_id = params.get('expression_id')
+        self.page = int(params.get('page', 1))
 
         self.expression_metadata = True
 
@@ -151,4 +152,7 @@ class ExpressionService():
             file_attributes = [getattr(File, attr) for attr in File.TSV_MAP.values()]
             expressions = expressions.join(File).add_columns(*file_attributes)
 
-        self.expressions = expressions.all()
+        if self.page:
+            self.expressions = expressions.paginate(self.page, Expression.PER_PAGE, False).items
+        else:
+            self.expressions = expressions.all()
