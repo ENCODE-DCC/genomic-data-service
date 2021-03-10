@@ -89,21 +89,28 @@ class Expression(db.Model):
     fpkm = db.Column(db.String())
 
     FILTERS = []
-    TSV_HEADERS = ['featureID', 'tpm', 'expressionID']
-    PER_PAGE = 1000
+    TSV_HEADERS = ['featureID', 'expressionID', 'samplePrepProtocol', 'libraryPrepProtocol']
+    AVAILABLE_UNITS = ['tpm', 'fpkm']
+    DEFAULT_UNITS = 'tpm'
+    PER_PAGE = 5
 
     # tsv column name => object key
     TSV_MAP = {
         'featureID': 'feature_id',
         'tpm': 'tpm',
-        'expressionID': 'file_id'
+        'fpkm': 'fpkm',
+        'expressionID': 'file_id',
+        'samplePrepProtocol': ['https://www.encodeproject.org/{}', 'dataset_accession'],
+        'libraryPrepProtocol': ['https://www.encodeproject.org/{}', 'dataset_accession']
     }
+
+    TSV_ATTRIBUTES = ['feature_id', 'tpm', 'file_id', 'dataset_accession']
     
     file = db.relationship('File',
         backref=db.backref('expressions', lazy=True))
 
     def to_tsv_row(self):
-        return [self.transcript_id, self.tpm]
+        return [self.transcript_id, self.tpm]    
     
 
 class File(db.Model):
@@ -111,7 +118,7 @@ class File(db.Model):
 
     DEFAULT_UNITS = 'TPM'
     DEFAULT_FORMAT = 'tsv'
-    ACCEPTED_FORMATS = ['tsv']
+    ACCEPTED_FORMATS = ['tsv', 'json']
     REJECT_LIST_ASSAYS_INGESTION = ['CAGE', 'RAMPAGE']
 
     id = db.Column(db.String(), primary_key=True)
@@ -124,6 +131,19 @@ class File(db.Model):
     assembly = db.Column(db.String(), nullable=False)
     assembly_version = db.Column(db.String(), nullable=False)
 
+    analysis_id = db.Column(db.String(), nullable=True)
+    disease_term_id = db.Column(db.String(), nullable=True)
+    biosample_sex = db.Column(db.String(), nullable=True)
+    organism_id = db.Column(db.String(), nullable=True)
+    organism_scientific_name = db.Column(db.String(), nullable=True)
+
+    cell_type_id=db.Column(db.String(), nullable=True)
+    cell_type_label=db.Column(db.String(), nullable=True)
+    tissue_id=db.Column(db.String(), nullable=True)
+    tissue_label=db.Column(db.String(), nullable=True)
+    cell_line_id=db.Column(db.String(), nullable=True)
+    cell_line_label=db.Column(db.String(), nullable=True)
+
     file_indexed_at = db.Column(db.String())
 
     study_id = db.Column(db.String(), db.ForeignKey('studies.id'),
@@ -131,11 +151,12 @@ class File(db.Model):
     study = db.relationship('Study',
         backref=db.backref('files', lazy=True))
 
-    TSV_HEADERS = ['sampleID', 'assayType']
+    TSV_HEADERS = ['assayType', 'annotation']
     TSV_MAP = {
-        'sampleID': 'study_id',
-        'assayType': 'assay'
+        'assayType': 'assay',
+        'annotation': 'assembly'
     }
+    TSV_ATTRIBUTES = ['assay', 'assembly']
 
 
     def fetch_and_parse(self):

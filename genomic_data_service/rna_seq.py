@@ -92,7 +92,7 @@ def expressions_formats():
 
 
 def extract_expression_params(request, params_list=None, expression_id=None):
-    params = params_list or ['format', 'projectID', 'studyID', 'version', 'sampleIDList', 'featureIDList', 'featureNameList', 'page']
+    params = params_list or ['format', 'units', 'projectID', 'studyID', 'version', 'sampleIDList', 'featureIDList', 'featureNameList', 'page', 'sort']
     params_dict = {}
     for param in params:
         params_dict[param] = request.args.get(param)
@@ -120,8 +120,16 @@ def expressions_bytes():
     if service.unacceptable_format():
         return abort(400, description="Format not present or not accepted. Current available formats: " + ", ".join(File.ACCEPTED_FORMATS))
 
+    expressions = service.get_expressions()
+
+    if service.file_type == 'json':
+        return jsonify({
+            'expressions': expressions,
+            'facets': service.facets
+        })
+
     file_name = "Expressions." + service.file_type
-    return excel.make_response_from_array(service.get_expressions(), service.file_type, file_name=file_name)
+    return excel.make_response_from_array(expressions, service.file_type, file_name=file_name)
 
 
 @app.route('/expressions/<expression_id>/ticket', methods=['GET'])
@@ -137,14 +145,19 @@ def expressions_id_ticket(expression_id):
 
 @app.route('/expressions/<expression_id>/bytes', methods=['GET'])
 def expressions_id_bytes(expression_id):
-    params = extract_expression_params(request, params_list=['featureIDList', 'featureNameList', 'page'], expression_id=expression_id)
+    params = extract_expression_params(request, params_list=['featureIDList', 'featureNameList', 'page', 'format'], expression_id=expression_id)
     service = ExpressionService(params)
 
     if not service.valid_expression_id():
         return abort(404, description="Expression ID not found")
 
+    expressions = service.get_expressions()
+
+    if params.get('format') == 'json':
+        return jsonify(expressions)
+
     file_name = "Expressions." + service.file_type
-    return excel.make_response_from_array(service.get_expressions(), service.file_type, file_name=file_name)
+    return excel.make_response_from_array(expressions, service.file_type, file_name=file_name)
 
 
 @app.route('/service-info', methods=['GET'])

@@ -1,6 +1,7 @@
 import hashlib
 import csv
 from genomic_data_service.models import File, Feature, Expression
+from sqlalchemy import func
 
 class ExpressionService():
     def __init__(self, params):
@@ -12,9 +13,13 @@ class ExpressionService():
         self.gene_ids = params.get('featureIDList')
         self.sample_ids = params.get('sampleIDList')
         self.file_id = params.get('expression_id')
-        self.page = int(params.get('page', 1))
+        self.page = int(params.get('page') or 1)
+        self.sort_by = params.get('sort')
 
-        self.expression_metadata = True
+        if params.get('units') in Expression.AVAILABLE_UNITS:
+            self.units = params.get('units')
+        else:
+            self.units = Expression.DEFAULT_UNITS
 
         if self.gene_ids:
             self.gene_ids = self.gene_ids.split(",")
@@ -30,6 +35,8 @@ class ExpressionService():
         else:
             self.fetch_file_ids()
 
+        self.should_calculate_facets = self.file_type == 'json'
+
         self.transcript_ids = []
             
         self.fetch_expressions()
@@ -41,18 +48,27 @@ class ExpressionService():
         self.gene_ids += [feature.gene_id for feature in features]
 
 
-    def get_tsv_headers(self):
-        if self.expression_metadata:
-            return [Expression.TSV_HEADERS + File.TSV_HEADERS]
-
-        return [Expression.TSV_HEADERS]
-
-
     def get_expressions(self):
+        headers = self.get_tsv_headers()
+
         if self.file_type == 'tsv':
-            return (self.get_tsv_headers() + self.expressions)
+            return ([headers] + self.expressions)
+        elif self.file_type == 'json':
+            expressions = []
+
+            for expression in self.expressions:
+                expression_dict = {}
+                for i, header in enumerate(headers):
+                    expression_dict[header] = expression[i]
+                expressions.append(expression_dict)
+
+            return expressions
         else:
             return self.expressions
+
+
+    def get_tsv_headers(self):
+        return Expression.TSV_HEADERS + [self.units] + File.TSV_HEADERS
 
 
     def generate_filename(self, filename_prefix='Expressions'):
@@ -100,11 +116,14 @@ class ExpressionService():
 
 
     def fetch_file_ids(self):
+        self.file_ids= []
+
         files = File.query.with_entities(File.id)
+        empty_query = str(files)
 
         if self.project_id:
             files = files.filter_by(project_id=self.project_id)
-    
+
         if self.study_id:
             files = files.filter_by(study_id=self.study_id)
 
@@ -114,7 +133,8 @@ class ExpressionService():
         if self.version:
             files = files.filter_by(version=self.version)
 
-        self.file_ids = files.all()
+        if str(files) != empty_query:
+            self.file_ids = files.all()
 
 
     def fetch_transcript_ids(self):
@@ -134,11 +154,11 @@ class ExpressionService():
 
 
     def fetch_expressions(self):
-        if self.file_type == 'tsv':
-            attributes = [getattr(Expression, attr) for attr in Expression.TSV_MAP.values()]
-            expressions = Expression.query.with_entities(*attributes)
-        else:
-            expressions = Expression.query
+        expression_attributes = [getattr(Expression, attr) for attr in Expression.TSV_ATTRIBUTES + [self.units]]
+        file_attributes = [getattr(File, attr) for attr in File.TSV_ATTRIBUTES]
+        attributes = expression_attributes + file_attributes
+
+        expressions = Expression.query.join(File).with_entities(*attributes)
 
         if len(self.transcript_ids) > 0:
             expressions = expressions.filter(Expression.feature_id.in_(self.transcript_ids))
@@ -148,11 +168,58 @@ class ExpressionService():
         if len(self.file_ids) > 0:
             expressions = expressions.filter(Expression.file_id.in_(self.file_ids))
 
-        if self.expression_metadata:
-            file_attributes = [getattr(File, attr) for attr in File.TSV_MAP.values()]
-            expressions = expressions.join(File).add_columns(*file_attributes)
+        if self.should_calculate_facets:
+            self.calculate_facets(expressions)
+
+        if self.sort_by:
+            sort_by = self.sort_by
+            desc = False
+            if self.sort_by[0] == '-':
+                desc = True
+                sort_by = sort_by[1:]
+
+            for model in [Expression, File]:
+                if sort_by in model.TSV_MAP.keys():
+                    field = getattr(model, model.TSV_MAP[sort_by])
+                    if desc:
+                        field = field.desc()
+                        expressions = expressions.order_by(field)
 
         if self.page:
             self.expressions = expressions.paginate(self.page, Expression.PER_PAGE, False).items
         else:
             self.expressions = expressions.all()
+
+        self.format_metadata()
+
+
+    def calculate_facets(self, expressions):
+        assays = expressions.with_entities(File.assay, func.count(File.assay)).group_by(File.assay).all()
+
+        self.facets = {
+            'assayType': expressions.with_entities(File.assay, func.count(File.assay)).group_by(File.assay).all(),
+            'annotation': expressions.with_entities(File.assembly, func.count(File.assembly)).group_by(File.assembly).all()
+        }
+
+
+    def format_metadata(self):
+        metadata_expressions = []
+
+        metadata_dictionary = {**Expression.TSV_MAP, **File.TSV_MAP}
+        metadata_headers = self.get_tsv_headers()
+
+        for expression in self.expressions:
+            exp = []
+
+            for header in metadata_headers:
+                component = metadata_dictionary[header]
+
+                if isinstance(component, list):
+                    value = getattr(expression, component[1])
+                    exp.append(component[0].format(value))
+                else:
+                    exp.append(getattr(expression, component))
+
+            metadata_expressions.append(exp)
+
+        self.expressions = metadata_expressions
