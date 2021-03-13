@@ -201,6 +201,9 @@ class ExpressionService():
             'annotation': expressions.with_entities(File.assembly, func.count(File.assembly)).group_by(File.assembly).all()
         }
 
+        for key in self.facets:
+            self.facets[key] = [[facet[0], facet[1]] for facet in self.facets[key]]
+
 
     def format_metadata(self):
         metadata_expressions = []
