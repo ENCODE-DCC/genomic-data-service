@@ -93,6 +93,9 @@ def expressions_formats():
 
 def extract_expression_params(request, params_list=None, expression_id=None):
     params = params_list or ['format', 'units', 'projectID', 'studyID', 'version', 'sampleIDList', 'featureIDList', 'featureNameList', 'page', 'sort']
+
+    params += ExpressionService.allowed_facets()
+
     params_dict = {}
     for param in params:
         params_dict[param] = request.args.get(param)

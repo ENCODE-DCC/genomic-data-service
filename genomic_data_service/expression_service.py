@@ -5,6 +5,8 @@ from sqlalchemy import func, cast, DECIMAL
 
 class ExpressionService():
     def __init__(self, params):
+        self._params = params
+
         self.project_id = params.get('projectID')
         self.study_id = params.get('studyID')
         self.file_type = params.get('format', File.DEFAULT_FORMAT)
@@ -35,11 +37,14 @@ class ExpressionService():
         else:
             self.fetch_file_ids()
 
-        self.should_calculate_facets = self.file_type == 'json'
-
         self.transcript_ids = []
-            
+
         self.fetch_expressions()
+
+
+    @staticmethod
+    def allowed_facets():
+        return Expression.FACETS + File.FACETS
 
 
     def resolve_gene_ids(self, gene_names):
@@ -170,48 +175,64 @@ class ExpressionService():
 
         self.total = expressions.count()
 
-        if self.should_calculate_facets:
-            self.calculate_facets(expressions)
+        self.expressions = expressions
+
+        self.calculate_facets()
 
         if self.sort_by:
-            sort_by = self.sort_by
-
-            desc = False
-            if self.sort_by[0] == '-':
-                desc = True
-                sort_by = sort_by[1:]
-
-            for model in [Expression, File]:
-                if sort_by in model.TSV_MAP.keys():
-                    field = getattr(model, model.TSV_MAP[sort_by])
-
-                    if sort_by in ['tpm', 'fpkm']:
-                        field = cast(field, DECIMAL)
-
-                    if desc:
-                        field = field.desc()
-
-                    expressions = expressions.order_by(field)
-                    break
+            self.add_sorting()
 
         if self.page:
-            self.expressions = expressions.paginate(self.page, Expression.PER_PAGE, False).items
+            self.expressions = self.expressions.paginate(self.page, Expression.PER_PAGE, False).items
         else:
-            self.expressions = expressions.all()
+            self.expressions = self.expressions.all()
 
         self.format_metadata()
 
 
-    def calculate_facets(self, expressions):
-        assays = expressions.with_entities(File.assay, func.count(File.assay)).group_by(File.assay).all()
+    def add_sorting(self):
+        sort_by = self.sort_by
+
+        desc = False
+        if self.sort_by[0] == '-':
+            desc = True
+            sort_by = sort_by[1:]
+
+        for model in [Expression, File]:
+            if sort_by in model.TSV_MAP.keys():
+                field = getattr(model, model.TSV_MAP[sort_by])
+
+                if sort_by in ['tpm', 'fpkm']:
+                    field = cast(field, DECIMAL)
+
+                if desc:
+                    field = field.desc()
+
+                self.expressions = self.expressions.order_by(field)
+                break
+
+
+    def should_calculate_facets(self):
+        return (self.file_type == 'json')
+
+
+    def calculate_facets(self):
+        if not self.should_calculate_facets():
+            return
 
         self.facets = {
-            'assayType': expressions.with_entities(File.assay, func.count(File.assay)).group_by(File.assay).all(),
-            'annotation': expressions.with_entities(File.assembly, func.count(File.assembly)).group_by(File.assembly).all()
+            'assayType': self.expressions.with_entities(File.assay, func.count(File.assay)).group_by(File.assay).all(),
+            'annotation': self.expressions.with_entities(File.assembly, func.count(File.assembly)).group_by(File.assembly).all()
         }
 
         for key in self.facets:
             self.facets[key] = [[facet[0], facet[1]] for facet in self.facets[key]]
+
+        if self._params.get('assayType'):
+            self.expressions = self.expressions.filter(File.assay == self._params.get('assayType'))
+
+        if self._params.get('annotation'):
+            self.expressions = self.expressions.filter(File.assembly == self._params.get('annotation'))
 
 
     def format_metadata(self):

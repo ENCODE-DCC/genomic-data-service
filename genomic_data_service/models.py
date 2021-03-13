@@ -105,6 +105,7 @@ class Expression(db.Model):
     }
 
     TSV_ATTRIBUTES = ['feature_id', 'tpm', 'file_id', 'dataset_accession']
+    FACETS = []
     
     file = db.relationship('File',
         backref=db.backref('expressions', lazy=True))
@@ -157,6 +158,7 @@ class File(db.Model):
         'annotation': 'assembly'
     }
     TSV_ATTRIBUTES = ['assay', 'assembly']
+    FACETS = ['assayType', 'annotation']
 
 
     def fetch_and_parse(self):
