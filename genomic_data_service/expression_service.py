@@ -1,7 +1,7 @@
 import hashlib
 import csv
 from genomic_data_service.models import File, Feature, Expression
-from sqlalchemy import func
+from sqlalchemy import func, cast, DECIMAL
 
 class ExpressionService():
     def __init__(self, params):
@@ -168,11 +168,14 @@ class ExpressionService():
         if len(self.file_ids) > 0:
             expressions = expressions.filter(Expression.file_id.in_(self.file_ids))
 
+        self.total = expressions.count()
+
         if self.should_calculate_facets:
             self.calculate_facets(expressions)
 
         if self.sort_by:
             sort_by = self.sort_by
+
             desc = False
             if self.sort_by[0] == '-':
                 desc = True
@@ -181,11 +184,15 @@ class ExpressionService():
             for model in [Expression, File]:
                 if sort_by in model.TSV_MAP.keys():
                     field = getattr(model, model.TSV_MAP[sort_by])
+
+                    if sort_by in ['tpm', 'fpkm']:
+                        field = cast(field, DECIMAL)
+
                     if desc:
                         field = field.desc()
-                        expressions = expressions.order_by(field)
 
-        self.total = expressions.count()
+                    expressions = expressions.order_by(field)
+                    break
 
         if self.page:
             self.expressions = expressions.paginate(self.page, Expression.PER_PAGE, False).items
