@@ -185,6 +185,8 @@ class ExpressionService():
                         field = field.desc()
                         expressions = expressions.order_by(field)
 
+        self.total = expressions.count()
+
         if self.page:
             self.expressions = expressions.paginate(self.page, Expression.PER_PAGE, False).items
         else:

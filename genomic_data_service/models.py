@@ -92,7 +92,7 @@ class Expression(db.Model):
     TSV_HEADERS = ['featureID', 'expressionID', 'samplePrepProtocol', 'libraryPrepProtocol']
     AVAILABLE_UNITS = ['tpm', 'fpkm']
     DEFAULT_UNITS = 'tpm'
-    PER_PAGE = 5
+    PER_PAGE = 100
 
     # tsv column name => object key
     TSV_MAP = {
