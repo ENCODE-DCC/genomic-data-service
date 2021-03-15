@@ -173,11 +173,11 @@ class ExpressionService():
         if len(self.file_ids) > 0:
             expressions = expressions.filter(Expression.file_id.in_(self.file_ids))
 
-        self.total = expressions.count()
-
         self.expressions = expressions
 
         self.calculate_facets()
+
+        self.total = self.expressions.count()
 
         if self.sort_by:
             self.add_sorting()
