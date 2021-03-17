@@ -182,10 +182,7 @@ class ExpressionService():
         if self.sort_by:
             self.add_sorting()
 
-        if self.page:
-            self.expressions = self.expressions.paginate(self.page, Expression.PER_PAGE, False).items
-        else:
-            self.expressions = self.expressions.all()
+        self.expressions = self.expressions.paginate(self.page, Expression.PER_PAGE, False).items
 
         self.format_metadata()
 
@@ -200,7 +197,10 @@ class ExpressionService():
 
         for model in [Expression, File]:
             if sort_by in model.TSV_MAP.keys():
-                field = getattr(model, model.TSV_MAP[sort_by])
+                if isinstance(model.TSV_MAP[sort_by], str):
+                    field = getattr(model, model.TSV_MAP[sort_by])
+                else:
+                    field = getattr(model, model.TSV_MAP[sort_by][1])
 
                 if sort_by in ['tpm', 'fpkm']:
                     field = cast(field, DECIMAL)
