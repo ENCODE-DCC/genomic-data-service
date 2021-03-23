@@ -61,11 +61,16 @@ class Study(db.Model):
 class Feature(db.Model):
     __tablename__ = 'features'
 
+    # feature IDs are as imported in experiment files
     gene_id = db.Column(db.String(), primary_key=True)
     transcript_id = db.Column(db.String(), primary_key=True)
 
     gene_name = db.Column(db.String(), nullable=True)
     transcript_name = db.Column(db.String(), nullable=True)
+
+    gene_encode_id = db.Column(db.String(), nullable=True)
+    gene_symbol = db.Column(db.String(), nullable=True)
+    gene_name = db.Column(db.String(), nullable=True)
 
     @staticmethod
     def prefix_id(id):
