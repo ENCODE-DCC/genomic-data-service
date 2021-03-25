@@ -58,19 +58,32 @@ class Study(db.Model):
         }
 
 
+class Gene(db.Model):
+    __tablename__ = 'genes'
+
+    id = db.Column(db.String(), primary_key=True)
+
+    encode_id = db.Column(db.String(), nullable=True)
+    symbol = db.Column(db.String(), nullable=True)
+    name = db.Column(db.String(), nullable=True)
+
+    TSV_ATTRIBUTES = ['encode_id', 'symbol', 'name']
+    TSV_HEADERS = ['encodeID', 'gene_symbol', 'gene_name']
+
+    # tsv column name => object key
+    TSV_MAP = {
+        'encodeID': 'encode_id',
+        'gene_symbol': 'symbol',
+        'gene_name': 'name'
+    }
+
+
 class Feature(db.Model):
     __tablename__ = 'features'
 
     # feature IDs are as imported in experiment files
     gene_id = db.Column(db.String(), primary_key=True)
     transcript_id = db.Column(db.String(), primary_key=True)
-
-    gene_name = db.Column(db.String(), nullable=True)
-    transcript_name = db.Column(db.String(), nullable=True)
-
-    gene_encode_id = db.Column(db.String(), nullable=True)
-    gene_symbol = db.Column(db.String(), nullable=True)
-    gene_name = db.Column(db.String(), nullable=True)
 
     @staticmethod
     def prefix_id(id):

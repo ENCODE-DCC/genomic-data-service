@@ -1,6 +1,6 @@
 import hashlib
 import csv
-from genomic_data_service.models import File, Feature, Expression
+from genomic_data_service.models import File, Feature, Expression, Gene
 from sqlalchemy import func, cast, DECIMAL
 
 class ExpressionService():
@@ -73,7 +73,7 @@ class ExpressionService():
 
 
     def get_tsv_headers(self):
-        return Expression.TSV_HEADERS + [self.units] + File.TSV_HEADERS
+        return Expression.TSV_HEADERS + [self.units] + File.TSV_HEADERS + Gene.TSV_HEADERS
 
 
     def generate_filename(self, filename_prefix='Expressions'):
@@ -161,9 +161,11 @@ class ExpressionService():
     def fetch_expressions(self):
         expression_attributes = [getattr(Expression, attr) for attr in Expression.TSV_ATTRIBUTES + [self.units]]
         file_attributes = [getattr(File, attr) for attr in File.TSV_ATTRIBUTES]
-        attributes = expression_attributes + file_attributes
+        gene_attributes = [getattr(Gene, attr) for attr in Gene.TSV_ATTRIBUTES]
 
-        expressions = Expression.query.join(File).with_entities(*attributes)
+        attributes = expression_attributes + file_attributes + gene_attributes
+
+        expressions = Expression.query.join(File).join(Gene, Expression.feature_id == Gene.id, isouter=True).with_entities(*attributes)
 
         if len(self.transcript_ids) > 0:
             expressions = expressions.filter(Expression.feature_id.in_(self.transcript_ids))
@@ -238,7 +240,7 @@ class ExpressionService():
     def format_metadata(self):
         metadata_expressions = []
 
-        metadata_dictionary = {**Expression.TSV_MAP, **File.TSV_MAP}
+        metadata_dictionary = {**Expression.TSV_MAP, **File.TSV_MAP, **Gene.TSV_MAP}
         metadata_headers = self.get_tsv_headers()
 
         for expression in self.expressions:
