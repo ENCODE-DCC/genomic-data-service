@@ -1,8 +1,9 @@
-from genomic_data_service import app
+from genomic_data_service import app, es
 from flask import jsonify, abort, request, send_file, redirect
 import flask_excel as excel
 from genomic_data_service.models import Project, Study, File, Expression
 from genomic_data_service.expression_service import ExpressionService
+from genomic_data_service.rna_seq_indexer import RNASeqES
 
 import os.path
 from os import path
@@ -196,7 +197,18 @@ def service_info():
     return jsonify(info)
 
 
-# Explicit unsupported endpoints
+@app.route('/autocomplete/', methods=['GET'])
+def autocomplete():
+    params = extract_expression_params(request, params_list=['gene'])
+
+    if params.get('gene'):
+        genes = RNASeqES(es).autocomplete_genes(params.get('gene'))
+        return jsonify({'genes': genes})
+
+    return jsonify({})
+
+
+# Unsupported endpoints
 @app.route('/continuous/<continuous_id>/ticket', methods=['GET'])
 def continuous_id_ticket(continuous_id):
     return abort(501)
@@ -225,3 +237,4 @@ def continuous_formats():
 @app.route('/continuous/filters', methods=['GET'])
 def continuous_filters():
     return abort(501)
+    
