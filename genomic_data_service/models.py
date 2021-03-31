@@ -170,13 +170,16 @@ class File(db.Model):
     study = db.relationship('Study',
         backref=db.backref('files', lazy=True))
 
-    TSV_HEADERS = ['assayType', 'annotation']
+    TSV_HEADERS = ['assayType', 'annotation', 'analysis', 'disease_id', 'biosample_sex']
     TSV_MAP = {
         'assayType': 'assay',
-        'annotation': 'assembly'
+        'annotation': 'assembly',
+        'analysis': 'analysis_id',
+        'disease_id': 'disease_term_id',
+        'biosample_sex': 'biosample_sex'
     }
-    TSV_ATTRIBUTES = ['assay', 'assembly']
-    FACETS = ['assayType', 'annotation']
+    TSV_ATTRIBUTES = ['assay', 'assembly', 'analysis_id', 'disease_term_id', 'biosample_sex']
+    FACETS = ['assayType', 'annotation', 'biosample_sex']
 
 
     def fetch_and_parse(self):

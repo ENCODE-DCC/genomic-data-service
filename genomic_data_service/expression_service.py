@@ -224,17 +224,18 @@ class ExpressionService():
 
         self.facets = {
             'assayType': self.expressions.with_entities(File.assay, func.count(File.assay)).group_by(File.assay).all(),
-            'annotation': self.expressions.with_entities(File.assembly, func.count(File.assembly)).group_by(File.assembly).all()
+            'annotation': self.expressions.with_entities(File.assembly, func.count(File.assembly)).group_by(File.assembly).all(),
+            'biosample_sex': self.expressions.with_entities(File.biosample_sex, func.count(File.biosample_sex)).group_by(File.biosample_sex).all()
         }
-
-        for key in self.facets:
-            self.facets[key] = [[facet[0], facet[1]] for facet in self.facets[key]]
 
         if self._params.get('assayType'):
             self.expressions = self.expressions.filter(File.assay == self._params.get('assayType'))
 
         if self._params.get('annotation'):
             self.expressions = self.expressions.filter(File.assembly == self._params.get('annotation'))
+
+        if self._params.get('biosample_sex'):
+            self.expressions = self.expressions.filter(File.biosample_sex == self._params.get('biosample_sex'))
 
 
     def format_metadata(self):
