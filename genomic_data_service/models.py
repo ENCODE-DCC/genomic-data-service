@@ -176,16 +176,19 @@ class File(db.Model):
     study = db.relationship('Study',
         backref=db.backref('files', lazy=True))
 
-    TSV_HEADERS = ['assayType', 'annotation', 'analysis', 'disease_id', 'biosample_sex']
+    TSV_HEADERS = ['assayType', 'annotation', 'biosample_sex', 'biosample_summary', 'biosample_organ', 'biosample_term_name', 'biosample_system', 'biosample_classification']
     TSV_MAP = {
         'assayType': 'assay',
         'annotation': 'assembly',
-        'analysis': 'analysis_id',
-        'disease_id': 'disease_term_id',
-        'biosample_sex': 'biosample_sex'
+        'biosample_sex': 'biosample_sex',
+        'biosample_summary': 'biosample_summary',
+        'biosample_organ': 'biosample_organ',
+        'biosample_term_name': 'biosample_term_name',
+        'biosample_system': 'biosample_system',
+        'biosample_classification': 'biosample_classification'
     }
-    TSV_ATTRIBUTES = ['assay', 'assembly', 'analysis_id', 'disease_term_id', 'biosample_sex']
-    FACETS = ['assayType', 'annotation', 'biosample_sex']
+    TSV_ATTRIBUTES = ['assay', 'assembly', 'biosample_sex', 'biosample_summary', 'biosample_organ', 'biosample_term_name', 'biosample_system', 'biosample_classification']
+    FACETS = ['assayType', 'annotation', 'biosample_sex', 'biosample_organ', 'biosample_term_name', 'biosample_system', 'biosample_classification']
 
 
     def fetch_and_parse(self):

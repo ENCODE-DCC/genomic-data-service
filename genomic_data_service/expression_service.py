@@ -225,7 +225,11 @@ class ExpressionService():
         self.facets = {
             'assayType': self.expressions.with_entities(File.assay, func.count(File.assay)).group_by(File.assay).all(),
             'annotation': self.expressions.with_entities(File.assembly, func.count(File.assembly)).group_by(File.assembly).all(),
-            'biosample_sex': self.expressions.with_entities(File.biosample_sex, func.count(File.biosample_sex)).group_by(File.biosample_sex).all()
+            'biosample_sex': self.expressions.with_entities(File.biosample_sex, func.count(File.biosample_sex)).group_by(File.biosample_sex).all(),
+            'biosample_organ': self.expressions.with_entities(File.biosample_organ, func.count(File.biosample_organ)).group_by(File.biosample_organ).all(),
+            'biosample_term_name': self.expressions.with_entities(File.biosample_term_name, func.count(File.biosample_term_name)).group_by(File.biosample_term_name).all(),
+            'biosample_system': self.expressions.with_entities(File.biosample_system, func.count(File.biosample_system)).group_by(File.biosample_system).all(),
+            'biosample_classification': self.expressions.with_entities(File.biosample_classification, func.count(File.biosample_classification)).group_by(File.biosample_classification).all()
         }
 
         for facet in self.facets:
@@ -239,6 +243,18 @@ class ExpressionService():
 
         if self._params.get('biosample_sex'):
             self.expressions = self.expressions.filter(File.biosample_sex == self._params.get('biosample_sex'))
+
+        if self._params.get('biosample_organ'):
+            self.expressions = self.expressions.filter(File.biosample_organ == self._params.get('biosample_organ'))
+
+        if self._params.get('biosample_term_name'):
+            self.expressions = self.expressions.filter(File.biosample_term_name == self._params.get('biosample_term_name'))
+
+        if self._params.get('biosample_system'):
+            self.expressions = self.expressions.filter(File.biosample_system == self._params.get('biosample_system'))
+
+        if self._params.get('biosample_classification'):
+            self.expressions = self.expressions.filter(File.biosample_classification == self._params.get('biosample_classification'))
 
 
     def format_metadata(self):
