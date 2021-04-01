@@ -156,6 +156,12 @@ class File(db.Model):
     organism_id = db.Column(db.String(), nullable=True)
     organism_scientific_name = db.Column(db.String(), nullable=True)
 
+    biosample_summary = db.Column(db.String(), nullable=True)
+    biosample_term_name = db.Column(db.String(), nullable=True)
+    biosample_organ = db.Column(db.String(), nullable=True)
+    biosample_system = db.Column(db.String(), nullable=True)
+    biosample_classification = db.Column(db.String(), nullable=True)
+
     cell_type_id=db.Column(db.String(), nullable=True)
     cell_type_label=db.Column(db.String(), nullable=True)
     tissue_id=db.Column(db.String(), nullable=True)
