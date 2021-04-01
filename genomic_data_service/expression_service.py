@@ -228,6 +228,9 @@ class ExpressionService():
             'biosample_sex': self.expressions.with_entities(File.biosample_sex, func.count(File.biosample_sex)).group_by(File.biosample_sex).all()
         }
 
+        for facet in self.facets:
+            self.facets[facet] = [list(option) for option in self.facets[facet]]
+
         if self._params.get('assayType'):
             self.expressions = self.expressions.filter(File.assay == self._params.get('assayType'))
 
