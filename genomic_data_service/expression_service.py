@@ -3,6 +3,8 @@ import csv
 from genomic_data_service.models import File, Feature, Expression, Gene
 from sqlalchemy import func, cast, DECIMAL
 
+EXPRESSION_EMPTY_VALUE = 'NA'
+
 class ExpressionService():
     def __init__(self, params):
         self._params = params
@@ -218,6 +220,17 @@ class ExpressionService():
         return (self.file_type == 'json')
 
 
+    def formatted_facets(self):
+        for facet in self.facets:
+            for option in self.facets[facet]:
+                if option[0] == '' or option[0] is None:
+                    option[0] = EXPRESSION_EMPTY_VALUE
+
+            self.facets[facet].sort(key=lambda f: f[1], reverse=True)
+
+        return self.facets
+
+
     def calculate_facets(self):
         if not self.should_calculate_facets():
             return
@@ -236,25 +249,31 @@ class ExpressionService():
             self.facets[facet] = [list(option) for option in self.facets[facet]]
 
         if self._params.get('assayType'):
-            self.expressions = self.expressions.filter(File.assay == self._params.get('assayType'))
+            self.expressions = self.expressions.filter(File.assay == self.get_user_param('assayType'))
 
         if self._params.get('annotation'):
-            self.expressions = self.expressions.filter(File.assembly == self._params.get('annotation'))
+            self.expressions = self.expressions.filter(File.assembly == self.get_user_param('annotation'))
 
         if self._params.get('biosample_sex'):
-            self.expressions = self.expressions.filter(File.biosample_sex == self._params.get('biosample_sex'))
+            self.expressions = self.expressions.filter(File.biosample_sex == self.get_user_param('biosample_sex'))
 
         if self._params.get('biosample_organ'):
-            self.expressions = self.expressions.filter(File.biosample_organ == self._params.get('biosample_organ'))
+            self.expressions = self.expressions.filter(File.biosample_organ == self.get_user_param('biosample_organ'))
 
         if self._params.get('biosample_term_name'):
-            self.expressions = self.expressions.filter(File.biosample_term_name == self._params.get('biosample_term_name'))
+            self.expressions = self.expressions.filter(File.biosample_term_name == self.get_user_param('biosample_term_name'))
 
         if self._params.get('biosample_system'):
-            self.expressions = self.expressions.filter(File.biosample_system == self._params.get('biosample_system'))
+            self.expressions = self.expressions.filter(File.biosample_system == self.get_user_param('biosample_system'))
 
         if self._params.get('biosample_classification'):
-            self.expressions = self.expressions.filter(File.biosample_classification == self._params.get('biosample_classification'))
+            self.expressions = self.expressions.filter(File.biosample_classification == self.get_user_param('biosample_classification'))
+
+
+    def get_user_param(self, param):
+        user_param = self._params.get(param)
+
+        return '' if user_param == EXPRESSION_EMPTY_VALUE else user_param
 
 
     def format_metadata(self):

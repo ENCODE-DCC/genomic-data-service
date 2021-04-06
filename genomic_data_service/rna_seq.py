@@ -129,7 +129,7 @@ def expressions_bytes():
     if service.file_type == 'json':
         return jsonify({
             'expressions': expressions,
-            'facets': service.facets,
+            'facets': service.formatted_facets(),
             'total': service.total
         })
 
