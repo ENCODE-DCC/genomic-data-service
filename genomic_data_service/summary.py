@@ -1,7 +1,7 @@
 import time
 from flask import jsonify, request, redirect, url_for, make_response
 from werkzeug.exceptions import BadRequest
-from genomic_data_service import es, app
+from genomic_data_service import regulome_es, app
 from genomic_data_service.regulome_atlas import RegulomeAtlas
 from genomic_data_service.rsid_coordinates_resolver import resolve_coordinates_and_variants, region_get_hits, evidence_to_features
 from genomic_data_service.request_utils import validate_search_request, extract_search_params
@@ -49,7 +49,7 @@ def summary():
         request.args
     )
 
-    atlas = RegulomeAtlas(es)
+    atlas = RegulomeAtlas(regulome_es)
     
     variants, query_coordinates, notifications = resolve_coordinates_and_variants(
         region_queries, assembly, atlas, maf
