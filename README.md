@@ -4,7 +4,7 @@ Flask based web service providing genomic region search, based on regulomedb.org
 
 Installation Requirements:
 
-* python 3.7+
+* python 3.7.* (3.8+ is not supported)
 * postgres
 * elasticsearch
 
