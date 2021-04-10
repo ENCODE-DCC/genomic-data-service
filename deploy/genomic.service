@@ -8,7 +8,7 @@ Group=ubuntu
 WorkingDirectory=/home/ubuntu/genomic-data-service
 Environment=FLASK_APP=genomic_data_service
 Environment=GENOMIC_DATA_SERVICE_SETTINGS=../config/production.cfg
-ExecStart=gunicorn -w 4 --bind unix:genomic.sock -m 007 --access-logfile /var/log/genomic/gunicorn-access.log --error-logfile /var/log/genomic/gunicorn-error.log wsgi:app
+ExecStart=/home/ubuntu/.pyenv/shims/gunicorn -w 4 --bind unix:genomic.sock -m 007 --access-logfile /var/log/genomic/gunicorn-access.log --error-logfile /var/log/genomic/gunicorn-error.log wsgi:app
 Type=simple
 
 [Install]
