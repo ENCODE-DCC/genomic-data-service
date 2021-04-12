@@ -291,7 +291,7 @@ def search_peaks(query_coordinates, atlas, assembly, num_variants):
 
 
 def resolve_relative_hrefs(obj, obj_type=''):
-    path = 'https://regulomedb.org'
+    path = 'https://encodeproject.org'
 
     if not obj:
         return obj
