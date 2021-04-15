@@ -291,7 +291,7 @@ def search_peaks(query_coordinates, atlas, assembly, num_variants):
 
 
 def resolve_relative_hrefs(obj, obj_type=''):
-    path = 'https://encodeproject.org'
+    path = 'https://www.encodeproject.org'
 
     if not obj:
         return obj
@@ -300,7 +300,11 @@ def resolve_relative_hrefs(obj, obj_type=''):
         return path + obj
 
     if obj_type == 'document':
-        obj['@id'] = path + obj['@id']
+        encode_id = obj['@id']
+        if obj['aliases']:
+            encode_id = f"/{obj['aliases'][0]}/"
+
+        obj['@id'] = path + encode_id
         obj['award'] = path + obj['award']
         obj['lab'] = path + obj['lab']
         obj['submitted_by'] = path + obj['submitted_by']
