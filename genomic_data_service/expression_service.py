@@ -206,7 +206,7 @@ class ExpressionService():
             desc = True
             sort_by = sort_by[1:]
 
-        for model in [Expression, File]:
+        for model in [Expression, File, Gene]:
             if sort_by in model.TSV_MAP.keys():
                 if isinstance(model.TSV_MAP[sort_by], str):
                     field = getattr(model, model.TSV_MAP[sort_by])
