@@ -4,6 +4,7 @@ from genomic_data_service.models import File, Feature, Expression, Gene
 from sqlalchemy import func, cast, DECIMAL
 
 EXPRESSION_EMPTY_VALUE = 'NA'
+GENE_ID_PREFIX = 'ENSG0'
 
 class ExpressionService():
     def __init__(self, params):
@@ -14,7 +15,6 @@ class ExpressionService():
         self.file_type = params.get('format', File.DEFAULT_FORMAT)
         self.version = params.get('version')
         self.gene_names = params.get('featureNameList')
-        self.gene_ids = params.get('featureIDList')
         self.sample_ids = params.get('sampleIDList')
         self.file_id = params.get('expression_id')
         self.page = int(params.get('page') or 1)
@@ -25,11 +25,8 @@ class ExpressionService():
         else:
             self.units = Expression.DEFAULT_UNITS
 
-        if self.gene_ids:
-            self.gene_ids = self.gene_ids.split(",")
-
-        if self.gene_names:
-            self.resolve_gene_ids(self.gene_names.split(","))
+        if params.get('featureIDList'):
+            self.resolve_gene_ids(params.get('featureIDList').split(","))
 
         if self.sample_ids:
             self.sample_ids = self.sample_ids.split(",")
@@ -50,9 +47,19 @@ class ExpressionService():
 
 
     def resolve_gene_ids(self, gene_names):
-        features = Feature.query.with_entities(Feature.gene_id).filter(Feature.gene_name.in_(self.gene_names)).all()
+        self.gene_ids = []
+        symbols = []
 
-        self.gene_ids += [feature.gene_id for feature in features]
+        for gene in gene_names:
+            if gene.startswith(GENE_ID_PREFIX):
+                self.gene_ids.append(gene)
+            else:
+                symbols.append(gene)
+
+        genes = Gene.query.with_entities(Gene.id).filter(Gene.symbol.in_(symbols)).all()
+
+        for gene in genes:
+            self.gene_ids += [gene.id]
 
 
     def get_expressions(self):
