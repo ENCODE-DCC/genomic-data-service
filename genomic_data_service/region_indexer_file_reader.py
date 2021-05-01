@@ -6,27 +6,31 @@ from botocore.config import Config
 from urllib.parse import urlparse
 
 
-class S3BedFileRemoteReader():
-    MAX_IN_MEMORY_FILE_SIZE = (25 * 1024 * 1024)
+MAX_IN_MEMORY_FILE_SIZE = (25 * 1024 * 1024)
 
+
+class S3BedFileRemoteReader():
     def __init__(self, file_properties, dataset_type, strand_col_values, snp_set=False):
         self.file_properties = file_properties
         self.temp_file = tempfile.NamedTemporaryFile()
         self.snp_set = snp_set
-        self.data = self.download_file_from_s3()
         self.strand_values = strand_col_values
+        self.data = self.download_file_from_s3()
+
 
     def close(self):
         if self.temp_file:
             self.temp_file.close()
 
+
     def should_load_file_in_memory(self):
-        return self.file_properties.get('file_size', 0) <= self.MAX_IN_MEMORY_FILE_SIZE
+        return self.file_properties.get('file_size', 0) <= MAX_IN_MEMORY_FILE_SIZE
+
 
     def download_file_from_s3(self):
         config = Config(region_name='us-west-2', retries={'max_attempts': 2})
         s3 = boto3.client('s3', config=config)
-        href = self.file_properties['href']
+        href = self.file_properties['s3_uri']
 
         parsed_href = urlparse(href, allow_fragments=False)
         s3_bucket = parsed_href.netloc
@@ -44,6 +48,7 @@ class S3BedFileRemoteReader():
             with open(self.temp_file.name, 'wb') as f:
                 s3.download_fileobj(s3_bucket, s3_path, f)
             return gzip.open(self.temp_file, mode='rt')
+
 
     def parse(self):
         value_col  = self.strand_values.get('value_col')
@@ -65,6 +70,7 @@ class S3BedFileRemoteReader():
                 continue
 
             yield (chrom, doc)
+
 
     def region(self, row, value_col=None, strand_col=None):
         chrom, start, end = row[0], int(row[1]), int(row[2])
@@ -89,6 +95,7 @@ class S3BedFileRemoteReader():
             else:
                 doc['strand'] = '.'
         return (chrom, doc)
+
 
     def snp(self, row):
         chrom, start, end, rsid = row[0], int(row[1]), int(row[2]), row[3]

@@ -13,9 +13,9 @@ celery_app.config_from_object('config.celeryconfig')
 RESIDENTS_INDEX = 'resident_regionsets'
 FOR_REGULOME_DB = 'regulomedb'
 
-# PEDRO TODO: move constants to centralized file
+# TODO: move constants to centralized file
 REGULOME_COLLECTION_TYPES = ['assay_term_name', 'annotation_type', 'reference_type']
-REGULOME_DATASET_TYPES = ['experiment', 'annotation', 'reference']
+REGULOME_DATASET_TYPES = ['Experiment', 'Annotation', 'Reference']
 
 
 SUPPORTED_CHROMOSOMES = [
@@ -71,7 +71,6 @@ def add_to_residence(es, file_doc):
     use_type = FOR_REGULOME_DB
 
     es.index(index=RESIDENTS_INDEX, doc_type=use_type, body=file_doc, id=str(uuid))
-    return True
 
 
 def snps_bulk_iterator(snp_index, chrom, snps_for_chrom):
@@ -121,7 +120,6 @@ def index_regions(es, regions, metadata, chroms):
             continue
 
         bulk(es, region_bulk_iterator(chrom_lc, assembly, uuid, regions[chrom]), chunk_size=100000, request_timeout=1000)
-
         metadata['chroms'].append(chrom)
 
     return True
@@ -130,7 +128,7 @@ def index_regions(es, regions, metadata, chroms):
 def index_regions_from_file(es, uuid, file_properties, dataset, snp=False):
     metadata = metadata_doc(uuid, file_properties, dataset)
 
-    snp_set      = metadata.get('snps', False)
+    snp_set      = dataset['@type'][0] == 'Reference'
     dataset_type = metadata['dataset']['collection_type']
     regulome_strand = VALUE_STRAND_COL.get(dataset_type, {})
 
@@ -187,7 +185,7 @@ def index_regions_from_file(es, uuid, file_properties, dataset, snp=False):
 
     readable_file.close()
 
-    return add_to_residence(es, metadata)
+    add_to_residence(es, metadata)
 
 
 def list_targets(dataset):
@@ -220,33 +218,21 @@ def metadata_doc(uuid, file_properties, dataset):
         'dataset': {
             'uuid': dataset['uuid'],
             '@id': dataset['@id'],
-            'target': list_targets(dataset),
+            'target': [dataset.get('target', {}).get('name')],
             'biosample_ontology': dataset.get('biosample_ontology', {}),
+            'biosample_term_name': dataset.get('biosample_ontology', {}).get('term_name'),
             'documents': []
-        }
+        },
+        'dataset_type': dataset['@type'][0]
     }
 
     for prop in REGULOME_COLLECTION_TYPES:
         prop_value = dataset.get(prop)
         if prop_value:
-            meta_doc['dataset'][prop] = prop_value
-            if 'collection_type' not in meta_doc['dataset']:
-                meta_doc['dataset']['collection_type'] = prop_value
+            meta_doc['dataset']['collection_type'] = prop_value
 
     if meta_doc['dataset']['collection_type'] in ['Footprints', 'PWMs']:
         meta_doc['dataset']['documents'] = dataset.get('documents', [])
-
-    biosample = dataset.get('biosample_ontology', {}).get('term_name', "None")
-    if biosample:
-        meta_doc['dataset']['biosample_term_name'] = biosample
-
-    for dataset_type in REGULOME_DATASET_TYPES:
-        if dataset_type in dataset['@type']:
-            meta_doc['dataset_type'] = dataset_type
-            break
-
-    if dataset_type == 'Reference':
-        meta_doc['snps'] = True
 
     return meta_doc
 
@@ -279,10 +265,10 @@ def file_in_es(uuid, es):
 
 
 @celery_app.task(bind=True, autoretry_for=(Exception,), retry_kwargs={'max_retries': 5, 'countdown': 2})
-def index_file(self, file_properties, dataset, es_hosts, es_port, force_reindex=False):
+def index_file(self, file_, dataset, es_hosts, es_port, force_reindex=False):
     es = Elasticsearch(port=es_port, hosts=es_hosts)
 
-    file_uuid = file_properties['uuid']
+    file_uuid = file_['uuid']
 
     indexed_file = file_in_es(file_uuid, es)
 
@@ -290,9 +276,9 @@ def index_file(self, file_properties, dataset, es_hosts, es_port, force_reindex=
         if force_reindex:
             remove_from_es(indexed_file, file_uuid, es)
         else:
-            return "File " + file_uuid + " is already indexed"
+            return f"File {file_uuid} is already indexed"
 
-    index_regions_from_file(es, file_uuid, file_properties, dataset)
+    index_regions_from_file(es, file_uuid, file_, dataset)
 
-    return "File " + file_uuid + " was indexed via " + file_properties['href']
+    return f"File {file_uuid} was indexed via {file_['href']}"
 

@@ -27,16 +27,18 @@ LOCAL_BIGWIGS = {
     )
 }
 
+SEARCH_MAX = 9999
+
 
 class RegulomeAtlas(object):
-    SEARCH_MAX = 9999
-
     def __init__(self, es):
         self.es = es
         self.bigwig_signal_map = LOCAL_BIGWIGS
 
+
     def snp_es_index_name(self, assembly):
         return 'snp_' + assembly.lower()
+
 
     def find_snp(self, assembly, rsid):
         try:
@@ -45,6 +47,7 @@ class RegulomeAtlas(object):
             return None
 
         return res['_source']
+
 
     def find_snps(self, assembly, chrom, start, end, max_results=SEARCH_MAX, maf=None):
         range_query = self._range_query(start, end, maf=maf)
@@ -57,6 +60,7 @@ class RegulomeAtlas(object):
 
         return [hit['_source'] for hit in results['hits']['hits']]
 
+
     def find_peaks(self, assembly, chrom, start, end, peaks_too=False, max_results=SEARCH_MAX):
         range_query = self._range_query(start, end, max_results=max_results)
 
@@ -67,6 +71,7 @@ class RegulomeAtlas(object):
             return None
 
         return list(results['hits']['hits'])
+
 
     def find_peaks_filtered(self, assembly, chrom, start, end, peaks_too=False):
         peaks = self.find_peaks(assembly, chrom, start, end, peaks_too=peaks_too)
@@ -87,6 +92,7 @@ class RegulomeAtlas(object):
                 filtered_peaks.append(peak)
 
         return (filtered_peaks, details)
+
 
     def regulome_evidence(self, datasets, chrom, start, end):
         '''Returns evidence for scoring: datasets in a characterized dict'''
@@ -127,6 +133,7 @@ class RegulomeAtlas(object):
             evidence[k] = 0.0 if math.isnan(average) else average
 
         return evidence
+
 
     @staticmethod
     def _range_query(start, end, maf=None, max_results=SEARCH_MAX):
@@ -169,6 +176,7 @@ class RegulomeAtlas(object):
 
         return query
 
+
     def _resident_details(self, uuids, max_results=SEARCH_MAX):
         try:
             id_query = {"query": {"ids": {"values": uuids}}}
@@ -185,6 +193,7 @@ class RegulomeAtlas(object):
 
         return details
 
+
     @staticmethod
     def _peak_uuids_in_overlap(peaks, chrom, start, end=None):
         '''private: returns set of only the uuids for peaks that overlap a given location'''
@@ -199,6 +208,7 @@ class RegulomeAtlas(object):
                 overlap.add(peak['_source']['uuid'])
 
         return overlap
+
 
     @staticmethod
     def _filter_details(details, uuids=None, peaks=None):
@@ -230,9 +240,11 @@ class RegulomeAtlas(object):
             dataset_dets[dataset['@id']] = dataset
         return (dataset_dets, file_dets)
 
+
     @staticmethod
     def evidence_categories():
         return EVIDENCE_CATEGORIES
+
 
     @staticmethod
     def _score_category(dataset):
@@ -251,6 +263,7 @@ class RegulomeAtlas(object):
             return 'QTL'
         return None
 
+
     def _regulome_category(self, score_category=None, dataset=None):
         '''private: returns one of the categories used to present evidence in a bed file.'''
         # regulome category 'Motifs' contains score categories 'PWM' and 'Footprint'
@@ -267,6 +280,7 @@ class RegulomeAtlas(object):
         if score_category == 'QTL':
             return 'Single_Nucleotides'
         return '???'
+
 
     def _write_a_brief(self, category, snp_evidence):
         '''private: given evidence for a category make a string that summarizes it'''
@@ -307,6 +321,7 @@ class RegulomeAtlas(object):
             brief += ','
         return brief[:-1]   # remove last comma
 
+
     def make_a_case(self, snp):
         '''Convert evidence json to list of evidence strings for bed batch downloads.'''
         case = {}
@@ -317,6 +332,7 @@ class RegulomeAtlas(object):
                 else:
                     case[category] = self._write_a_brief(category, snp['evidence'])
         return case
+
 
     @staticmethod
     def _score(characterization):
@@ -391,11 +407,13 @@ class RegulomeAtlas(object):
             ranking = '6'
         return {'probability': probability, 'ranking': ranking}
 
+
     def regulome_score(self, datasets, evidence):
         '''Calculate RegulomeDB score based upon hits and voodoo'''
         if not evidence:
             return None
         return self._score(evidence)
+
 
     @staticmethod
     def _snp_window(snps, window, center_pos=None):
@@ -414,6 +432,7 @@ class RegulomeAtlas(object):
         if first_ix > 0:
             snps = snps[first_ix:]
         return snps[:window]
+
 
     def _scored_snps(self, assembly, chrom, start, end, window=-1, center_pos=None):
         '''For a region, yields all SNPs with scores'''
@@ -462,6 +481,7 @@ class RegulomeAtlas(object):
                         continue
             # if we are here this snp had no score
             yield snp
+
 
     def _scored_regions(self, assembly, chrom, start, end):
         '''For a region, yields sub-regions (start, end, score) of contiguous numeric score > 0'''
@@ -514,6 +534,7 @@ class RegulomeAtlas(object):
         if region_score > 0:  # end previous region?
             yield (region_start, region_end, region_score)
 
+
     def nearby_snps(self, assembly, chrom, pos, rsid=None, window=1600,
                     max_snps=10, scores=False):
         '''Return SNPs nearby to the chosen SNP.'''
@@ -532,6 +553,7 @@ class RegulomeAtlas(object):
             snps = self.find_snps(assembly, chrom, range_start, range_end)
             return self._snp_window(snps, max_snps, pos)
 
+
     def iter_scored_snps(self, assembly, chrom, start, end, base_level=False):
         '''For a region, iteratively yields all SNPs with scores.'''
         if end < start:
@@ -544,6 +566,7 @@ class RegulomeAtlas(object):
                 chunk_end = end
             yield from self._scored_snps(assembly, chrom, chunk_start, chunk_end)
             chunk_start += chunk_size
+
 
     def iter_scored_signal(self, assembly, chrom, start, end):
         '''For a region, iteratively yields all bedGraph styled regions
@@ -559,6 +582,7 @@ class RegulomeAtlas(object):
             yield from self._scored_regions(assembly, chrom, chunk_start, chunk_end)
             chunk_start += chunk_size
 
+
     def live_score(self, assembly, chrom, pos):
         '''Returns score knowing single position and nothing more.'''
         (peaks, details) = self.find_peaks_filtered(assembly, chrom, pos, pos)
@@ -568,6 +592,7 @@ class RegulomeAtlas(object):
         evidence = self.regulome_evidence(datasets, chrom, pos, pos + 1)
         return self.regulome_score(datasets, evidence)
 
+
     @staticmethod
     def numeric_score(alpha_score):
         '''converst str score to numeric representation (for bedGraph)'''
@@ -575,6 +600,7 @@ class RegulomeAtlas(object):
             return REGDB_NUM_SCORES[REGDB_STR_SCORES.index(alpha_score)]
         except Exception:
             return 0
+
 
     @staticmethod
     def str_score(int_score):
