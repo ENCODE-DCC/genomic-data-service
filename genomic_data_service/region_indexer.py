@@ -103,7 +103,7 @@ def fetch_reference_files_from_encode():
 
 
 def fetch_dataset_files_from_encode():
-    query = ['type=Dataset', 'files.file_format=bed'] + ENCODE_QUERY
+    query = ['type=Dataset'] + ENCODE_QUERY
 
     dataset_files = encode_graph(query)
 
@@ -121,7 +121,7 @@ def fetch_dataset_files_from_encode():
         if dataset_file.get('files'):
             bed_file = dataset_file['files'][0] # TODO: change to preferred_default when ready
 
-            for requirement in ['output_type', 'file_type']:
+            for requirement in ['output_type', 'file_type', 'file_format']:
                 if requirement in requirements and bed_file[requirement].lower() not in requirements[requirement]:
                     continue
 
