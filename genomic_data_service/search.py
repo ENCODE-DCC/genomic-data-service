@@ -110,6 +110,7 @@ def region_search():
        start=754000
        end=754012
        chr=1 (optional)
+       files_only = false (default) 
        intervals=[intersects, contain, within] (default = contain)
        format=json
     """
@@ -124,6 +125,7 @@ def region_search():
     return jsonify({
         'es_execution_time': region_service.execution_time,
         'total_regions': region_service.total_regions,
+        'endpoint_time': end - begin,
         'regions': region_service.regions,
-        'endpoint_time': end - begin
+        'regions_per_file': region_service.regions_per_file
     })
