@@ -305,9 +305,11 @@ def resolve_relative_hrefs(obj, obj_type=''):
             encode_id = f"/{obj['aliases'][0]}/"
 
         obj['@id'] = path + encode_id
-        obj['award'] = path + obj['award']
-        obj['lab'] = path + obj['lab']
-        obj['submitted_by'] = path + obj['submitted_by']
+
+        for field in ['award', 'lab', 'submitted_by']:
+            if field in obj and type(obj[field]) is dict:
+                obj[field] = path + obj[field].get('@id', '')
+
         return obj
 
     if obj_type == 'biosample_ontology':
