@@ -1,8 +1,8 @@
-from genomic_data_service import regulome_es
+from genomic_data_service import region_search_es
 
 REGIONS_PER_PAGE = 100
 AGGREGATION_SIZE = 1000
-DEFAULT_INTERVAL_MATCH = 'CONTAINS'
+DEFAULT_INTERVAL_MATCH = 'INTERSECTS'
 INTERVAL_MATCH_OPTIONS = ['CONTAINS', 'WITHIN', 'INTERSECTS']
 
 
@@ -46,7 +46,7 @@ class RegionService():
 
 
     def intercepting_regions(self):
-        res = regulome_es.search(index=self.chrm, _source=True, body=self.region_search_query())#, size=self.limit)
+        res = region_search_es.search(index=self.chrm, _source=True, body=self.region_search_query())
 
         self.execution_time = res['took'] / 1000.0
         self.total_regions = res['hits']['total']
@@ -54,7 +54,7 @@ class RegionService():
         self.regions_per_file = []
         for agg in res['aggregations']['files'].get('buckets', []):
             self.regions_per_file.append({
-                'file_url': f"https://regulomedb.org/{agg['key']}",
+                'file_url': f"https://www.encodeproject.org/{agg['key']}",
                 'count': agg['doc_count']
             })
 
@@ -66,6 +66,6 @@ class RegionService():
                 'coordinates': f"{r['_source']['coordinates']['gte']}-{r['_source']['coordinates']['lt']}",
                 'value': r['_source'].get('value'),
                 'strand': r['_source'].get('strand'),
-                'file_url': f"https://regulomedb.org/{r['_source']['uuid']}"
+                'file_url': f"https://www.encodeproject.org/{r['_source']['uuid']}"
             })
 

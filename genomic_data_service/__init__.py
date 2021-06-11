@@ -19,8 +19,8 @@ if is_web_app:
     
     es = Elasticsearch(port=app.config['ES_PORT'], hosts=app.config['ES_HOSTS'])
 
-    # temporary ES for Regulome queries
     regulome_es = Elasticsearch(port=app.config['REGULOME_ES_PORT'], hosts=app.config['REGULOME_ES_HOSTS'])
+    region_search_es = Elasticsearch(port=app.config['REGION_SEARCH_ES_PORT'], hosts=app.config['REGION_SEARCH_ES_HOSTS'])
 
     db = SQLAlchemy(app)
 
