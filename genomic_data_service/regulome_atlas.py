@@ -64,11 +64,8 @@ class RegulomeAtlas(object):
     def find_peaks(self, assembly, chrom, start, end, peaks_too=False, max_results=SEARCH_MAX):
         range_query = self._range_query(start, end, max_results=max_results)
 
-        try:
-            results = self.es.search(index=chrom.lower(), doc_type=assembly, _source=True,
-                                            body=range_query, size=max_results)
-        except Exception:
-            return None
+        results = self.es.search(index=chrom.lower(), doc_type=assembly, _source=True,
+                                 body=range_query, size=max_results)
 
         return list(results['hits']['hits'])
 
@@ -250,16 +247,16 @@ class RegulomeAtlas(object):
     def _score_category(dataset):
         '''private: returns one of the categories of evidence that are needed for scoring.'''
         # score categories are slighly different from regulome categories
-        collection_type = dataset.get('collection_type')  # resident_regionset dataset
-        if collection_type in ['ChIP-seq', 'binding sites']:
+        collection_type = dataset.get('collection_type', '').lower()  # resident_regionset dataset
+        if collection_type in ['chip-seq', 'binding sites']:
             return 'ChIP'
-        if collection_type == 'DNase-seq':
+        if collection_type == 'dnase-seq':
             return 'DNase'
-        if collection_type == 'PWMs':
+        if collection_type == 'pwms':
             return 'PWM'
-        if collection_type == 'Footprints':
+        if collection_type == 'footprints':
             return 'Footprint'
-        if collection_type in ['eQTLs', 'dsQTLs', 'curated SNVs']:
+        if collection_type in ['eqtls', 'dsqtls', 'curated snvs']:
             return 'QTL'
         return None
 
