@@ -66,11 +66,7 @@ VALUE_STRAND_COL = {
 
 
 def add_to_residence(es, file_doc):
-    uuid = file_doc['uuid']
-
-    use_type = FOR_REGULOME_DB
-
-    es.index(index=RESIDENTS_INDEX, doc_type=use_type, body=file_doc, id=str(uuid))
+    es.index(index=RESIDENTS_INDEX, doc_type=FOR_REGULOME_DB, body=file_doc, id=str(file_doc['uuid']))
 
 
 def snps_bulk_iterator(snp_index, chrom, snps_for_chrom):
@@ -191,7 +187,7 @@ def index_regions_from_file(es, uuid, file_properties, dataset, snp=False):
 def list_targets(dataset):
     target_labels = []
 
-    target = dataset.get('target', {})
+    target = dataset.get('target', dataset.get('targets'))
     if target:
         if isinstance(target, dict):
             target = [target]
@@ -218,7 +214,7 @@ def metadata_doc(uuid, file_properties, dataset):
         'dataset': {
             'uuid': dataset['uuid'],
             '@id': dataset['@id'],
-            'target': [dataset.get('target', {}).get('name')],
+            'target': list_targets(dataset),
             'biosample_ontology': dataset.get('biosample_ontology', {}),
             'biosample_term_name': dataset.get('biosample_ontology', {}).get('term_name'),
             'documents': []

@@ -19,6 +19,7 @@ SUPPORTED_CHROMOSOMES = [
     'chr18', 'chr19', 'chr20', 'chr21', 'chr22', 'chrX', 'chrY'
 ]
 
+ENCODE_DOMAIN = 'https://test.encodeproject.org'
 SUPPORTED_ASSEMBLIES = ['hg19', 'GRCh38']
 REGULOME_ALLOWED_STATUSES = ['released', 'archived']
 REGULOME_COLLECTION_TYPES = ['assay_term_name', 'annotation_type', 'reference_type']
@@ -34,11 +35,11 @@ REGULOME_REGION_REQUIREMENTS = {
     },
     'dnase-seq': {
         'output_type': ['peaks'],
-        'file_type': ['bed narrowPeak'],
+        'file_type': ['bed narrowpeak'],
         'file_format': ['bed']
     },
     'faire-seq': {
-        'file_type': ['bed narrowPeak'],
+        'file_type': ['bed narrowpeak'],
         'file_format': ['bed']
     },
     'chromatin state': {
@@ -70,10 +71,9 @@ REGULOME_REGION_REQUIREMENTS = {
 
 
 ENCODE_QUERY = [
-    'internal_tags=RegulomeDB',
+    'internal_tags=RegulomeDB_2_0',
     'field=files',
     'field=biosample_ontology',
-    'field=target.name',
     'field=biosample_term_name',
     'field=documents',
     'field=uuid',
@@ -81,6 +81,8 @@ ENCODE_QUERY = [
     'field=annotation_type',
     'field=reference_type',
     'field=collection_type',
+    'field=targets',
+    'field=target',
     '&'.join([f'status={st}' for st in REGULOME_ALLOWED_STATUSES]),
     'format=json',
     'limit=all'
@@ -88,24 +90,36 @@ ENCODE_QUERY = [
 
 
 def encode_graph(query):
-    endpoint = f"https://www.encodeproject.org/search/?{'&'.join(query)}"
+    endpoint = f"{ENCODE_DOMAIN}/search/?{'&'.join(query)}"
 
     return requests.get(endpoint).json()['@graph']
 
 
-def fetch_reference_files_from_encode():
-    query = ['type=Reference', 'internal_tags=RegulomeDB'] + ENCODE_QUERY
+def needs_to_fetch_documents(dataset_file):
+    for prop in REGULOME_COLLECTION_TYPES:
+        prop_value = dataset_file.get(prop)
+        if prop_value and prop_value in ['Footprints', 'PWMs']:
+             return True
 
-    reference_files = encode_graph(query)[0]
-
-    for reference_file in reference_files.get('files', []):
-        index_file.delay(reference_file, reference_files, es_uri, es_port)
+    return False
 
 
-def fetch_dataset_files_from_encode():
-    query = ['type=Dataset'] + ENCODE_QUERY
+def fetch_documents(dataset_file):
+    if not needs_to_fetch_documents(dataset_file):
+        return False
 
-    dataset_files = encode_graph(query)
+    document_ids = dataset_file.get('documents', [])
+    documents = []
+    for document_id in document_ids:
+        endpoint = f"{ENCODE_DOMAIN}{document_id}?format=json"
+        documents.append(requests.get(endpoint).json())
+    dataset_file['documents'] = documents
+
+    return documents != []
+
+
+def index_regulome_db():
+    dataset_files = encode_graph(ENCODE_QUERY)
 
     for dataset_file in dataset_files:
         requirements = None
@@ -115,21 +129,21 @@ def fetch_dataset_files_from_encode():
                 requirements = REGULOME_REGION_REQUIREMENTS.get(dataset_file[collection_type].lower())
 
         if not requirements:
-            print(f'{dataset_file["@id"]}')
+            print(f'No requirements for dataset: {dataset_file["@id"]}')
             continue
 
-        if dataset_file.get('files'):
-            bed_file = dataset_file['files'][0] # TODO: change to preferred_default when ready
-
+        for bed_file in dataset_file.get('files'):
+            ok = True
             for requirement in ['output_type', 'file_type', 'file_format']:
                 if requirement in requirements and bed_file[requirement].lower() not in requirements[requirement]:
-                    continue
+                    ok = False
 
-            index_file.delay(bed_file, dataset_file, es_uri, es_port)
+            if ok:
+                fetch_documents(dataset_file)
+                index_file.delay(bed_file, dataset_file, es_uri, es_port)
 
 
 if __name__ == "__main__":
     RegionIndexerElasticSearch(es_uri, es_port, SUPPORTED_CHROMOSOMES, SUPPORTED_ASSEMBLIES).setup_indices()
 
-    fetch_reference_files_from_encode()
-    fetch_dataset_files_from_encode()
+    index_regulome_db()

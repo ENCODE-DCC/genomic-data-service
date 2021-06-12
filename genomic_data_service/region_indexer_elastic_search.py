@@ -4,7 +4,7 @@ from elasticsearch.helpers import bulk
 
 RESIDENTS_INDEX = 'resident_regionsets'
 REGION_INDEXER_SHARDS = 2
-SEARCH_MAX = 200
+SEARCH_MAX = 99999
 FOR_REGULOME_DB = 'regulomedb'
 
 INDEX_SETTINGS = {
