@@ -2,6 +2,7 @@ from genomic_data_service.region_indexer_task import index_file
 from genomic_data_service.region_indexer_elastic_search import RegionIndexerElasticSearch
 
 import requests
+import pickle
 
 from os import environ
 
@@ -20,6 +21,8 @@ SUPPORTED_CHROMOSOMES = [
 ]
 
 ENCODE_DOMAIN = 'https://test.encodeproject.org'
+REGULOME_ENCODE_ACCESSIONS_PATH = 'regulome_encode_accessions.pickle'
+ENCODE_SNP = ['ENCFF904UCL', 'ENCFF578KDT']
 SUPPORTED_ASSEMBLIES = ['hg19', 'GRCh38']
 REGULOME_ALLOWED_STATUSES = ['released', 'archived']
 REGULOME_COLLECTION_TYPES = ['assay_term_name', 'annotation_type', 'reference_type']
@@ -70,77 +73,136 @@ REGULOME_REGION_REQUIREMENTS = {
 }
 
 
-ENCODE_QUERY = [
-    'internal_tags=RegulomeDB_2_0',
-    'field=files',
-    'field=biosample_ontology',
-    'field=biosample_term_name',
-    'field=documents',
-    'field=uuid',
-    'field=assay_term_name',
-    'field=annotation_type',
-    'field=reference_type',
-    'field=collection_type',
-    'field=targets',
-    'field=target',
-    '&'.join([f'status={st}' for st in REGULOME_ALLOWED_STATUSES]),
-    'format=json',
-    'limit=all'
-]
+# https://stackoverflow.com/questions/3173320/text-progress-bar-in-the-console
+def print_progress_bar (iteration, total, prefix = 'Progress:', suffix = 'Complete', decimals = 1, length = 80, fill = '█', printEnd = "\r"):
+    percent = ("{0:." + str(decimals) + "f}").format(100 * (iteration / float(total)))
+    filledLength = int(length * iteration // total)
+    bar = fill * filledLength + '-' * (length - filledLength)
+
+    print(f'\r{prefix} |{bar}| {percent}% {suffix}', end = printEnd)
+
+    if iteration == total:
+        print()
 
 
 def encode_graph(query):
     endpoint = f"{ENCODE_DOMAIN}/search/?{'&'.join(query)}"
-
     return requests.get(endpoint).json()['@graph']
 
 
-def needs_to_fetch_documents(dataset_file):
+def needs_to_fetch_documents(dataset):
     for prop in REGULOME_COLLECTION_TYPES:
-        prop_value = dataset_file.get(prop)
+        prop_value = dataset.get(prop)
         if prop_value and prop_value in ['Footprints', 'PWMs']:
              return True
 
     return False
 
 
-def fetch_documents(dataset_file):
-    if not needs_to_fetch_documents(dataset_file):
-        return False
+def fetch_documents(dataset):
+    if not needs_to_fetch_documents(dataset):
+        return
 
-    document_ids = dataset_file.get('documents', [])
     documents = []
-    for document_id in document_ids:
+    for document_id in dataset.get('documents', []):
         endpoint = f"{ENCODE_DOMAIN}{document_id}?format=json"
         documents.append(requests.get(endpoint).json())
-    dataset_file['documents'] = documents
 
-    return documents != []
+    dataset['documents'] = documents
+
+
+def log(text, verbose=False):
+    if verbose:
+        print(text)
+
+
+def filter_files(files):
+    files_to_index = []
+    for f in files:
+
+        if f['assembly'] not in SUPPORTED_ASSEMBLIES:
+            log(f"Invalid assembly: {f['assembly']}")
+            continue
+
+        if f['status'] not in REGULOME_ALLOWED_STATUSES:
+            log(f"Invalid status: {f['status']}")
+            continue
+
+        if f['file_format'] != 'bed':
+            log(f"Invalid file format: {f['file_format']}")
+            continue
+
+        requirements = None
+
+        for collection_type in REGULOME_COLLECTION_TYPES:
+            if collection_type in f:
+                requirements = REGULOME_REGION_REQUIREMENTS.get(f[collection_type].lower())
+
+                if requirements is None:
+                    log(f'Unsupported {collection_type}: {f[collection_type]}')
+
+        if requirements is None:
+            continue
+
+        for requirement in ['output_type', 'file_type', 'file_format']:
+            if requirement in requirements and f[requirement].lower() not in requirements[requirement]:
+                log(f'Requirement {requirement} not satisfied: {f[requirement]} - expected: {requirements[requirement]}')
+                continue
+
+        files_to_index.append(f)
+
+    return files_to_index
+
+
+def dataset_accession(f):
+    if 'dataset' not in f:
+        return None
+
+    return f['dataset'].split('/')[2]
+
+
+def fetch_datasets(files, datasets):
+    fetch = []
+
+    for f in files:
+        accession = dataset_accession(f)
+
+        if accession in datasets:
+            continue
+
+        fetch.append(accession)
+
+    query = [f'accession={c}' for c in fetch] + ['field=*', 'format=json']
+    datasets_data = encode_graph(query)
+
+    for dataset in datasets_data:
+        fetch_documents(dataset)
+        datasets[dataset['accession']] = dataset
 
 
 def index_regulome_db():
-    dataset_files = encode_graph(ENCODE_QUERY)
+    encode_accessions = ENCODE_SNP + list(pickle.load(open(REGULOME_ENCODE_ACCESSIONS_PATH, 'rb')))
 
-    for dataset_file in dataset_files:
-        requirements = None
-        
-        for collection_type in REGULOME_COLLECTION_TYPES:
-            if collection_type in dataset_file:
-                requirements = REGULOME_REGION_REQUIREMENTS.get(dataset_file[collection_type].lower())
+    datasets = {}
 
-        if not requirements:
-            print(f'No requirements for dataset: {dataset_file["@id"]}')
-            continue
+    per_request = 350
+    chunks = [encode_accessions[i:i + per_request] for i in range(0, len(encode_accessions), per_request)]
 
-        for bed_file in dataset_file.get('files'):
-            ok = True
-            for requirement in ['output_type', 'file_type', 'file_format']:
-                if requirement in requirements and bed_file[requirement].lower() not in requirements[requirement]:
-                    ok = False
+    i = 0
+    print_progress_bar(i, len(chunks))
+    for chunk in chunks:
+        i += 1
+        print_progress_bar(i, len(chunks))
 
-            if ok:
-                fetch_documents(dataset_file)
-                index_file.delay(bed_file, dataset_file, es_uri, es_port)
+        query = [f'accession={c}' for c in chunk] + ['field=*', 'format=json']
+        files = encode_graph(query)
+
+        files_to_index = filter_files(files)
+
+        fetch_datasets(files_to_index, datasets)
+
+        for f in files_to_index:
+            index_file.delay(f, datasets[dataset_accession(f)], es_uri, es_port)
 
 
 if __name__ == "__main__":
