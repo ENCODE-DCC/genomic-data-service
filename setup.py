@@ -22,7 +22,8 @@ setup(
         'flower==0.9.4',
         'sqlalchemy==1.3.22',
         'psycopg2',
-        'boto3'
+        'boto3',
+        'docker-compose',
     ],
     tests_require=['pytest']
 )
