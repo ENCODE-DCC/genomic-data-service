@@ -1,4 +1,4 @@
-*.egg
+*.egg-info
 ml_models
 .git
 .pytest_cache
