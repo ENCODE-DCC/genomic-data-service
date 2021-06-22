@@ -10,6 +10,9 @@ build:
 run:
 	FLASK_APP=$(APP_NAME) FLASK_ENV=development flask run -p 5000
 
+up:
+	FLASK_APP=$(APP_NAME) FLASK_ENV=up GENOMIC_DATA_SERVICE_SETTINGS=../config/up.cfg flask run --host=0.0.0.0 -p 5000
+
 clean:
 	rm -rf genomic_data_service.egg-info/
 

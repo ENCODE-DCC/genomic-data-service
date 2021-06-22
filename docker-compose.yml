@@ -11,7 +11,7 @@ services:
       - .:/opt/genomic-data-service/
     command:
       - make
-      - run
+      - up
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:5.6.16
     environment:
@@ -20,5 +20,13 @@ services:
       - xpack.security.enabled=false
       - http.port=9201
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
     ports:
       - 9201:9201
+      - 9300:9300
