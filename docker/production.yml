@@ -9,7 +9,7 @@ services:
     depends_on:
       - elasticsearch
     ports:
-      - 5000:5000
+      - 4000:4000
     volumes:
       - .:/opt/genomic-data-service/
     command: ${WEB_COMMAND}

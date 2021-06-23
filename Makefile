@@ -7,20 +7,8 @@ build:
 	deactivate & source venv/bin/activate
 	python3 ./utils/download_ml_models.py
 
-run:
-	FLASK_APP=$(APP_NAME) FLASK_ENV=development flask run -p 5000
-
-up:
-	FLASK_APP=$(APP_NAME) FLASK_ENV=up GENOMIC_DATA_SERVICE_SETTINGS=../config/up.cfg flask run --host=0.0.0.0 -p 5000
-
 clean:
 	rm -rf genomic_data_service.egg-info/
-
-test:
-	FLASK_APP=$(APP_NAME) FLASK_ENV=test GENOMIC_DATA_SERVICE_SETTINGS=../config/test.cfg pytest
-
-prod:
-	FLASK_APP=$(APP_NAME) GENOMIC_DATA_SERVICE_SETTINGS=../config/production.cfg gunicorn -w 4 -b 127.0.0.1:4000 wsgi:app
 
 worker:
 	celery -A genomic_data_service.region_indexer_task worker --loglevel=INFO
@@ -35,3 +23,12 @@ db:
 	FLASK_APP=$(APP_NAME) FLASK_ENV=development python3 migrate.py db init
 	FLASK_APP=$(APP_NAME) FLASK_ENV=development python3 migrate.py db migrate
 	FLASK_APP=$(APP_NAME) FLASK_ENV=development python3 migrate.py db upgrade
+
+dev:
+	docker-compose --file docker-compose.yml --file ./docker/development.yml --env-file ./docker/compose/development.env up
+
+test:
+	docker-compose --file docker-compose.yml --file ./docker/development.yml --env-file ./docker/compose/test.env up
+
+prod:
+	docker-compose --file docker-compose.yml --file ./docker/production.yml --env-file ./docker/compose/production.env up
