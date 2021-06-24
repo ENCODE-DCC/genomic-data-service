@@ -10,7 +10,7 @@ MAX_IN_MEMORY_FILE_SIZE = (25 * 1024 * 1024)
 
 
 class S3BedFileRemoteReader():
-    def __init__(self, file_properties, dataset_type, strand_col_values, snp_set=False):
+    def __init__(self, file_properties, strand_col_values, snp_set=False):
         self.file_properties = file_properties
         self.temp_file = tempfile.NamedTemporaryFile()
         self.snp_set = snp_set
