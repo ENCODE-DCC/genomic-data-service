@@ -22,7 +22,7 @@ def download_and_open_tsv(url, path):
 def get_indices_from_header(header):
     return [
         header.index(value)
-        for valuue in ROW_VALUES
+        for value in ROW_VALUES
     ]
 
 
