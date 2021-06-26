@@ -3,7 +3,7 @@ import os
 
 from genomic_data_service.rnaseq.domain.expression import Expression
 from genomic_data_service.rnaseq.remote.tsv import local_tsv_iterable
-from genomic_data_service.rnaseq.remote.tsv import save_file
+from genomic_data_service.rnaseq.remote.tsv import maybe_save_file
 
 
 ROW_VALUES = [
@@ -14,9 +14,8 @@ ROW_VALUES = [
 ]
 
 
-def open_or_download_tsv(path, url):
-    if not os.path.exists(path):
-        save_file(url, path)
+def download_and_open_tsv(url, path):
+    maybe_save_file(url, path)
     return local_tsv_iterable(path)
 
 
@@ -27,8 +26,8 @@ def get_indices_from_header(header):
     ]
 
 
-def get_tsv_header_and_indices(path):
-    tsv = open_or_download_tsv(path)
+def get_tsv_header_and_indices(url, path):
+    tsv = download_and_open_tsv(url, path)
     header = next(tsv)
     indices = get_indices_from_header(header)
     return tsv, header, indices
@@ -58,8 +57,8 @@ class RnaSeqFile:
 
     def load_expressions(self):
         tsv, header, indices = get_tsv_header_and_indices(
+            self.get_url(),
             self.get_path(),
-            self.get_url()
         )
         for row in tsv:
             values = get_values_from_row(row, indices)
