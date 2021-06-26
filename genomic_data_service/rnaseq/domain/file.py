@@ -40,6 +40,16 @@ def get_values_from_row(row, indices):
     ]
 
 
+def get_expression_generator(url, path):
+    tsv, header, indices = get_tsv_header_and_indices(
+        url,
+        path
+    )
+    yield header
+    for row in tsv:
+        yield get_values_from_row(row, indices)
+
+
 class RnaSeqFile:
 
     BASE_PATH = '/tmp/'
@@ -49,21 +59,23 @@ class RnaSeqFile:
         self.props = props
         self.expressions = []
 
-    def get_url(self):
+    @property
+    def url(self):
         return self.DOMAIN + self.props.get('href')
 
-    def get_path(self):
+    @property
+    def path(self):
         return self.BASE_PATH + self.get_url().split('/')[-1]
 
     def load_expressions(self):
-        tsv, header, indices = get_tsv_header_and_indices(
-            self.get_url(),
-            self.get_path(),
+        expressions = get_expression_generator(
+            self.url,
+            self.path,
         )
-        for row in tsv:
-            values = get_values_from_row(row, indices)
+        header = next(expressions)
+        for expression in expressions:
             self.expressions.append(
                 Expression(
-                    *values
+                    *expression
                 )
             )
