@@ -56,7 +56,6 @@ class RnaSeqFile:
     
     def __init__(self, props):
         self.props = props
-        self.expressions = []
 
     @property
     def url(self):
@@ -66,14 +65,15 @@ class RnaSeqFile:
     def path(self):
         return self.BASE_PATH + self.get_url().split('/')[-1]
 
-    def load_expressions(self):
+    def _get_expressions(self):
         expressions = get_expression_generator(
             self.url,
             self.path,
         )
-        self.expressions.extend(
-            (
-                Expression(*row)
-                for row in expressions
-            )
+        return (
+            Expression(*row)
+            for row in expressions
         )
+
+    def as_expressions():
+        pass

@@ -5,8 +5,14 @@ class Memory:
     def __init__(self):
         self._data = []
 
-    def add(self, item):
+    def load(self, item):
         self._data.append(item)
 
-    def bulk_add(self, items):
+    def bulk_load(self, items):
         self._data.extend(items)
+
+    def bulk_load_from_files(self, files):
+        for file_ in files:
+            self._data.extend(
+                file_.as_expressions()
+            )
