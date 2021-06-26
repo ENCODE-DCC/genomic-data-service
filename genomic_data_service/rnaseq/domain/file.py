@@ -41,11 +41,10 @@ def get_values_from_row(row, indices):
 
 
 def get_expression_generator(url, path):
-    tsv, header, indices = get_tsv_header_and_indices(
+    tsv, _, indices = get_tsv_header_and_indices(
         url,
         path
     )
-    yield header
     for row in tsv:
         yield get_values_from_row(row, indices)
 
@@ -72,10 +71,9 @@ class RnaSeqFile:
             self.url,
             self.path,
         )
-        header = next(expressions)
-        for expression in expressions:
-            self.expressions.append(
-                Expression(
-                    *expression
-                )
+        self.expressions.extend(
+            (
+                Expression(*row)
+                for row in expressions
             )
+        )
