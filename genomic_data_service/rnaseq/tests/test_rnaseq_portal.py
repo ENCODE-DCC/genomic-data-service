@@ -10,5 +10,4 @@ def test_rnaseq_portal_init():
 def test_rnaseq_portal_get_data():
     from genomic_data_service.rnaseq.remote.portal import Portal
     portal = Portal()
-    assert portal.get_data() == []
     assert False
