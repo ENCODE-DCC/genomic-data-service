@@ -143,14 +143,14 @@ def encode_graph(query):
     return requests.get(endpoint).json()['@graph']
 
 
-def needs_to_fetch_documents(dataset):
+def need_to_fetch_documents(dataset):
     documents_required_for = ['footprints', 'pwms']
 
     for prop in REGULOME_COLLECTION_TYPES:
         prop_value = dataset.get(prop)
 
         if not prop_value:
-            return False
+            continue
 
         if isinstance(prop_value, list):
             for p in [p.lower() for p in prop_value]:
@@ -163,7 +163,7 @@ def needs_to_fetch_documents(dataset):
 
 
 def fetch_documents(dataset):
-    if not needs_to_fetch_documents(dataset):
+    if not need_to_fetch_documents(dataset):
         return
 
     documents = []
@@ -252,7 +252,7 @@ def index_regulome_db(filter_files=False):
     regulome_encode_accessions = pickle.load(open(REGULOME_ENCODE_ACCESSIONS_MAPPING_PATH, 'rb'))
     regulome_accessions = list(pickle.load(open(REGULOME_ACCESSIONS_PATH, 'rb')))
 
-    encode_accessions = ENCODE_SNP + [regulome_encode_accessions[reg] for reg in regulome_accessions]
+    encode_accessions = [regulome_encode_accessions[reg] for reg in regulome_accessions]
 
     datasets = {}
 

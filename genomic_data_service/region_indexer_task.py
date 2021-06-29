@@ -15,13 +15,12 @@ FOR_REGULOME_DB = 'regulomedb'
 
 # TODO: move constants to centralized file
 REGULOME_COLLECTION_TYPES = ['assay_term_name', 'annotation_type', 'reference_type']
-REGULOME_DATASET_TYPES = ['Experiment', 'Annotation', 'Reference']
 
 
 SUPPORTED_CHROMOSOMES = [
     'chr1', 'chr2', 'chr3', 'chr4', 'chr5', 'chr6', 'chr7', 'chr8', 'chr9',
     'chr10', 'chr11', 'chr12', 'chr13', 'chr14', 'chr15', 'chr16', 'chr17',
-    'chr18', 'chr19', 'chr20', 'chr21', 'chr22', 'chrX', 'chrY'
+    'chr18', 'chr19', 'chr20', 'chr21', 'chr22', 'chrx', 'chry'
 ]
 
 # TODO: refactor
@@ -38,28 +37,28 @@ SEARCH_MAX = 200
 
 # Columns (0-based) for value and strand to be indexed - based on RegulomeDB
 VALUE_STRAND_COL = {
-    'ChIP-seq': {
+    'chip-seq': {
         'strand_col': 5,
         'value_col': 6
     },
-    'DNase-seq': {
+    'dnase-seq': {
         'strand_col': 5,
         'value_col': 6
     },
-    'FAIRE-seq': {
+    'faire-seq': {
         'strand_col': 5,
         'value_col': 6
     },
     'chromatin state': {
         'value_col': 3
     },
-    'eQTLs': {
+    'eqtls': {
         'value_col': 5
     },
-    'Footprints': {
+    'footprints': {
         'strand_col': 5,
     },
-    'PWMs': {
+    'pwms': {
         'strand_col': 4,
     },
 }
@@ -124,8 +123,8 @@ def index_regions(es, regions, metadata, chroms):
 def index_regions_from_file(es, uuid, file_properties, dataset, snp=False):
     metadata = metadata_doc(uuid, file_properties, dataset)
 
-    snp_set      = dataset['@type'][0] == 'Reference'
-    dataset_type = metadata['dataset']['collection_type']
+    snp_set      = dataset['@type'][0].lower() == 'reference'
+    dataset_type = metadata['dataset']['collection_type'].lower()
     regulome_strand = VALUE_STRAND_COL.get(dataset_type, {})
 
     metadata['chroms'] = []
@@ -133,11 +132,11 @@ def index_regions_from_file(es, uuid, file_properties, dataset, snp=False):
     file_data = {}
     chroms = []
 
-    readable_file = S3BedFileRemoteReader(file_properties, dataset_type, regulome_strand, snp_set=snp_set)
+    readable_file = S3BedFileRemoteReader(file_properties, regulome_strand, snp_set=snp_set)
 
     if file_properties['file_format'] == 'bed':
         for (chrom, doc) in readable_file.parse():
-            if chrom not in SUPPORTED_CHROMOSOMES:
+            if chrom.lower() not in SUPPORTED_CHROMOSOMES:
                 continue
 
             if doc['coordinates']['gte'] == doc['coordinates']['lt']:
@@ -227,7 +226,7 @@ def metadata_doc(uuid, file_properties, dataset):
         if prop_value:
             meta_doc['dataset']['collection_type'] = prop_value
 
-    if meta_doc['dataset']['collection_type'] in ['Footprints', 'PWMs']:
+    if meta_doc['dataset']['collection_type'].lower() in ['footprints', 'pwms']:
         meta_doc['dataset']['documents'] = dataset.get('documents', [])
 
     return meta_doc
