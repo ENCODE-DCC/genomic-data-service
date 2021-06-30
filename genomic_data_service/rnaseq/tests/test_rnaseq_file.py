@@ -3,14 +3,14 @@ import pytest
 
 def test_rnaseq_file_init(raw_files):
     from genomic_data_service.rnaseq.domain.file import RnaSeqFile
-    rna_file = RnaSeqFile(raw_files[0])
+    rna_file = RnaSeqFile(raw_files[0], {})
     assert isinstance(rna_file, RnaSeqFile)
     assert rna_file.props == raw_files[0]
 
 
 def test_rnaseq_file_url(raw_files):
     from genomic_data_service.rnaseq.domain.file import RnaSeqFile
-    rna_file = RnaSeqFile(raw_files[0])
+    rna_file = RnaSeqFile(raw_files[0], {})
     assert (
         rna_file.url == 'https://www.encodeproject.org/files/ENCFF241WYH/@@download/ENCFF241WYH.tsv'
     )
@@ -18,13 +18,13 @@ def test_rnaseq_file_url(raw_files):
 
 def test_rnaseq_file_path(raw_files):
     from genomic_data_service.rnaseq.domain.file import RnaSeqFile
-    rna_file = RnaSeqFile(raw_files[0])
+    rna_file = RnaSeqFile(raw_files[0], {})
     assert rna_file.path == '/tmp/ENCFF241WYH.tsv'
 
 
 def test_rnaseq_file_get_expressions(raw_files, raw_expressions, mocker):
     from genomic_data_service.rnaseq.domain.file import RnaSeqFile
-    rna_file = RnaSeqFile(raw_files[0])
+    rna_file = RnaSeqFile(raw_files[0], {})
     mocker.patch(
         'genomic_data_service.rnaseq.domain.file.get_expression_generator',
         return_value=raw_expressions,
@@ -95,7 +95,7 @@ def test_rnaseq_file_get_expressions_local_file(local_quantification_tsv_path):
     props = {
         'href': '/files/ENCFF241WYH/@@download/ENCFF241WYH.tsv',
     }
-    rna_file = RnaSeqFile(props)
+    rna_file = RnaSeqFile(props, {})
     rna_file.BASE_PATH = base_path
     rna_file.DOMAIN = ''
     expressions = list(rna_file._get_expressions())
@@ -117,7 +117,7 @@ def test_rnaseq_file_get_expressions_remote_file():
     props = {
         'href': '/files/ENCFF241WYH/@@download/ENCFF241WYH.tsv',
     }
-    rna_file = RnaSeqFile(props)
+    rna_file = RnaSeqFile(props, {})
     expressions = list(rna_file._get_expressions())
     assert len(expressions) == 59526
     assert expressions[0] == Expression(
@@ -132,7 +132,7 @@ def test_rnaseq_file_get_expressions_remote_file():
 
 def test_rnaseq_file_extract_file_properties(raw_files):
     from genomic_data_service.rnaseq.domain.file import RnaSeqFile
-    rna_file = RnaSeqFile(raw_files[0])
+    rna_file = RnaSeqFile(raw_files[0], {})
     rna_file._extract_file_properties()
     assert rna_file._file_properties == {
         '@id': '/files/ENCFF241WYH/',
@@ -165,13 +165,63 @@ def test_rnaseq_file_extract_file_properties(raw_files):
     }
 
 
-def test_rnaseq_file_extract_file_properties(raw_files):
+def test_rnaseq_file_extract_as_documents(raw_files, raw_expressions, mocker):
     from genomic_data_service.rnaseq.domain.file import RnaSeqFile
-    rna_file = RnaSeqFile(raw_files[0])
-    rna_file._extract_file_properties()
-    expressions = list(rna_file.as_expressions())
-    assert expressions == [
-        {
-            'embedded': {}
+    mocker.patch(
+        'genomic_data_service.rnaseq.domain.file.get_expression_generator',
+        return_value=raw_expressions,
+    )
+    rna_file = RnaSeqFile(raw_files[0], {})
+    as_documents = list(rna_file.as_documents())
+    assert len(as_documents) == 4
+    assert as_documents[0] == {
+        'embedded': {
+            'gene_id': 'ENSG00000034677.12',
+            'transcript_ids': [
+                'ENST00000341084.6',
+                'ENST00000432381.2',
+                'ENST00000517584.5',
+                'ENST00000519342.1',
+                'ENST00000519449.5',
+                'ENST00000519527.5',
+                'ENST00000520071.1',
+                'ENST00000520903.1',
+                'ENST00000522182.1',
+                'ENST00000522369.5',
+                'ENST00000523167.1',
+                'ENST00000523255.5',
+                'ENST00000523481.5',
+                'ENST00000523644.1',
+                'ENST00000524233.1'
+            ],
+            'tpm': 9.34,
+            'fpkm': 14.49,
+            '@id': '/files/ENCFF241WYH/',
+            'assay_title': 'polyA plus RNA-seq',
+            'assembly': 'GRCh38',
+            'biosample_ontology': {
+                'organ_slims': [
+                    'musculature of body'
+                ],
+                'term_name': 'muscle of trunk',
+                'synonyms': [
+                    'torso muscle organ',
+                    'trunk musculature',
+                    'trunk muscle',
+                    'muscle of trunk',
+                    'muscle organ of torso',
+                    'trunk muscle organ',
+                    'muscle organ of trunk',
+                    'body musculature'
+                ],
+                'name': 'tissue_UBERON_0001774',
+                'term_id': 'UBERON:0001774',
+                'classification': 'tissue'
+            },
+            'dataset': '/experiments/ENCSR906HEV/',
+            'donors': [
+                '/human-donors/ENCDO676JUB/'
+            ],
+            'genome_annotation': 'V29'
         }
-    ]
+    }

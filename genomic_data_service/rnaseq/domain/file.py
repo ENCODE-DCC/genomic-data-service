@@ -6,7 +6,9 @@ from genomic_data_service.rnaseq.remote.tsv import local_tsv_iterable
 from genomic_data_service.rnaseq.remote.tsv import maybe_save_file
 from genomic_data_service.rnaseq.domain.constants import BASE_PATH
 from genomic_data_service.rnaseq.domain.constants import DATASET
-from genomic_data_service.rnaseq.domain.constants import GENE
+from genomic_data_service.rnaseq.domain.constants import DATASETS
+from genomic_data_service.rnaseq.domain.constants import DATASET_FIELDS
+from genomic_data_service.rnaseq.domain.constants import GENES
 from genomic_data_service.rnaseq.domain.constants import DOCUMENT_PREFIX
 from genomic_data_service.rnaseq.domain.constants import DOMAIN
 from genomic_data_service.rnaseq.domain.constants import FILE_FIELDS
@@ -83,7 +85,7 @@ class RnaSeqFile:
 
     def _extract_dataset_properties(self):
         dataset = self.repositories.get(
-            DATASET,
+            DATASETS,
             {}
         ).get(
             self._file_properties.get(DATASET),
@@ -95,12 +97,12 @@ class RnaSeqFile:
             if k in self.DATASET_FIELDS
         }
 
-    def _get_gene_from_gene_id(self, feature_id):
+    def _get_gene_from_gene_id(self, gene_id):
         return self.repositories.get(
-            GENE,
+            GENES,
             {}
         ).get(
-            feature_id,
+            gene_id,
             {}
         )
 
@@ -117,7 +119,7 @@ class RnaSeqFile:
     def _build_document(self, expression):
         return {
             DOCUMENT_PREFIX: {
-                **expression.__dict__,
+                **expression.as_dict(),
                 **self._file_properties,
                 **self._dataset_properties,
                 **self._get_gene_from_gene_id(
@@ -131,7 +133,9 @@ class RnaSeqFile:
             yield self._build_document(expression)
 
 
-    def as_expressions(self):
+    def as_documents(self):
+        self._extract_file_properties()
+        self._extract_dataset_properties()
         return (
             document
             for document in self._get_documents()

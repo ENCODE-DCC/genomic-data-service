@@ -14,5 +14,5 @@ class Memory:
     def bulk_load_from_files(self, files):
         for file_ in files:
             self._data.extend(
-                file_.as_expressions()
+                file_.as_documents()
             )
