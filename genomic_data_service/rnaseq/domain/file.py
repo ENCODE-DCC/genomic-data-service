@@ -4,6 +4,7 @@ import os
 from genomic_data_service.rnaseq.domain.expression import Expression
 from genomic_data_service.rnaseq.remote.tsv import local_tsv_iterable
 from genomic_data_service.rnaseq.remote.tsv import maybe_save_file
+from genomic_data_service.rnaseq.domain.constants import FILE_FIELDS
 
 
 ROW_VALUES = [
@@ -53,6 +54,7 @@ class RnaSeqFile:
 
     BASE_PATH = '/tmp/'
     DOMAIN = 'https://www.encodeproject.org'
+    FILE_FIELDS = FILE_FIELDS
     
     def __init__(self, props):
         self.props = props
@@ -64,6 +66,13 @@ class RnaSeqFile:
     @property
     def path(self):
         return self.BASE_PATH + self.url.split('/')[-1]
+
+    def _extract_file_properties(self):
+        self._file_properties = {
+            k: v
+            for k, v in self.props.items()
+            if k in self.FILE_FIELDS
+        }
 
     def _get_expressions(self):
         expressions = get_expression_generator(

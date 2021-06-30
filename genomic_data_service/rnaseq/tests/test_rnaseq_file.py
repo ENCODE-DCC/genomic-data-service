@@ -128,3 +128,38 @@ def test_rnaseq_file_get_expressions_remote_file():
             '0.00'
         ]
     )
+
+
+def test_rnaseq_file_extract_file_properties(raw_files):
+    from genomic_data_service.rnaseq.domain.file import RnaSeqFile
+    rna_file = RnaSeqFile(raw_files[0])
+    rna_file._extract_file_properties()
+    assert rna_file._file_properties == {
+        '@id': '/files/ENCFF241WYH/',
+        'assay_title': 'polyA plus RNA-seq',
+        'assembly': 'GRCh38',
+        'biosample_ontology': {
+            'organ_slims': [
+                'musculature of body'
+            ],
+            'term_name': 'muscle of trunk',
+            'synonyms': [
+                'torso muscle organ',
+                'trunk musculature',
+                'trunk muscle',
+                'muscle of trunk',
+                'muscle organ of torso',
+                'trunk muscle organ',
+                'muscle organ of trunk',
+                'body musculature'
+            ],
+            'name': 'tissue_UBERON_0001774',
+            'term_id': 'UBERON:0001774',
+            'classification': 'tissue'
+        },
+        'dataset': '/experiments/ENCSR906HEV/',
+        'donors': [
+            '/human-donors/ENCDO676JUB/'
+        ],
+        'genome_annotation': 'V29',
+    }
