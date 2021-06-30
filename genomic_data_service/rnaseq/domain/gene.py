@@ -2,6 +2,14 @@ from genomic_data_service.rnaseq.domain.constants import ENSEMBL_PREFIX
 from genomic_data_service.rnaseq.domain.constants import GENE_FIELDS
 
 
+def get_genes_by_ensembl_id(genes):
+    return dict(
+        gene_by_ensembl_id
+        for gene in genes
+        for gene_by_ensembl_id in gene.by_ensembl_ids()
+    )
+
+
 class Gene:
 
     def __init__(self, props):

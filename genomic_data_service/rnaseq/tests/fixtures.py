@@ -377,6 +377,15 @@ def raw_human_genes():
     ]
 
 
+@pytest.fixture()
+def human_genes(raw_human_genes):
+    from genomic_data_service.rnaseq.domain.gene import Gene
+    return [
+        Gene(raw_human_gene)
+        for raw_human_gene in raw_human_genes
+    ]
+
+
 @pytest.fixture
 def raw_mouse_genes():
     return [
