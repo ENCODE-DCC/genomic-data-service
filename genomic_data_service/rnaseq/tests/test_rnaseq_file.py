@@ -163,3 +163,15 @@ def test_rnaseq_file_extract_file_properties(raw_files):
         ],
         'genome_annotation': 'V29',
     }
+
+
+def test_rnaseq_file_extract_file_properties(raw_files):
+    from genomic_data_service.rnaseq.domain.file import RnaSeqFile
+    rna_file = RnaSeqFile(raw_files[0])
+    rna_file._extract_file_properties()
+    expressions = list(rna_file.as_expressions())
+    assert expressions == [
+        {
+            'embedded': {}
+        }
+    ]

@@ -4,6 +4,9 @@ import os
 from genomic_data_service.rnaseq.domain.expression import Expression
 from genomic_data_service.rnaseq.remote.tsv import local_tsv_iterable
 from genomic_data_service.rnaseq.remote.tsv import maybe_save_file
+from genomic_data_service.rnaseq.domain.constants import BASE_PATH
+from genomic_data_service.rnaseq.domain.constants import DOCUMENT_PREFIX
+from genomic_data_service.rnaseq.domain.constants import DOMAIN
 from genomic_data_service.rnaseq.domain.constants import FILE_FIELDS
 
 
@@ -52,8 +55,8 @@ def get_expression_generator(url, path):
 
 class RnaSeqFile:
 
-    BASE_PATH = '/tmp/'
-    DOMAIN = 'https://www.encodeproject.org'
+    BASE_PATH = BASE_PATH
+    DOMAIN = DOMAIN
     FILE_FIELDS = FILE_FIELDS
     
     def __init__(self, props):
@@ -85,4 +88,10 @@ class RnaSeqFile:
         )
 
     def as_expressions():
-        pass
+        documents = [{}]
+        return (
+            {
+                DOCUMENT_PREFIX: document
+            }
+            for document in documents
+        )
