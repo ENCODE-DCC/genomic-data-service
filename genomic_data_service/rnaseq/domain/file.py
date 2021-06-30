@@ -5,6 +5,8 @@ from genomic_data_service.rnaseq.domain.expression import Expression
 from genomic_data_service.rnaseq.remote.tsv import local_tsv_iterable
 from genomic_data_service.rnaseq.remote.tsv import maybe_save_file
 from genomic_data_service.rnaseq.domain.constants import BASE_PATH
+from genomic_data_service.rnaseq.domain.constants import DATASET
+from genomic_data_service.rnaseq.domain.constants import GENE
 from genomic_data_service.rnaseq.domain.constants import DOCUMENT_PREFIX
 from genomic_data_service.rnaseq.domain.constants import DOMAIN
 from genomic_data_service.rnaseq.domain.constants import FILE_FIELDS
@@ -58,9 +60,11 @@ class RnaSeqFile:
     BASE_PATH = BASE_PATH
     DOMAIN = DOMAIN
     FILE_FIELDS = FILE_FIELDS
+    DATASET_FIELDS = DATASET_FIELDS
     
-    def __init__(self, props):
+    def __init__(self, props, repositories):
         self.props = props
+        self.repositories = repositories
 
     @property
     def url(self):
@@ -77,6 +81,29 @@ class RnaSeqFile:
             if k in self.FILE_FIELDS
         }
 
+    def _extract_dataset_properties(self):
+        dataset = self.repositories.get(
+            DATASET,
+            {}
+        ).get(
+            self._file_properties.get(DATASET),
+            {}
+        )
+        self._dataset_properties = {
+            k: v
+            for k, v in dataset.items()
+            if k in self.DATASET_FIELDS
+        }
+
+    def _get_gene_from_gene_id(self, feature_id):
+        return self.repositories.get(
+            GENE,
+            {}
+        ).get(
+            feature_id,
+            {}
+        )
+
     def _get_expressions(self):
         expressions = get_expression_generator(
             self.url,
@@ -87,11 +114,25 @@ class RnaSeqFile:
             for row in expressions
         )
 
-    def as_expressions():
-        documents = [{}]
-        return (
-            {
-                DOCUMENT_PREFIX: document
+    def _build_document(self, expression):
+        return {
+            DOCUMENT_PREFIX: {
+                **expression.__dict__,
+                **self._file_properties,
+                **self._dataset_properties,
+                **self._get_gene_from_gene_id(
+                    expression.gene_id
+                )
             }
-            for document in documents
+        }
+
+    def _get_documents(self):
+        for expression in self._get_expressions():
+            yield self._build_document(expression)
+
+
+    def as_expressions(self):
+        return (
+            document
+            for document in self._get_documents()
         )
