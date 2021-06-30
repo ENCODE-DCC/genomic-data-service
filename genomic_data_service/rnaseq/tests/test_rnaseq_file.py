@@ -108,3 +108,23 @@ def test_rnaseq_file_get_expressions_local_file(local_quantification_tsv_path):
             '0.02'
         ]
     )
+
+
+@pytest.mark.skip(reason='This actually downloads a file')
+def test_rnaseq_file_get_expressions_remote_file():
+    from genomic_data_service.rnaseq.domain.file import RnaSeqFile
+    from genomic_data_service.rnaseq.domain.expression import Expression
+    props = {
+        'href': '/files/ENCFF241WYH/@@download/ENCFF241WYH.tsv',
+    }
+    rna_file = RnaSeqFile(props)
+    expressions = list(rna_file._get_expressions())
+    assert len(expressions) == 59526
+    assert expressions[0] == Expression(
+        *[
+            '10904',
+            '10904',
+            '0.00',
+            '0.00'
+        ]
+    )
