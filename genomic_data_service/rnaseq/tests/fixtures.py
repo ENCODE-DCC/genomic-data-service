@@ -381,3 +381,8 @@ def raw_mouse_genes():
             "title": "Cdh24 (Mus musculus)"
         }
     ]
+
+
+@pytest.fixture
+def local_quantification_tsv_path():
+    return './genomic_data_service/rnaseq/tests/data/ENCFF241WYH.tsv'

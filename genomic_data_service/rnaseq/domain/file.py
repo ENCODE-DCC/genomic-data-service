@@ -9,7 +9,7 @@ from genomic_data_service.rnaseq.remote.tsv import maybe_save_file
 ROW_VALUES = [
     'gene_id',
     'transcript_id(s)',
-    'TMP',
+    'TPM',
     'FPKM',
 ]
 
@@ -63,7 +63,7 @@ class RnaSeqFile:
 
     @property
     def path(self):
-        return self.BASE_PATH + self.get_url().split('/')[-1]
+        return self.BASE_PATH + self.url.split('/')[-1]
 
     def _get_expressions(self):
         expressions = get_expression_generator(
