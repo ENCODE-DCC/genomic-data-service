@@ -17,3 +17,22 @@ def test_rnaseq_expression_init():
     assert expression.transcript_ids == 'ENST000, ENST001'
     assert expression.tpm == 0.03
     assert expression.fpkm == 90.1
+
+
+def test_rnaseq_expression_dict():
+    from genomic_data_service.rnaseq.domain.expression import Expression
+    data = [
+        'POMC',
+        'ENST000, ENST001',
+        0.03,
+        90.1,
+    ]
+    expression = Expression(
+        *data
+    )
+    assert expression.__dict__ == {
+        'fpkm': 90.1,
+        'gene_id': 'POMC',
+        'tpm': 0.03,
+        'transcript_ids': 'ENST000, ENST001'
+    }
