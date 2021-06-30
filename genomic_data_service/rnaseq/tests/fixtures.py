@@ -185,8 +185,71 @@ def raw_files():
 def files(raw_files):
     from genomic_data_service.rna_seq.domain.file import RnaSeqFile
     return [
-        RnaSeqFile(props=raw_file)
+        RnaSeqFile(raw_file, {})
         for raw_file in raw_files
+    ]
+
+
+@pytest.fixture
+def raw_datasets():
+    return [
+        {
+            "@id": "/experiments/ENCSR113HQM/",
+            "@type": ["Experiment", "Dataset", "Item"],
+            "biosample_summary": "uterus tissue female adult (53 years)",
+            "replicates": [
+                {
+                    "library": {
+                        "biosample": {
+                            "age_units": "year",
+                            "sex": "female",
+                            "age": "53"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "@id": "/experiments/ENCSR906HEV/",
+            "@type": ["Experiment", "Dataset", "Item"],
+            "biosample_summary": "muscle of trunk tissue female embryo (113 days)",
+            "replicates": [
+                {
+                    "library": {
+                        "biosample": {
+                            "age_units": "day",
+                            "sex": "female",
+                            "age": "113"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "@id": "/experiments/ENCSR938LSP/",
+            "@type": ["Experiment", "Dataset", "Item"],
+            "biosample_summary": "GM23338 originated from GM23248",
+            "replicates": [
+                {
+                    "library": {
+                        "biosample": {
+                            "age_units": "year",
+                            "sex": "male",
+                            "age": "53"
+                        }
+                    }
+                },
+                {
+                    "library": {
+                        "biosample": {
+                            "age_units": "year",
+                            "sex": "male",
+                            "age": "53"
+                        }
+                    }
+                }
+            ]
+        }
     ]
 
 
@@ -386,3 +449,18 @@ def raw_mouse_genes():
 @pytest.fixture
 def local_quantification_tsv_path():
     return './genomic_data_service/rnaseq/tests/data/ENCFF241WYH.tsv'
+
+
+@pytest.fixture
+def respositories(raw_datasets):
+    from genomic_data_service.rnaseq.domain.constants import DATASETS
+    from genomic_data_service.rnaseq.domain.constants import FILES
+    from genomic_data_service.rnaseq.domain.constants import GENES
+    return {
+        DATASETS: {
+            dataset['@id']: dataset
+            for dataset in raw_datasets
+        },
+        FILES: {},
+        GENES: {},
+    }
