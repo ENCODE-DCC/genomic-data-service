@@ -37,7 +37,6 @@ def test_rnaseq_file_get_expressions(raw_files, raw_expressions, mocker):
     assert expressions[3].fpkm == 15.8
 
 
-
 def test_rnaseq_file_get_indices_from_header():
     from genomic_data_service.rnaseq.domain.file import get_indices_from_header
     header = [
@@ -86,3 +85,26 @@ def test_rnaseq_file_get_expression_generator(local_quantification_tsv_path):
         ['ENSG00000150991.14', 'ENST00000339647.5,ENST00000535131.1,ENST00000535859.1,ENST00000536661.1,ENST00000536769.1,ENST00000538617.5,ENST00000540351.1,ENST00000540700.1,ENST00000541272.1,ENST00000541645.1,ENST00000542416.1,ENST00000544481.1,ENST00000546120.2,ENST00000546271.1', '183.38', '284.55'],
         ['ENSG00000150995.19', 'ENST00000302640.12,ENST00000354582.11,ENST00000357086.10,ENST00000443694.4,ENST00000456211.8,ENST00000463980.6,ENST00000467056.6,ENST00000467545.6,ENST00000472205.1,ENST00000477577.2,ENST00000478515.2,ENST00000479831.1,ENST00000481415.2,ENST00000487016.1,ENST00000490572.1,ENST00000491868.2,ENST00000493491.6,ENST00000494681.5,ENST00000544951.6,ENST00000647624.1,ENST00000647673.1,ENST00000647685.1,ENST00000647708.1,ENST00000647717.1,ENST00000647900.1,ENST00000647997.1,ENST00000648016.1,ENST00000648038.1,ENST00000648208.1,ENST00000648212.1,ENST00000648266.1,ENST00000648309.1,ENST00000648390.1,ENST00000648431.1,ENST00000648510.1,ENST00000648564.1,ENST00000648770.1,ENST00000649015.1,ENST00000649051.1,ENST00000649139.1,ENST00000649144.1,ENST00000649272.1,ENST00000649314.1,ENST00000649414.1,ENST00000649425.1,ENST00000649430.1,ENST00000649669.1,ENST00000649694.1,ENST00000649767.1,ENST00000649908.1,ENST00000650074.1,ENST00000650079.1,ENST00000650139.1,ENST00000650146.1,ENST00000650294.1,ENST00000650552.1', '5.82', '9.04']
     ]
+
+
+def test_rnaseq_file_get_expressions_local_file(local_quantification_tsv_path):
+    from genomic_data_service.rnaseq.domain.file import RnaSeqFile
+    from genomic_data_service.rnaseq.domain.expression import Expression
+    file_name = local_quantification_tsv_path.split('/')[-1]
+    base_path = local_quantification_tsv_path.replace(file_name, '')
+    props = {
+        'href': '/files/ENCFF241WYH/@@download/ENCFF241WYH.tsv',
+    }
+    rna_file = RnaSeqFile(props)
+    rna_file.BASE_PATH = base_path
+    rna_file.DOMAIN = ''
+    expressions = list(rna_file._get_expressions())
+    assert len(expressions) == 10
+    assert expressions[0] == Expression(
+        *[
+            'ENSG00000150873.11',
+            'ENST00000381585.7,ENST00000405022.3',
+            '0.01',
+            '0.02'
+        ]
+    )
