@@ -12,7 +12,6 @@ class Expression:
     tpm: float
     fpkm: float
 
-
     def as_dict(self):
         return {
             'gene_id': self.gene_id,
