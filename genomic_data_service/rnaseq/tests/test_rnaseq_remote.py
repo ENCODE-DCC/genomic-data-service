@@ -69,7 +69,7 @@ def test_rnaseq_remote_portal_load_genes(mocker, raw_human_genes):
         }
     )
     portal = Portal()
-    portal._load_genes()
+    portal.load_genes()
     assert 'genes' in portal.repositories
     assert len(portal.repositories['genes']) == 5
     expected_gene_ids = [
@@ -92,7 +92,7 @@ def test_rnaseq_remote_portal_load_datasets(mocker, raw_datasets):
         }
     )
     portal = Portal()
-    portal._load_datasets()
+    portal.load_datasets()
     assert 'datasets' in portal.repositories
     assert len(portal.repositories['datasets']) == 3
     expected_dataset_ids = [
@@ -113,8 +113,8 @@ def test_rnaseq_remote_portal_get_rna_seq_files(mocker, raw_files, repositories)
         }
     )
     portal = Portal()
-    portal._load_genes = lambda: None
-    portal._load_datasets = lambda: None
+    portal.load_genes = lambda: None
+    portal.load_datasets = lambda: None
     portal.repositories = repositories
     files = list(portal.get_rna_seq_files())
     assert len(files) == 4
