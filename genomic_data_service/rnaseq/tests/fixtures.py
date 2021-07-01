@@ -373,6 +373,24 @@ def raw_human_genes():
                 "hsa-mir-1267"
             ],
             "title": "MIR1267 (Homo sapiens)"
+        },
+        {
+            'geneid': '25897',
+            'symbol': 'RNF19A',
+            'name': 'ring finger protein 19A, RBR E3 ubiquitin protein ligase',
+            'synonyms': ['DKFZp566B1346', 'RNF19', 'dorfin'],
+            'dbxrefs': [
+                'HGNC:13432',
+                'UniProtKB:Q9NV58',
+                'MIM:607119',
+                'ENSEMBL:ENSG00000034677',
+                'GeneCards:RNF19A',
+                'Vega:OTTHUMG00000164707'
+            ],
+            '@id': '/genes/25897/',
+            '@type': ['Gene', 'Item'],
+            'title': 'RNF19A (Homo sapiens)',
+            'targets': ['/targets/eGFP-RNF19A-human/']
         }
     ]
 
@@ -461,15 +479,16 @@ def local_quantification_tsv_path():
 
 
 @pytest.fixture
-def respositories(raw_datasets):
+def repositories(raw_datasets, human_genes):
     from genomic_data_service.rnaseq.domain.constants import DATASETS
     from genomic_data_service.rnaseq.domain.constants import FILES
     from genomic_data_service.rnaseq.domain.constants import GENES
+    from genomic_data_service.rnaseq.domain.gene import get_genes_by_ensembl_id
     return {
         DATASETS: {
             dataset['@id']: dataset
             for dataset in raw_datasets
         },
         FILES: {},
-        GENES: {},
+        GENES: get_genes_by_ensembl_id(human_genes),
     }

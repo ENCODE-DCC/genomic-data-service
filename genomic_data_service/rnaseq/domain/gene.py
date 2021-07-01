@@ -34,4 +34,3 @@ class Gene:
         self._extract_gene_properties()
         for ensembl_id in self._ensembl_ids:
             yield (ensembl_id, self._gene_properties)
-

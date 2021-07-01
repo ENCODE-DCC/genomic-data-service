@@ -4,14 +4,19 @@ import os
 from genomic_data_service.rnaseq.domain.expression import Expression
 from genomic_data_service.rnaseq.remote.tsv import local_tsv_iterable
 from genomic_data_service.rnaseq.remote.tsv import maybe_save_file
+from genomic_data_service.rnaseq.domain.constants import AT_ID
+from genomic_data_service.rnaseq.domain.constants import AT_TYPE
 from genomic_data_service.rnaseq.domain.constants import BASE_PATH
 from genomic_data_service.rnaseq.domain.constants import DATASET
 from genomic_data_service.rnaseq.domain.constants import DATASETS
 from genomic_data_service.rnaseq.domain.constants import DATASET_FIELDS
-from genomic_data_service.rnaseq.domain.constants import GENES
 from genomic_data_service.rnaseq.domain.constants import DOCUMENT_PREFIX
 from genomic_data_service.rnaseq.domain.constants import DOMAIN
+from genomic_data_service.rnaseq.domain.constants import EXPRESSION_AT_TYPE
+from genomic_data_service.rnaseq.domain.constants import EXPRESSION_ID
 from genomic_data_service.rnaseq.domain.constants import FILE_FIELDS
+from genomic_data_service.rnaseq.domain.constants import GENES
+from genomic_data_service.rnaseq.domain.constants import INDEXING_FIELDS
 
 
 ROW_VALUES = [
@@ -55,6 +60,10 @@ def get_expression_generator(url, path):
     )
     for row in tsv:
         yield get_values_from_row(row, indices)
+
+
+def remove_version_from_gene_id(gene_id):
+    return gene_id.split('.')[0]
 
 
 class RnaSeqFile:
@@ -116,15 +125,33 @@ class RnaSeqFile:
             for row in expressions
         )
 
+    def _get_expression_id(self, gene_id):
+        accession = self.props['@id'].split('/')[2]
+        return f'/expressions/{accession}/{gene_id}/'
+
+    def _get_at_fields(self, gene_id):
+        return {
+            AT_ID: self.props['@id'],
+            AT_TYPE: EXPRESSION_AT_TYPE,
+            EXPRESSION_ID: self._get_expression_id(gene_id),
+        }
+
+    def _get_indexing_fields(self):
+        return INDEXING_FIELDS
+
     def _build_document(self, expression):
         return {
             DOCUMENT_PREFIX: {
-                **expression.as_dict(),
-                **self._file_properties,
-                **self._dataset_properties,
-                **self._get_gene_from_gene_id(
+                'expression': expression.as_dict(),
+                'file': self._file_properties,
+                'dataset': self._dataset_properties,
+                'gene': self._get_gene_from_gene_id(
+                    expression.gene_id_without_version
+                ),
+                **self._get_at_fields(
                     expression.gene_id
-                )
+                ),
+                **self._get_indexing_fields(),
             }
         }
 

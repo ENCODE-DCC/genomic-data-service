@@ -55,3 +55,23 @@ def test_rnaseq_expression_as_dict():
         'tpm': 0.03,
         'transcript_ids': ['ENST000', 'ENST001'],
     }
+
+
+def test_rnaseq_expression_remove_version_from_gene_id():
+    from genomic_data_service.rnaseq.domain.expression import remove_version_from_gene_id
+    assert remove_version_from_gene_id('ENSG00000224939') == 'ENSG00000224939'
+    assert remove_version_from_gene_id('ENSG00000224939.14') == 'ENSG00000224939'
+
+
+def test_rnaseq_expression_gene_id_without_version():
+    from genomic_data_service.rnaseq.domain.expression import Expression
+    data = [
+        'ENSG00000034677.12',
+        'ENST000, ENST001',
+        0.03,
+        90.1,
+    ]
+    expression = Expression(
+        *data
+    )
+    assert expression.gene_id_without_version == 'ENSG00000034677'
