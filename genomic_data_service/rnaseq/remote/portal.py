@@ -14,7 +14,6 @@ from genomic_data_service.rnaseq.remote.constants import GENE_PARAMS
 from genomic_data_service.rnaseq.remote.constants import SEARCH_PATH
 
 
-
 def get_json(url):
     response = requests.get(url)
     return response.json()
