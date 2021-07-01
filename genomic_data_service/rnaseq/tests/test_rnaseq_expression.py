@@ -75,3 +75,12 @@ def test_rnaseq_expression_gene_id_without_version():
         *data
     )
     assert expression.gene_id_without_version == 'ENSG00000034677'
+
+
+def test_rnaseq_expression_expressions_init(mock_portal):
+    from genomic_data_service.rnaseq.expressions import Expressions
+    from genomic_data_service.rnaseq.repository.memory import Memory
+    repository = Memory()
+    portal = mock_portal
+    expressions = Expressions(portal, repository)
+    assert isinstance(expressions, Expressions)

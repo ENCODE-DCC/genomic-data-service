@@ -4,7 +4,7 @@ class Expressions:
 
     def __init__(self, portal, repository):
         self.portal = portal
-        self.repository = respository
+        self.repository = repository
 
     def index(self):
         files = self.portal.get_rna_seq_files()

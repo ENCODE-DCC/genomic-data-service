@@ -492,3 +492,19 @@ def repositories(raw_datasets, human_genes):
         FILES: {},
         GENES: get_genes_by_ensembl_id(human_genes),
     }
+
+
+@pytest.fixture
+def mock_portal(mocker, raw_files, repositories):
+    from genomic_data_service.rnaseq.remote.portal import Portal
+    mocker.patch(
+        'genomic_data_service.rnaseq.remote.portal.get_json',
+        return_value={
+            '@graph': raw_files
+        }
+    )
+    portal = Portal()
+    portal.load_genes = lambda: None
+    portal.load_datasets = lambda: None
+    portal.repositories = repositories
+    return portal

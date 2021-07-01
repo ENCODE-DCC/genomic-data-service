@@ -16,3 +16,6 @@ class Memory:
             self._data.extend(
                 file_.as_documents()
             )
+
+    def clear(self):
+        self._data = []

@@ -13,3 +13,6 @@ class ElasticsSearch:
 
     def bulk_load_from_files(self, files):
         pass
+
+    def clear(self):
+        pass

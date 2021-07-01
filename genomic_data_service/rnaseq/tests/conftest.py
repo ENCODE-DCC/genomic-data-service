@@ -11,3 +11,4 @@ from .fixtures import raw_mouse_genes
 from .fixtures import raw_datasets
 from .fixtures import local_quantification_tsv_path
 from .fixtures import repositories
+from .fixtures import mock_portal

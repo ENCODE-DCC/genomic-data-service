@@ -104,17 +104,6 @@ def test_rnaseq_remote_portal_load_datasets(mocker, raw_datasets):
         assert expected_dataset_id in portal.repositories['datasets']
 
 
-def test_rnaseq_remote_portal_get_rna_seq_files(mocker, raw_files, repositories):
-    from genomic_data_service.rnaseq.remote.portal import Portal
-    mocker.patch(
-        'genomic_data_service.rnaseq.remote.portal.get_json',
-        return_value={
-            '@graph': raw_files
-        }
-    )
-    portal = Portal()
-    portal.load_genes = lambda: None
-    portal.load_datasets = lambda: None
-    portal.repositories = repositories
-    files = list(portal.get_rna_seq_files())
+def test_rnaseq_remote_portal_get_rna_seq_files(mock_portal):
+    files = list(mock_portal.get_rna_seq_files())
     assert len(files) == 4
