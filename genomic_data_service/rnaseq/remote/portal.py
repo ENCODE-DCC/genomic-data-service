@@ -2,6 +2,7 @@ import requests
 
 from genomic_data_service.rnaseq.domain.constants import GENES
 from genomic_data_service.rnaseq.domain.constants import DATASETS
+from genomic_data_service.rnaseq.domain.file import RnaSeqFile
 from genomic_data_service.rnaseq.domain.gene import get_genes_by_ensembl_id
 from genomic_data_service.rnaseq.domain.gene import Gene
 
@@ -56,4 +57,7 @@ class Portal:
         self._load_genes()
         self._load_datasets()
         url = self._get_file_url()
-        return get_json(url)[AT_GRAPH]
+        return (
+            RnaSeqFile(props, self.repositories)
+            for props in get_json(url)[AT_GRAPH]
+        )

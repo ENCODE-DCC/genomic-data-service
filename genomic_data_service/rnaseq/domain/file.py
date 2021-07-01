@@ -115,16 +115,6 @@ class RnaSeqFile:
             {}
         )
 
-    def _get_expressions(self):
-        expressions = get_expression_generator(
-            self.url,
-            self.path,
-        )
-        return (
-            Expression(*row)
-            for row in expressions
-        )
-
     def _get_expression_id(self, gene_id):
         accession = self.props['@id'].split('/')[2]
         return f'/expressions/{accession}/{gene_id}/'
@@ -154,6 +144,16 @@ class RnaSeqFile:
                 **self._get_indexing_fields(),
             }
         }
+
+    def _get_expressions(self):
+        expressions = get_expression_generator(
+            self.url,
+            self.path,
+        )
+        return (
+            Expression(*row)
+            for row in expressions
+        )
 
     def _get_documents(self):
         for expression in self._get_expressions():
