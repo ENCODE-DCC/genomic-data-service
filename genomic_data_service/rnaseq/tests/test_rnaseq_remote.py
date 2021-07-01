@@ -21,6 +21,7 @@ def test_rnaseq_remote_portal_get_gene_url():
         '&format=json&limit=all'
     )
 
+
 def test_rnaseq_remote_portal_get_dataset_url():
     from genomic_data_service.rnaseq.remote.portal import Portal
     portal = Portal()
