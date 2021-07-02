@@ -16,6 +16,7 @@ FILE_PARAMS = (
     '&assay_title=total+RNA-seq'
     '&assay_title=small+RNA-seq'
     '&assay_title=polyA+minus+RNA-seq'
+    '&lab.title=ENCODE+Processing+Pipeline'
     '&field=assay_title'
     '&field=assembly'
     '&field=biosample_ontology.organ_slims'

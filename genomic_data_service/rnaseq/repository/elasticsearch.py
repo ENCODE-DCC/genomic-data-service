@@ -58,7 +58,7 @@ class Elasticsearch:
         return helpers.bulk(
             self.es,
             list(items),
-            chunk_size=10000,
+            chunk_size=100000,
             request_timeout=200
         )
 
