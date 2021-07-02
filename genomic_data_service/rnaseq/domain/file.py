@@ -126,8 +126,11 @@ class RnaSeqFile:
             EXPRESSION_ID: self._get_expression_id(gene_id),
         }
 
-    def _get_indexing_fields(self):
-        return INDEXING_FIELDS
+    def _get_indexing_fields(self, gene_id):
+        return {
+            '_id': self._get_expression_id(gene_id),
+            **INDEXING_FIELDS
+        }
 
     def _build_document(self, expression):
         return {
@@ -140,9 +143,11 @@ class RnaSeqFile:
                 ),
                 **self._get_at_fields(
                     expression.gene_id
-                ),
-                **self._get_indexing_fields(),
-            }
+                )
+            },
+            **self._get_indexing_fields(
+                expression.gene_id
+            ),
         }
 
     def _get_expressions(self):

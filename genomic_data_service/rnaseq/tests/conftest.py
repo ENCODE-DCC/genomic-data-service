@@ -12,3 +12,4 @@ from .fixtures import raw_datasets
 from .fixtures import local_quantification_tsv_path
 from .fixtures import repositories
 from .fixtures import mock_portal
+from .elasticsearch.fixtures import elasticsearch_client

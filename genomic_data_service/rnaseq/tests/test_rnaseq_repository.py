@@ -10,14 +10,14 @@ def test_rnaseq_repository_memory_load(as_expressions):
     from genomic_data_service.rnaseq.repository.memory import Memory
     memory = Memory()
     memory.load(as_expressions[1])
-    assert len(memory._data) == 1
+    assert len(memory.data) == 1
 
 
 def test_rnaseq_repository_memory_bulk_load(as_expressions):
     from genomic_data_service.rnaseq.repository.memory import Memory
     memory = Memory()
     memory.bulk_load(as_expressions)
-    assert len(memory._data) == 3
+    assert len(memory.data) == 3
 
 
 def test_rnaseq_repository_memory_bulk_load_from_files(mocker, mock_portal, raw_expressions):
@@ -31,8 +31,8 @@ def test_rnaseq_repository_memory_bulk_load_from_files(mocker, mock_portal, raw_
     assert len(files) == 4
     memory.bulk_load_from_files(files)
     # Four expression values for four files.
-    assert len(memory._data) == 16
-    assert memory._data[0] == {
+    assert len(memory.data) == 16
+    assert memory.data[0] == {
         'embedded': {
             'expression': {
                 'gene_id': 'ENSG00000034677.12',
@@ -106,11 +106,14 @@ def test_rnaseq_repository_memory_bulk_load_from_files(mocker, mock_portal, raw_
             },
             '@id': '/files/ENCFF241WYH/',
             '@type': ['RNAExpression', 'Item'],
-            'expression_id': '/expressions/ENCFF241WYH/ENSG00000034677.12/',
-            '_index': 'rna-expression',
-            '_type': 'rna-expression',
-            'principals_allowed.view': ['system.Everyone']
-        }
+            'expression_id': '/expressions/ENCFF241WYH/ENSG00000034677.12/'
+        },
+        '_index': 'rna-expression',
+        '_type': 'rna-expression',
+        'principals_allowed': {
+            'view': ['system.Everyone']
+        },
+        '_id': '/expressions/ENCFF241WYH/ENSG00000034677.12/'
     }
 
 
@@ -118,9 +121,9 @@ def test_rnaseq_repository_memory_clear(as_expressions):
     from genomic_data_service.rnaseq.repository.memory import Memory
     memory = Memory()
     memory.bulk_load(as_expressions)
-    assert len(memory._data) == 3
+    assert len(memory.data) == 3
     memory.clear()
-    assert len(memory._data) == 0
+    assert len(memory.data) == 0
 
 
 def test_rnaseq_repository_elasticsearch_init():
@@ -129,7 +132,8 @@ def test_rnaseq_repository_elasticsearch_init():
     assert isinstance(es, ElasticsSearch)
 
 
-def test_rnaseq_repository_elasticsearch_load():
+@pytest.mark.skip(reason='Starts elasticsearch')
+def test_rnaseq_repository_elasticsearch_load(elasticsearch_with_data):
     from genomic_data_service.rnaseq.repository.elasticsearch import ElasticsSearch
     es = ElasticsSearch()
     es.load({})
@@ -143,8 +147,18 @@ def test_rnaseq_repository_elasticsearch_bulk_load():
     assert False
 
 
-def test_rnaseq_repository_elasticsearch_bulk_load_from_files():
+def test_rnaseq_repository_elasticsearch_bulk_load_from_files(mocker, mock_portal, raw_expressions, elasticsearch_client):
     from genomic_data_service.rnaseq.repository.elasticsearch import ElasticsSearch
-    es = ElasticsSearch()
-    es.bulk_load_from_files([])
-    assert False
+    mocker.patch(
+        'genomic_data_service.rnaseq.domain.file.get_expression_generator',
+        return_value=raw_expressions,
+    )
+    es = ElasticsSearch(
+        elasticsearch_client
+    )
+    files = mock_portal.get_rna_seq_files()
+    es.bulk_load_from_files(files)
+    data = es.data
+    assert len(data) == 16
+    assert data[0]['_id'] == '/expressions/ENCFF241WYH/ENSG00000034677.12/'
+    assert data[15]['_id'] == '/expressions/ENCFF730OTJ/ENSG00000060982.14/'

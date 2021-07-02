@@ -56,5 +56,7 @@ EXPRESSION_DOC_TYPE = 'rna-expression'
 INDEXING_FIELDS = {
     '_index': EXPRESSION_INDEX,
     '_type': EXPRESSION_DOC_TYPE,
-    'principals_allowed.view': ["system.Everyone"]
+    'principals_allowed': {
+        'view': ['system.Everyone']
+    }
 }
