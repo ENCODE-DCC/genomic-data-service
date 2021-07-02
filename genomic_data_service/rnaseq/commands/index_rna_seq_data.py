@@ -1,24 +1,19 @@
-from elasticsearch import Elasticsearch
+from elasticsearch import Elasticsearch as Client
 
 from genomic_data_service.rnaseq.expressions import Expressions
-from genomic_data_service.rnaseq.repository import Elasticsearch as ESRepository
+from genomic_data_service.rnaseq.repository.elasticsearch import Elasticsearch
 from genomic_data_service.rnaseq.remote.portal import Portal
 
 
-HOST = '127.0.0.1'
-PORT = 9202
+HOST = '127.0.0.1:9202'
 
 
 def index_rna_seq_data():
-    es = Elasticsearch(
-        [f'{HOST}:{PORT}']
-    )
+    client = Client([HOST])
     portal = Portal()
-    repository = ESRepository(es)
-    expressions = Expressions(
-        portal=portal,
-        repository=repository,
-    )
+    repository = Elasticsearch(client)
+    print(vars(repository))
+    expressions = Expressions(portal, repository)
     expressions.index()
 
 

@@ -127,16 +127,16 @@ def test_rnaseq_repository_memory_clear(as_expressions):
 
 
 def test_rnaseq_repository_elasticsearch_init():
-    from genomic_data_service.rnaseq.repository.elasticsearch import ElasticsSearch
-    es = ElasticsSearch({})
-    assert isinstance(es, ElasticsSearch)
+    from genomic_data_service.rnaseq.repository.elasticsearch import Elasticsearch
+    es = Elasticsearch({})
+    assert isinstance(es, Elasticsearch)
 
 
 @pytest.mark.elasticsearch
 @pytest.mark.skip(reason='Starts elasticsearch')
 def test_rnaseq_repository_elasticsearch_load(mocker, mock_portal, raw_expressions, elasticsearch_client):
-    from genomic_data_service.rnaseq.repository.elasticsearch import ElasticsSearch
-    es = ElasticsSearch(
+    from genomic_data_service.rnaseq.repository.elasticsearch import Elasticsearch
+    es = Elasticsearch(
         elasticsearch_client
     )
     item = {
@@ -228,13 +228,13 @@ def test_rnaseq_repository_elasticsearch_load(mocker, mock_portal, raw_expressio
 @pytest.mark.elasticsearch
 @pytest.mark.skip(reason='Starts elasticsearch')
 def test_rnaseq_repository_elasticsearch_bulk_load(mocker, raw_files, raw_expressions, repositories, elasticsearch_client):
-    from genomic_data_service.rnaseq.repository.elasticsearch import ElasticsSearch
+    from genomic_data_service.rnaseq.repository.elasticsearch import Elasticsearch
     from genomic_data_service.rnaseq.domain.file import RnaSeqFile
     mocker.patch(
         'genomic_data_service.rnaseq.domain.file.get_expression_generator',
         return_value=raw_expressions,
     )
-    es = ElasticsSearch(
+    es = Elasticsearch(
         elasticsearch_client
     )
     rna_file = RnaSeqFile(raw_files[0], repositories)
@@ -249,12 +249,12 @@ def test_rnaseq_repository_elasticsearch_bulk_load(mocker, raw_files, raw_expres
 @pytest.mark.elasticsearch
 @pytest.mark.skip(reason='Starts Elasticsearch')
 def test_rnaseq_repository_elasticsearch_bulk_load_from_files(mocker, mock_portal, raw_expressions, elasticsearch_client):
-    from genomic_data_service.rnaseq.repository.elasticsearch import ElasticsSearch
+    from genomic_data_service.rnaseq.repository.elasticsearch import Elasticsearch
     mocker.patch(
         'genomic_data_service.rnaseq.domain.file.get_expression_generator',
         return_value=raw_expressions,
     )
-    es = ElasticsSearch(
+    es = Elasticsearch(
         elasticsearch_client
     )
     files = mock_portal.get_rna_seq_files()

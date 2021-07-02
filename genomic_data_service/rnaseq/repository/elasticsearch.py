@@ -1,4 +1,3 @@
-from elasticsearch import Elasticsearch
 from elasticsearch import helpers
 
 from genomic_data_service.rnaseq.domain.constants import EXPRESSION_INDEX
@@ -7,8 +6,7 @@ from genomic_data_service.rnaseq.repository.constants import EXPRESSION_MAPPING
 from genomic_data_service.rnaseq.repository.constants import MATCH_ALL
 
 
-
-class ElasticsSearch:
+class Elasticsearch:
 
     INDEX = EXPRESSION_INDEX
     DOC_TYPE = EXPRESSION_DOC_TYPE
@@ -41,6 +39,7 @@ class ElasticsSearch:
 
     def _maybe_create_mapping(self):
         if not self._exists():
+            print('create mapping')
             self.es.indices.create(
                 index=self.INDEX,
                 body=self.MAPPING,
@@ -66,6 +65,7 @@ class ElasticsSearch:
     def bulk_load_from_files(self, files):
         self._maybe_create_mapping()
         for file_ in files:
+            print('indexing', file_.props['@id'])
             self.bulk_load(
                 file_.as_documents()
             )

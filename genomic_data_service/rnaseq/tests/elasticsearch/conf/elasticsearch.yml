@@ -1,3 +1,4 @@
 cluster.name: elasticsearch_test_fixture
 discovery.type: single-node
 indices.query.bool.max_clause_count: 8192
+transport.tcp.port: 9301

@@ -200,7 +200,7 @@ EXPRESSION_MAPPING = {
                                                             'include_in_all': True
                                                         },
                                                         'age': {
-                                                            'type': 'long',
+                                                            'type': 'keyword',
                                                             'include_in_all': True
                                                         }
                                                     }
@@ -247,9 +247,6 @@ EXPRESSION_MAPPING = {
                             'type': 'keyword'
                         },
                         'expression_id': {
-                            'type': 'keyword'
-                        },
-                        'principals_allowed.view': {
                             'type': 'keyword'
                         }
                     }

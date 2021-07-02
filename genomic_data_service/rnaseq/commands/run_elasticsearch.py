@@ -1,5 +1,3 @@
-import pytest
-
 from contextlib import contextmanager
 
 
@@ -43,10 +41,11 @@ def start_elasticsearch(host='127.0.0.1', port=9202):
         shutil.rmtree(data_directory)
 
 
-@pytest.fixture(scope='session')
-def elasticsearch_client(host='127.0.0.1', port=9202):
-    from elasticsearch import Elasticsearch
-    with start_elasticsearch(host=host, port=port) as process:
-        yield Elasticsearch(
-            [f'{host}:{port}']
-        )
+def run_elasticsearch():
+    with start_elasticsearch() as es:
+        while True:
+            pass
+
+
+if __name__ == '__main__':
+    run_elasticsearch()

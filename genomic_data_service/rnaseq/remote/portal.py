@@ -30,6 +30,7 @@ class Portal:
         return self.BASE_URL + SEARCH_PATH + GENE_PARAMS
 
     def load_genes(self):
+        print('loadinig genes')
         url = self._get_gene_url()
         genes = (
             Gene(props)
@@ -43,6 +44,7 @@ class Portal:
         return self.BASE_URL + SEARCH_PATH + DATASET_PARAMS
 
     def load_datasets(self):
+        print('loading datasets')
         url = self._get_dataset_url()
         self.repositories[DATASETS] = {
             dataset['@id']: dataset
@@ -53,6 +55,7 @@ class Portal:
         return self.BASE_URL + SEARCH_PATH + FILE_PARAMS
 
     def get_rna_seq_files(self):
+        print('getting files')
         self.load_genes()
         self.load_datasets()
         url = self._get_file_url()
