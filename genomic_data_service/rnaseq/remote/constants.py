@@ -34,7 +34,7 @@ FILE_PARAMS = (
     '&field=s3_uri'
     '&field=title'
     '&format=json'
-    '&limit=5'
+    '&limit=all'
 )
 
 
