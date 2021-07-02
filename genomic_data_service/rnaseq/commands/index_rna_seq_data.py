@@ -12,7 +12,6 @@ def index_rna_seq_data():
     client = Client([HOST])
     portal = Portal()
     repository = Elasticsearch(client)
-    print(vars(repository))
     expressions = Expressions(portal, repository)
     expressions.index()
 
