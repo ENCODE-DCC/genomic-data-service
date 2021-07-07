@@ -123,7 +123,7 @@ def resolve_coordinates_and_variants(region_queries, assembly, atlas, maf):
     for region_query in region_queries:
         try:
             chrom, start, end = get_coordinates(region_query, assembly, atlas)
-        except ValueError:
+        except:
             notifications[region_query] = 'Failed: invalid region input'
             continue
 
