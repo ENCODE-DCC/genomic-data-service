@@ -193,16 +193,24 @@ EXPRESSION_MAPPING = {
                                                 'biosample': {
                                                     'properties': {
                                                         'age_units': {
-                                                            'type': 'keyword',
-                                                            'include_in_all': True
+                                                            'type': 'keyword'
                                                         },
                                                         'sex': {
-                                                            'type': 'keyword',
-                                                            'include_in_all': True
+                                                            'type': 'keyword'
                                                         },
                                                         'age': {
-                                                            'type': 'keyword',
-                                                            'include_in_all': True
+                                                            'type': 'keyword'
+                                                        },
+                                                        'donor': {
+                                                            'properties': {
+                                                                'organism': {
+                                                                    'properties': {
+                                                                        'scientific_name': {
+                                                                            'type': 'keyword'
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
                                                         }
                                                     }
                                                 }
@@ -224,7 +232,6 @@ EXPRESSION_MAPPING = {
                                 },
                                 'name': {
                                     'type': 'keyword',
-                                    'include_in_all': True
                                 },
                                 'synonyms': {
                                     'type': 'keyword',
@@ -232,7 +239,6 @@ EXPRESSION_MAPPING = {
                                 },
                                 '@id':  {
                                     'type': 'keyword',
-                                    'include_in_all': True
                                 },
                                 'title': {
                                     'type': 'keyword',
@@ -242,7 +248,6 @@ EXPRESSION_MAPPING = {
                         },
                         '@id': {
                             'type': 'keyword',
-                            'include_in_all': True
                         },
                         '@type': {
                             'type': 'keyword'

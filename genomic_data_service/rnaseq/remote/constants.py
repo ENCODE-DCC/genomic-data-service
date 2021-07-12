@@ -57,6 +57,7 @@ DATASET_PARAMS = (
     '&field=replicates.library.biosample.sex'
     '&field=replicates.library.biosample.age'
     '&field=replicates.library.biosample.age_units'
+    '&field=replicates.library.biosample.donor.organism.scientific_name'
     '&format=json'
     '&limit=all'
 )

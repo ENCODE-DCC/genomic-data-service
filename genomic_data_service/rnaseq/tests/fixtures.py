@@ -203,7 +203,12 @@ def raw_datasets():
                         "biosample": {
                             "age_units": "year",
                             "sex": "female",
-                            "age": "53"
+                            "age": "53",
+                            "donor": {
+                                "organism": {
+                                    "scientific_name": "Homo sapiens"
+                                }
+                            }
                         }
                     }
                 }
@@ -219,7 +224,12 @@ def raw_datasets():
                         "biosample": {
                             "age_units": "day",
                             "sex": "female",
-                            "age": "113"
+                            "age": "113",
+                            "donor": {
+                                "organism": {
+                                    "scientific_name": "Homo sapiens"
+                                }
+                            }
                         }
                     }
                 }
@@ -235,7 +245,12 @@ def raw_datasets():
                         "biosample": {
                             "age_units": "year",
                             "sex": "male",
-                            "age": "53"
+                            "age": "53",
+                            "donor": {
+                                "organism": {
+                                    "scientific_name": "Homo sapiens"
+                                }
+                            }
                         }
                     }
                 },
@@ -244,7 +259,12 @@ def raw_datasets():
                         "biosample": {
                             "age_units": "year",
                             "sex": "male",
-                            "age": "53"
+                            "age": "53",
+                            "donor": {
+                                "organism": {
+                                    "scientific_name": "Homo sapiens"
+                                }
+                            }
                         }
                     }
                 }

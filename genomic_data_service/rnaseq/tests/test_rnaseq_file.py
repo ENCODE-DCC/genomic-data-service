@@ -311,7 +311,12 @@ def test_rnaseq_file_extract_as_documents_with_repository(raw_files, raw_express
                             'biosample': {
                                 'age_units': 'day',
                                 'sex': 'female',
-                                'age': '113'
+                                'age': '113',
+                                'donor': {
+                                    'organism': {
+                                        'scientific_name': 'Homo sapiens'
+                                    }
+                                }
                             }
                         }
                     }

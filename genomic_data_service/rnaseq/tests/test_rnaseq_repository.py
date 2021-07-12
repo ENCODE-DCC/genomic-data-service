@@ -90,7 +90,12 @@ def test_rnaseq_repository_memory_bulk_load_from_files(mocker, mock_portal, raw_
                             'biosample': {
                                 'age_units': 'day',
                                 'sex': 'female',
-                                'age': '113'
+                                'age': '113',
+                                'donor': {
+                                    'organism': {
+                                        'scientific_name': 'Homo sapiens'
+                                    }
+                                }
                             }
                         }
                     }
