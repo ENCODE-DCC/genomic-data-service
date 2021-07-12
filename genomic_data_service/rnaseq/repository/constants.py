@@ -6,10 +6,10 @@ MATCH_ALL = {
 
 
 INDEX_SETTINGS =  {
-    'index.refresh_interval': '30s',
+    'index.refresh_interval': '180s',
     'index.max_result_window': 99999,
     'index.mapping.total_fields.limit': 5000,
-    'index.number_of_shards': 1,
+    'index.number_of_shards': 15,
     'index.number_of_replicas': 0,
     'analysis': {
         'filter': {
