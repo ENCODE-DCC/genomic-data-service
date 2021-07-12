@@ -14,8 +14,10 @@ FILE_PARAMS = (
     '&assembly=mm10'
     '&assay_title=polyA+plus+RNA-seq'
     '&assay_title=total+RNA-seq'
-    '&assay_title=small+RNA-seq'
     '&assay_title=polyA+minus+RNA-seq'
+    '&lab.title=Tim+Reddy%2C+Duke'
+    '&lab.title=Christina+Leslie%2C+MSKCC'
+    '&lab.title=Manuel+Garber%2C+UMass'
     '&lab.title=ENCODE+Processing+Pipeline'
     '&field=assay_title'
     '&field=assembly'
@@ -39,12 +41,12 @@ FILE_PARAMS = (
 )
 
 
+
 DATASET_PARAMS = (
     '?type=Experiment'
     '&status=released'
     '&assay_title=polyA+plus+RNA-seq'
     '&assay_title=total+RNA-seq'
-    '&assay_title=small+RNA-seq'
     '&assay_title=polyA+minus+RNA-seq'
     '&replicates.library.biosample.donor.organism.scientific_name=Homo+sapiens'
     '&replicates.library.biosample.donor.organism.scientific_name=Mus+musculus'
