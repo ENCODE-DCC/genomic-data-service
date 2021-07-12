@@ -49,7 +49,7 @@ def test_rnaseq_remote_portal_get_file_url():
         '?type=File&status=released&output_type=gene+quantifications'
         '&output_category=quantification&file_format=tsv&assembly=GRCh38&assembly=mm10'
         '&assay_title=polyA+plus+RNA-seq&assay_title=total+RNA-seq&assay_title=polyA+minus+RNA-seq'
-        '&lab.title=Tim+Reddy%2C+Duke&lab.title=Christina+Leslie%2C+MSKCC&lab.title=Manuel+Garber%2C+UMass'
+        '&lab.title=Manuel+Garber%2C+UMass'
         '&lab.title=ENCODE+Processing+Pipeline&field=assay_title&field=assembly'
         '&field=biosample_ontology.organ_slims&field=biosample_ontology.term_name'
         '&field=biosample_ontology.synonyms&field=biosample_ontology.name&field=biosample_ontology.term_id'
