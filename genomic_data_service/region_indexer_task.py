@@ -65,6 +65,8 @@ VALUE_STRAND_COL = {
 
 
 def add_to_residence(es, file_doc):
+    file_doc['chroms'] = list(set(file_doc['chroms']))
+
     es.index(index=RESIDENTS_INDEX, doc_type=FOR_REGULOME_DB, body=file_doc, id=str(file_doc['uuid']))
 
 
@@ -96,9 +98,9 @@ def index_snps(es, snps, metadata, chroms=None):
 def region_bulk_iterator(chrom, assembly, uuid, docs_for_chrom):
     assembly = ASSEMBLIES_MAPPING.get(assembly, assembly).lower()
 
-    for idx, doc in enumerate(docs_for_chrom):
+    for doc in docs_for_chrom:
         doc['uuid'] = uuid
-        yield {'_index': chrom.lower(), '_type': assembly, '_id': uuid+'-'+str(idx), '_source': doc}
+        yield {'_index': chrom.lower(), '_type': assembly, '_source': doc}
 
 
 def index_regions(es, regions, metadata, chroms):
@@ -114,7 +116,7 @@ def index_regions(es, regions, metadata, chroms):
         if len(regions[chrom]) == 0:
             continue
 
-        bulk(es, region_bulk_iterator(chrom_lc, assembly, uuid, regions[chrom]), chunk_size=100000, request_timeout=1000)
+        bulk(es, region_bulk_iterator(chrom_lc, assembly, uuid, regions[chrom]), chunk_size=5000, request_timeout=1000)
         metadata['chroms'].append(chrom)
 
     return True
@@ -250,7 +252,7 @@ def remove_from_es(indexed_file, uuid, es):
 
 def file_in_es(uuid, es):
     try:
-        return es.get(index=RESIDENTS_INDEX, id=str(uuid)).get('_source', {})
+        return es.get(index=RESIDENTS_INDEX, id=str(uuid), doc_type=FOR_REGULOME_DB).get('_source', {})
     except NotFoundError:
         return None
     except Exception:
@@ -276,4 +278,3 @@ def index_file(self, file_, dataset, es_hosts, es_port, force_reindex=False):
     index_regions_from_file(es, file_uuid, file_, dataset)
 
     return f"File {file_uuid} was indexed via {file_['href']}"
-

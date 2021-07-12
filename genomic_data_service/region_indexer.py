@@ -144,6 +144,10 @@ def encode_graph(query):
 
 
 def need_to_fetch_documents(dataset):
+    if type(dataset.get('documents')) is list:
+        if dataset.get('documents') == [] or type(dataset.get('documents')[0]) is dict:
+            return False
+
     documents_required_for = ['footprints', 'pwms']
 
     for prop in REGULOME_COLLECTION_TYPES:

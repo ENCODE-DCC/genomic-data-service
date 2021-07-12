@@ -24,6 +24,9 @@ class S3BedFileRemoteReader():
 
 
     def should_load_file_in_memory(self):
+        if self.file_properties.get('file_size', 0) == 0:
+            return False
+
         return self.file_properties.get('file_size', 0) <= MAX_IN_MEMORY_FILE_SIZE
 
 
