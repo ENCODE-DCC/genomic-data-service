@@ -15,13 +15,12 @@ FOR_REGULOME_DB = 'regulomedb'
 
 # TODO: move constants to centralized file
 REGULOME_COLLECTION_TYPES = ['assay_term_name', 'annotation_type', 'reference_type']
-REGULOME_DATASET_TYPES = ['Experiment', 'Annotation', 'Reference']
 
 
 SUPPORTED_CHROMOSOMES = [
     'chr1', 'chr2', 'chr3', 'chr4', 'chr5', 'chr6', 'chr7', 'chr8', 'chr9',
     'chr10', 'chr11', 'chr12', 'chr13', 'chr14', 'chr15', 'chr16', 'chr17',
-    'chr18', 'chr19', 'chr20', 'chr21', 'chr22', 'chrX', 'chrY'
+    'chr18', 'chr19', 'chr20', 'chr21', 'chr22', 'chrx', 'chry'
 ]
 
 # TODO: refactor
@@ -38,39 +37,37 @@ SEARCH_MAX = 200
 
 # Columns (0-based) for value and strand to be indexed - based on RegulomeDB
 VALUE_STRAND_COL = {
-    'ChIP-seq': {
+    'chip-seq': {
         'strand_col': 5,
         'value_col': 6
     },
-    'DNase-seq': {
+    'dnase-seq': {
         'strand_col': 5,
         'value_col': 6
     },
-    'FAIRE-seq': {
+    'faire-seq': {
         'strand_col': 5,
         'value_col': 6
     },
     'chromatin state': {
         'value_col': 3
     },
-    'eQTLs': {
+    'eqtls': {
         'value_col': 5
     },
-    'Footprints': {
+    'footprints': {
         'strand_col': 5,
     },
-    'PWMs': {
+    'pwms': {
         'strand_col': 4,
     },
 }
 
 
 def add_to_residence(es, file_doc):
-    uuid = file_doc['uuid']
+    file_doc['chroms'] = list(set(file_doc['chroms']))
 
-    use_type = FOR_REGULOME_DB
-
-    es.index(index=RESIDENTS_INDEX, doc_type=use_type, body=file_doc, id=str(uuid))
+    es.index(index=RESIDENTS_INDEX, doc_type=FOR_REGULOME_DB, body=file_doc, id=str(file_doc['uuid']))
 
 
 def snps_bulk_iterator(snp_index, chrom, snps_for_chrom):
@@ -101,9 +98,9 @@ def index_snps(es, snps, metadata, chroms=None):
 def region_bulk_iterator(chrom, assembly, uuid, docs_for_chrom):
     assembly = ASSEMBLIES_MAPPING.get(assembly, assembly).lower()
 
-    for idx, doc in enumerate(docs_for_chrom):
+    for doc in docs_for_chrom:
         doc['uuid'] = uuid
-        yield {'_index': chrom.lower(), '_type': assembly, '_id': uuid+'-'+str(idx), '_source': doc}
+        yield {'_index': chrom.lower(), '_type': assembly, '_source': doc}
 
 
 def index_regions(es, regions, metadata, chroms):
@@ -119,7 +116,7 @@ def index_regions(es, regions, metadata, chroms):
         if len(regions[chrom]) == 0:
             continue
 
-        bulk(es, region_bulk_iterator(chrom_lc, assembly, uuid, regions[chrom]), chunk_size=100000, request_timeout=1000)
+        bulk(es, region_bulk_iterator(chrom_lc, assembly, uuid, regions[chrom]), chunk_size=5000, request_timeout=1000)
         metadata['chroms'].append(chrom)
 
     return True
@@ -128,8 +125,8 @@ def index_regions(es, regions, metadata, chroms):
 def index_regions_from_file(es, uuid, file_properties, dataset, snp=False):
     metadata = metadata_doc(uuid, file_properties, dataset)
 
-    snp_set      = dataset['@type'][0] == 'Reference'
-    dataset_type = metadata['dataset']['collection_type']
+    snp_set      = dataset['@type'][0].lower() == 'reference'
+    dataset_type = metadata['dataset']['collection_type'].lower()
     regulome_strand = VALUE_STRAND_COL.get(dataset_type, {})
 
     metadata['chroms'] = []
@@ -137,11 +134,11 @@ def index_regions_from_file(es, uuid, file_properties, dataset, snp=False):
     file_data = {}
     chroms = []
 
-    readable_file = S3BedFileRemoteReader(file_properties, dataset_type, regulome_strand, snp_set=snp_set)
+    readable_file = S3BedFileRemoteReader(file_properties, regulome_strand, snp_set=snp_set)
 
     if file_properties['file_format'] == 'bed':
         for (chrom, doc) in readable_file.parse():
-            if chrom not in SUPPORTED_CHROMOSOMES:
+            if chrom.lower() not in SUPPORTED_CHROMOSOMES:
                 continue
 
             if doc['coordinates']['gte'] == doc['coordinates']['lt']:
@@ -191,7 +188,7 @@ def index_regions_from_file(es, uuid, file_properties, dataset, snp=False):
 def list_targets(dataset):
     target_labels = []
 
-    target = dataset.get('target', {})
+    target = dataset.get('target', dataset.get('targets'))
     if target:
         if isinstance(target, dict):
             target = [target]
@@ -218,7 +215,7 @@ def metadata_doc(uuid, file_properties, dataset):
         'dataset': {
             'uuid': dataset['uuid'],
             '@id': dataset['@id'],
-            'target': [dataset.get('target', {}).get('name')],
+            'target': list_targets(dataset),
             'biosample_ontology': dataset.get('biosample_ontology', {}),
             'biosample_term_name': dataset.get('biosample_ontology', {}).get('term_name'),
             'documents': []
@@ -231,7 +228,7 @@ def metadata_doc(uuid, file_properties, dataset):
         if prop_value:
             meta_doc['dataset']['collection_type'] = prop_value
 
-    if meta_doc['dataset']['collection_type'] in ['Footprints', 'PWMs']:
+    if meta_doc['dataset']['collection_type'].lower() in ['footprints', 'pwms']:
         meta_doc['dataset']['documents'] = dataset.get('documents', [])
 
     return meta_doc
@@ -255,7 +252,7 @@ def remove_from_es(indexed_file, uuid, es):
 
 def file_in_es(uuid, es):
     try:
-        return es.get(index=RESIDENTS_INDEX, id=str(uuid)).get('_source', {})
+        return es.get(index=RESIDENTS_INDEX, id=str(uuid), doc_type=FOR_REGULOME_DB).get('_source', {})
     except NotFoundError:
         return None
     except Exception:
@@ -281,4 +278,3 @@ def index_file(self, file_, dataset, es_hosts, es_port, force_reindex=False):
     index_regions_from_file(es, file_uuid, file_, dataset)
 
     return f"File {file_uuid} was indexed via {file_['href']}"
-
