@@ -15,8 +15,8 @@ INDEX_SETTINGS =  {
         'filter': {
             'substring': {
                 'type': 'edge_ngram',
-                'min_gram': 1,
-                'max_gram': 33
+                'min_gram': 3,
+                'max_gram': 30
             },
             'english_stop': {
                 'type': 'stop',
