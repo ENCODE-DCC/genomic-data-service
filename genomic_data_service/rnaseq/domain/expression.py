@@ -22,7 +22,9 @@ class Expression:
 
     def as_dict(self):
         return {
-            'gene_id': self.gene_id,
+            'gene_id': prefix_numerical_gene_id(
+                self.gene_id
+            ),
             'transcript_ids': [
                 transcript_id.strip()
                 for transcript_id in self.transcript_ids.split(',')
