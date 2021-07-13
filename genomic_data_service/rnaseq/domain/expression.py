@@ -5,6 +5,14 @@ def remove_version_from_gene_id(gene_id):
     return gene_id.split('.')[0]
 
 
+def prefix_numerical_gene_id(gene_id):
+    try:
+        int(gene_id)
+        return f'tRNAscan:{gene_id}'
+    except ValueError:
+        return gene_id
+
+
 @dataclass
 class Expression:
     gene_id: str

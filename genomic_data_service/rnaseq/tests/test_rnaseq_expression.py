@@ -84,3 +84,12 @@ def test_rnaseq_expression_expressions_init(mock_portal):
     portal = mock_portal
     expressions = Expressions(portal, repository)
     assert isinstance(expressions, Expressions)
+
+
+def test_rnaseq_expression_prefix_numerical_gene_id():
+    from genomic_data_service.rnaseq.domain.expression import prefix_numerical_gene_id
+    assert prefix_numerical_gene_id('ENSG00000224939') == 'ENSG00000224939'
+    assert prefix_numerical_gene_id('ENSG00000224939.14') == 'ENSG00000224939.14'
+    assert prefix_numerical_gene_id('21301') == 'tRNAscan:21301'
+    assert prefix_numerical_gene_id('32719') == 'tRNAscan:32719'
+    assert prefix_numerical_gene_id(21301) == 'tRNAscan:21301'
