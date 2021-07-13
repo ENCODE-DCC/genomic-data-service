@@ -112,7 +112,6 @@ EXPRESSION_MAPPING = {
                                 },
                                 'transcript_ids': {
                                     'type': 'keyword',
-                                    'include_in_all': True
                                 },
                                 'tpm': {
                                     'type': 'float'
@@ -165,15 +164,12 @@ EXPRESSION_MAPPING = {
                                 },
                                 'dataset': {
                                     'type': 'keyword',
-                                    'include_in_all': True
                                 },
                                 'donors': {
                                     'type': 'keyword',
-                                    'include_in_all': True
                                 },
                                 'genome_annotation': {
                                     'type': 'keyword',
-                                    'include_in_all': True
                                 }
                             }
                         },
