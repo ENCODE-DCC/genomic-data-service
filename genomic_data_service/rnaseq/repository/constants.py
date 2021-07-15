@@ -9,13 +9,13 @@ INDEX_SETTINGS =  {
     'index.refresh_interval': '180s',
     'index.max_result_window': 99999,
     'index.mapping.total_fields.limit': 5000,
-    'index.number_of_shards': 15,
+    'index.number_of_shards': 24,
     'index.number_of_replicas': 0,
     'analysis': {
         'filter': {
             'substring': {
                 'type': 'edge_ngram',
-                'min_gram': 3,
+                'min_gram': 2,
                 'max_gram': 30
             },
             'english_stop': {
@@ -128,11 +128,13 @@ EXPRESSION_MAPPING = {
                                 },
                                 'assay_title': {
                                     'type': 'keyword',
-                                    'include_in_all': True
+                                    'include_in_all': True,
+                                    'eager_global_ordinals': True
                                 },
                                 'assembly': {
                                     'type': 'keyword',
-                                    'include_in_all': True
+                                    'include_in_all': True,
+                                    'eager_global_ordinals': True
                                 },
                                 'biosample_ontology': {
                                     'properties': {
@@ -142,7 +144,8 @@ EXPRESSION_MAPPING = {
                                         },
                                         'term_name': {
                                             'type': 'keyword',
-                                            'include_in_all': True
+                                            'include_in_all': True,
+                                            'eager_global_ordinals': True
                                         },
                                         'synonyms': {
                                             'type': 'keyword',
@@ -158,7 +161,8 @@ EXPRESSION_MAPPING = {
                                         },
                                         'classification': {
                                             'type': 'keyword',
-                                            'include_in_all': True
+                                            'include_in_all': True,
+                                            'eager_global_ordinals': True
                                         }
                                     }
                                 },
@@ -202,7 +206,8 @@ EXPRESSION_MAPPING = {
                                                                 'organism': {
                                                                     'properties': {
                                                                         'scientific_name': {
-                                                                            'type': 'keyword'
+                                                                            'type': 'keyword',
+                                                                            'eager_global_ordinals': True
                                                                         }
                                                                     }
                                                                 }
@@ -224,7 +229,8 @@ EXPRESSION_MAPPING = {
                                 },
                                 'symbol': {
                                     'type': 'keyword',
-                                    'include_in_all': True
+                                    'include_in_all': True,
+                                    'eager_global_ordinals': True
                                 },
                                 'name': {
                                     'type': 'keyword',
