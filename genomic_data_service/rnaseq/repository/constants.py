@@ -6,10 +6,10 @@ MATCH_ALL = {
 
 
 INDEX_SETTINGS =  {
-    'index.refresh_interval': '180s',
+    'index.refresh_interval': '-1',
     'index.max_result_window': 99999,
     'index.mapping.total_fields.limit': 5000,
-    'index.number_of_shards': 24,
+    'index.number_of_shards': 5,
     'index.number_of_replicas': 0,
     'analysis': {
         'filter': {
@@ -174,6 +174,7 @@ EXPRESSION_MAPPING = {
                                 },
                                 'genome_annotation': {
                                     'type': 'keyword',
+                                    'eager_global_ordinals': True
                                 }
                             }
                         },
@@ -196,7 +197,8 @@ EXPRESSION_MAPPING = {
                                                             'type': 'keyword'
                                                         },
                                                         'sex': {
-                                                            'type': 'keyword'
+                                                            'type': 'keyword',
+                                                            'eager_global_ordinals': True
                                                         },
                                                         'age': {
                                                             'type': 'keyword'
