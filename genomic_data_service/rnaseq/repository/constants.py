@@ -15,7 +15,7 @@ INDEX_SETTINGS =  {
         'filter': {
             'substring': {
                 'type': 'edge_ngram',
-                'min_gram': 2,
+                'min_gram': 1,
                 'max_gram': 30
             },
             'english_stop': {
@@ -173,8 +173,7 @@ EXPRESSION_MAPPING = {
                                     'type': 'keyword',
                                 },
                                 'genome_annotation': {
-                                    'type': 'keyword',
-                                    'eager_global_ordinals': True
+                                    'type': 'keyword'
                                 }
                             }
                         },
@@ -184,7 +183,7 @@ EXPRESSION_MAPPING = {
                                     'type': 'keyword'
                                 },
                                 'biosample_summary': {
-                                    'type': 'text',
+                                    'type': 'keyword',
                                     'include_in_all': True
                                 },
                                 'replicates': {
