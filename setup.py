@@ -5,6 +5,7 @@ setup(
     packages=['genomic_data_service'],
     include_package_data=True,
     install_requires=[
+        'click==8.0.1',
         'Flask==1.1.2',
         'Flask-SQLAlchemy',
         'Flask-Migrate',
