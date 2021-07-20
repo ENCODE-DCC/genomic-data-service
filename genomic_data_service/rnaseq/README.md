@@ -14,7 +14,7 @@ done bulk loading 9.511317491531372
 
 ## Optimize index
 Index refresh is turned off to maximize life of aggregation cache. After fully indexing force merge segments
-and refresh once. Force merge is an expensive operation that reqiures some disk space.
+and refresh once. Force merge is expensive operation that requires disk space.
 ```bash
 $ curl -X POST "[HOST]/rna-expression/_forcemerge?max_num_segments=1&pretty"
 $ curl -X POST "[HOST]/rna-expression/_refresh?pretty"
