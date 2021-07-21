@@ -20,7 +20,7 @@ SUPPORTED_CHROMOSOMES = [
     'chr18', 'chr19', 'chr20', 'chr21', 'chr22', 'chrX', 'chrY'
 ]
 
-ENCODE_DOMAIN = 'https://test.encodeproject.org'
+ENCODE_DOMAIN = 'https://www.encodeproject.org'
 REGULOME_ENCODE_ACCESSIONS_MAPPING_PATH = 'regulome_encode_accessions_mapping.pickle'
 REGULOME_ACCESSIONS_PATH = 'regulome_accessions.pickle'
 ENCODE_SNP = ['ENCFF904UCL', 'ENCFF578KDT']
