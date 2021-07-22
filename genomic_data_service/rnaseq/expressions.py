@@ -1,5 +1,3 @@
-
-
 class Expressions:
 
     def __init__(self, portal, repository):
