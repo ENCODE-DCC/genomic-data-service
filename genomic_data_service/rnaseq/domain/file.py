@@ -1,4 +1,3 @@
-from .expression import Expression
 import os
 
 from genomic_data_service.rnaseq.domain.expression import Expression
