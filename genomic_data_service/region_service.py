@@ -14,6 +14,7 @@ class RegionService():
         self.page = int(params.get('page', 1)) - 1
         self.limit = params.get('limit', REGIONS_PER_PAGE)
         self.files_only = params.get('files_only', '').lower() == 'true'
+        self.assembly = params.get('assembly', 'GRCh38').lower()
 
         self.interval = params.get('interval', DEFAULT_INTERVAL_MATCH).upper()
         if self.interval not in INTERVAL_MATCH_OPTIONS:
@@ -46,7 +47,7 @@ class RegionService():
 
 
     def intercepting_regions(self):
-        res = region_search_es.search(index=self.chrm, _source=True, body=self.region_search_query())
+        res = region_search_es.search(index=self.chrm, doc_type=self.assembly, _source=True, body=self.region_search_query())
 
         self.execution_time = res['took'] / 1000.0
         self.total_regions = res['hits']['total']
@@ -68,4 +69,3 @@ class RegionService():
                 'strand': r['_source'].get('strand'),
                 'file_url': f"https://www.encodeproject.org/{r['_source']['uuid']}"
             })
-
