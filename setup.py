@@ -15,8 +15,6 @@ setup(
         'requests',
         'pyBigWig',
         'scikit-learn==0.20.3',
-        'pytest==6.2.4',
-        'pytest-mock==3.6.1',
         'gunicorn',
         'boto3',
         'redis',
@@ -26,5 +24,11 @@ setup(
         'psycopg2',
         'boto3'
     ],
-    tests_require=['pytest']
+    extras_require={
+        'test': [
+            'pytest==6.2.4',
+            'pytest-mock==3.6.1',
+            'pytest-cov==2.12.1',
+        ]
+    }
 )
