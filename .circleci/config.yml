@@ -1,0 +1,26 @@
+version: 2.1
+
+orbs:
+  python: circleci/python@1.2
+
+workflows:
+  gds-tests:
+    jobs:
+      - install-and-test
+
+jobs:
+  install-and-test:
+    docker:
+      - image: cimg/python:3.8
+    steps:
+      - checkout
+      - run:
+          name: Install
+          command: |
+            pip install --upgrade pip
+            pip install coveralls
+            pip install -e .[test]
+      - run:
+          name: Run tests
+          command: |
+            pytest --cov=genomic_data_service
