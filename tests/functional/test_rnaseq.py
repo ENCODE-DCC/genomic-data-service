@@ -22,7 +22,7 @@ def test_expression_filters(test_client):
 def test_expression_format_accepts_tsv_only(test_client):
     response = test_client.get('/expressions/formats')
     assert response.status_code == 200
-    assert response.json == ['tsv']
+    assert response.json == ['tsv', 'json']
 
 
 def test_continuous_endpoints_should_return_501(test_client):
