@@ -5,6 +5,7 @@ setup(
     packages=['genomic_data_service'],
     include_package_data=True,
     install_requires=[
+        'click==8.0.1',
         'Flask==1.1.2',
         'Flask-SQLAlchemy',
         'Flask-Migrate',
@@ -14,7 +15,8 @@ setup(
         'requests',
         'pyBigWig',
         'scikit-learn==0.20.3',
-        'pytest',
+        'pytest==6.2.4',
+        'pytest-mock==3.6.1',
         'gunicorn',
         'boto3',
         'redis',
