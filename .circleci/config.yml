@@ -24,3 +24,4 @@ jobs:
           name: Run tests
           command: |
             pytest --cov=genomic_data_service
+            coveralls
