@@ -30,7 +30,9 @@ class RequestAdapter:
 
     def __setitem__(self, key, value):
         Request.parameter_storage_class = ImmutableOrderedMultiDict
-        self._request = Request({key: value})
+        environ = self._request.environ.copy()
+        environ.update({key: value})
+        self._request = Request(environ)
 
     def __getitem__(self, key):
         return self._request.environ[key]
