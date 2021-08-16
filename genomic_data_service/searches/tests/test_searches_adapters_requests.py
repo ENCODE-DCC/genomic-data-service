@@ -1,5 +1,36 @@
 import pytest
+
+from flask import Request
 from genomic_data_service import app
+from werkzeug.datastructures import ImmutableOrderedMultiDict
+from genomic_data_service.searches.adapters.requests import RequestAdapter
+
+
+class DummyRequest(RequestAdapter):
+
+    def __init__(self, request):
+        self._request = request
+
+    def __setitem__(self, key, value):
+        Request.parameter_storage_class = ImmutableOrderedMultiDict
+        environ = self._request.environ.copy()
+        environ.update({key: value})
+        self._request = Request(environ)
+
+    def __getitem__(self, key):
+        return self._request.environ[key]
+
+    @property
+    def environ(self):
+        return self
+
+    @property
+    def query_string(self):
+        return self._request.query_string.decode('utf-8')
+
+    @query_string.setter
+    def query_string(self, value):
+        self.__setitem__('QUERY_STRING', value)
 
 
 def test_searches_adapters_requests_args_adapters_init():
@@ -101,7 +132,7 @@ def test_searches_adapters_request_adapter_passes_param_parser_unit_tests():
         for k, v in vars(test_searches_parsers).items()
         if k.startswith('test')
     }
-    dummy_request = RequestAdapter(Request({}))
+    dummy_request = DummyRequest(Request({}))
     for test_name, test in tests.items():
         dummy_request['QUERY_STRING'] = ''
         print(test_name)

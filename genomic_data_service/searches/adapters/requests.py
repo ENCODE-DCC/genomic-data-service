@@ -1,5 +1,4 @@
 from flask import Request
-from werkzeug.datastructures import ImmutableOrderedMultiDict
 
 
 class ArgsAdapter:
@@ -27,27 +26,6 @@ class RequestAdapter:
         return ArgsAdapter(
             self._request.args
         )
-
-    def __setitem__(self, key, value):
-        Request.parameter_storage_class = ImmutableOrderedMultiDict
-        environ = self._request.environ.copy()
-        environ.update({key: value})
-        self._request = Request(environ)
-
-    def __getitem__(self, key):
-        return self._request.environ[key]
-
-    @property
-    def environ(self):
-        return self
-
-    @property
-    def query_string(self):
-        return self._request.query_string.decode('utf-8')
-
-    @query_string.setter
-    def query_string(self, value):
-        self.__setitem__('QUERY_STRING', value)
 
     def copy(self):
         return RequestAdapter(
