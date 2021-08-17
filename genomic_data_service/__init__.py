@@ -37,3 +37,5 @@ if is_web_app:
     def healthcheck():
         es.cluster.health()
         return 'ok'
+
+import genomic_data_service.rnaseq.views
