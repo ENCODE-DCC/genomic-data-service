@@ -332,18 +332,16 @@ def rnaget_search():
     from snosearch.fields import BasicSearchResponseField
     from snosearch.fields import DebugQueryResponseField
     from snosearch.parsers import ParamsParser
-    from snosearch.responses import FieldedInMemoryResponse
+    from snosearch.responses import FieldedResponse
+    from snosearch.adapters.flask.responses import ResponseAdapter
     from snosearch.adapters.flask.requests import RequestAdapter
-    from flask import make_response
-
-    from flask import stream_with_context
     
     registry = make_registry(types, configs)
     wrapped_request = RequestAdapter(request)
     wrapped_request.registry = registry
-    wrapped_request.response = make_response()
+    wrapped_request.response = ResponseAdapter()
     
-    fr = FieldedInMemoryResponse(
+    fr = FieldedResponse(
         _meta={
             'params_parser': ParamsParser(
                 wrapped_request

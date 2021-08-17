@@ -26,7 +26,7 @@ def client():
         yield client
 
 
-def test_rnaseq__views_rnaget_search(client, rnaseq_data_in_elasticsearch):
+def test_rnaseq_views_rnaget_search(client, rnaseq_data_in_elasticsearch):
     r = client.get('/rnaget-search/?type=RNAExpression')
     assert '@graph' in r.json
     assert len(r.json['@graph']) == 16
