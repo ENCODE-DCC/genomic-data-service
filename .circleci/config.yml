@@ -1,8 +1,5 @@
 version: 2.1
 
-orbs:
-  python: circleci/python@1.2
-
 workflows:
   gds-tests:
     jobs:
@@ -12,7 +9,6 @@ jobs:
   install-and-test:
     docker:
       - image: cimg/python:3.7
-      - image: elasticsearch:5.6.16
     steps:
       - checkout
       - run:
