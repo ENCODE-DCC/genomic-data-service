@@ -11,7 +11,7 @@ setup(
         'Flask-Migrate',
         'Flask-Script',
         'Flask-Excel',
-        'elasticsearch',
+        'elasticsearch==5.4.0',
         'requests',
         'pyBigWig',
         'scikit-learn==0.20.3',
@@ -23,7 +23,6 @@ setup(
         'snovault-search @ git+https://github.com/ENCODE-DCC/snovault-search.git@add-adapter-and-tests',
         'sqlalchemy==1.3.22',
         'psycopg2',
-        'boto3'
     ],
     extras_require={
         'test': [
