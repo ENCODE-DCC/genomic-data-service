@@ -12,6 +12,7 @@ jobs:
   install-and-test:
     docker:
       - image: cimg/python:3.7
+      - image: elasticsearch:5.6.16
     steps:
       - checkout
       - run:
