@@ -11,10 +11,11 @@ jobs:
       - image: circleci/buildpack-deps:focal
     steps:
       - checkout
-      - run: Install Python
-        command: |
-          sudo add-apt-repository ppa:deadsnakes/ppa
-          sudo apt-get install python3.7
+      - run:
+          name: Install Python
+          command: |
+            sudo add-apt-repository ppa:deadsnakes/ppa
+            sudo apt install python3.7
       - run:
           name: Install Elasticsearch
           command: |
