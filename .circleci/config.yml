@@ -8,9 +8,13 @@ workflows:
 jobs:
   install-and-test:
     docker:
-      - image: cimg/python:3.7
+      - image: circleci/buildpack-deps:focal
     steps:
       - checkout
+      - run: Install Python
+        command: |
+          sudo add-apt-repository ppa:deadsnakes/ppa
+          sudo apt-get install python3.7
       - run:
           name: Install Elasticsearch
           command: |
