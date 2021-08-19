@@ -19,3 +19,9 @@ RUN sudo wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch
 
 ENV PATH="/usr/share/elasticsearch/bin:${PATH}"
 ENV ES_JAVA_OPTS="-Xms2g -Xmx3g"
+
+RUN sudo wget -qO - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo tee /etc/apt/pg_gpg_key
+RUN sudo apt-key add /etc/apt/pg_gpg_key
+RUN echo "deb http://apt.postgresql.org/pub/repos/apt/ focal-pgdg main" | sudo tee -a /etc/apt/sources.list
+RUN sudo apt-get update && sudo apt-get install -y postgresql-11
+
