@@ -18,7 +18,7 @@ jobs:
             sudo add-apt-repository -y ppa:deadsnakes/ppa
             sudo apt install -y python3.7 python3-pip
             python3.7 -m pip install pip
-            echo 'alias pip=python3.7 -m pip' >> $BASH_ENV
+            echo 'alias pip="python3.7 -m pip"' >> $BASH_ENV
             echo 'alias python=python3.7' >> $BASH_ENV
       - run:
           name: Install Elasticsearch
