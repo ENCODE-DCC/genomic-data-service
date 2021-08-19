@@ -22,10 +22,10 @@ jobs:
           command: |
             pytest -s -v --cov=genomic_data_service -m 'not elasticsearch'
       - run:
-        name: Integration tests
-        command: |
-          pytest -s -v --cov=genomic_data_service --cov-append -m 'elasticsearch'
+          name: Integration tests
+          command: |
+            pytest -s -v --cov=genomic_data_service --cov-append -m 'elasticsearch'
       - run:
-        name: Upload coverage report
-        command:
-          coveralls
+          name: Upload coverage report
+          command:
+            coveralls
