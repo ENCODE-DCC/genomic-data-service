@@ -2,6 +2,10 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from os import environ
 
+from genomic_data_service.searches.configs import add_registry
+from genomic_data_service.rnaseq.client import add_rna_client
+
+
 def is_web_app():
     return ('FLASK_APP' in environ)
 
@@ -13,6 +17,8 @@ else:
     print('[CONFIG] Defaulting to development config')
     app.config.from_pyfile('../config/development.cfg')
 
+add_registry(app)
+add_rna_client(app)
 
 if is_web_app:
     from elasticsearch import Elasticsearch
