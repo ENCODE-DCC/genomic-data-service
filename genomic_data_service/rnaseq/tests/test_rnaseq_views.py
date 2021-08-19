@@ -197,3 +197,7 @@ def test_rnaseq_views_rnaget_search_no_results_raises_404(client, rnaseq_data_in
     assert '@graph' in r.json
     assert len(r.json['@graph']) == 0
     assert r.status_code == 404
+    r = client.get('/rnaget-search/?type=RNAExpression&searchTerm=no match term&format=json')
+    assert r.json['notification'] == 'No results found'
+    assert len(r.json['@graph']) == 0
+    assert r.status_code == 404
