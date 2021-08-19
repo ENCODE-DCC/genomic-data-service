@@ -22,7 +22,6 @@ def make_registry(types, configs):
     for type_dict in types:
         register_type_from_dict(type_registry, type_dict)
     registry[TYPES] = type_registry
-
     config_registry = SearchConfigRegistry()
     for config_dict in configs:
         register_search_config_from_dict(config_registry, config_dict)
