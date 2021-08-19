@@ -28,7 +28,7 @@ def client():
         yield client
 
 
-@pytest.mark.elasticsearch
+@pytest.mark.integration
 def test_rnaseq_views_rnaget_search(client, rnaseq_data_in_elasticsearch):
     r = client.get('/rnaget-search/?type=RNAExpression')
     assert '@graph' in r.json

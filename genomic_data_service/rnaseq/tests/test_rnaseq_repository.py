@@ -137,7 +137,7 @@ def test_rnaseq_repository_elasticsearch_init():
     assert isinstance(es, Elasticsearch)
 
 
-@pytest.mark.elasticsearch
+@pytest.mark.integration
 def test_rnaseq_repository_elasticsearch_load(mocker, mock_portal, raw_expressions, elasticsearch_client):
     from genomic_data_service.rnaseq.repository.elasticsearch import Elasticsearch
     es = Elasticsearch(
@@ -230,7 +230,7 @@ def test_rnaseq_repository_elasticsearch_load(mocker, mock_portal, raw_expressio
     es.clear()
 
 
-@pytest.mark.elasticsearch
+@pytest.mark.integration
 def test_rnaseq_repository_elasticsearch_bulk_load(mocker, raw_files, raw_expressions, repositories, elasticsearch_client):
     from genomic_data_service.rnaseq.repository.elasticsearch import Elasticsearch
     from genomic_data_service.rnaseq.domain.file import RnaSeqFile
@@ -252,7 +252,7 @@ def test_rnaseq_repository_elasticsearch_bulk_load(mocker, raw_files, raw_expres
     es.clear()
 
 
-@pytest.mark.elasticsearch
+@pytest.mark.integration
 def test_rnaseq_repository_elasticsearch_bulk_load_from_files(mocker, mock_portal, raw_expressions, elasticsearch_client):
     from genomic_data_service.rnaseq.repository.elasticsearch import Elasticsearch
     mocker.patch(

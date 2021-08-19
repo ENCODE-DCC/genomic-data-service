@@ -110,7 +110,8 @@ def test_rnaseq_file_get_expressions_local_file(local_quantification_tsv_path):
     )
 
 
-@pytest.mark.skip(reason='This actually downloads a file')
+# This actually downloads a file
+@pytest.mark.integration
 def test_rnaseq_file_get_expressions_remote_file():
     from genomic_data_service.rnaseq.domain.file import RnaSeqFile
     from genomic_data_service.rnaseq.domain.expression import Expression
