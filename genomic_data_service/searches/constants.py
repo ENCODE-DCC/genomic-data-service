@@ -27,3 +27,9 @@ FREE_TEXT_QUERIES = [
 
 
 RESERVED_KEYS = NOT_FILTERS = OPTIONAL_PARAMS + FREE_TEXT_QUERIES
+
+
+DEFAULT_RNA_EXPRESSION_SORT = [
+    '-expression.tpm',
+    'gene.symbol',
+]
