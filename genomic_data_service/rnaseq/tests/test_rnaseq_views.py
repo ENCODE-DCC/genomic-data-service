@@ -218,6 +218,13 @@ def test_rnaseq_views_rnaget_report_view(client, rnaseq_data_in_elasticsearch):
         '/rnaget-report/?type=RNAExpression&expression.tpm=gt:9.1&searchTerm=RNF19A'
     )
     assert len(r.json['@graph']) == 4
+    r = client.get(
+        '/rnaget-report/?type=RNAExpression&type=XYZ'
+    )
+    assert r.status_code == 400
+    assert (
+        r.json['message'] == "400 Bad Request: Report view requires specifying a single type: [('type', 'RNAExpression'), ('type', 'XYZ')]"
+    )
 
 
 @pytest.mark.integration
