@@ -296,7 +296,11 @@ def test_rnaseq_views_rnaget_rna_expression_search_generator_manual_request(rnas
         assert qs.get_query_string() == (
             'type=RNAExpression&searchTerm=RNF19A&field=expression.tpm&field=file.%40id&limit=2'
         )
-        new_search_request = qs.get_request_with_new_query_string()
+        new_request = qs.get_request_with_new_query_string()
+        assert not hasattr(new_request, 'response')
+        new_search_request = make_search_request(new_request)
+        assert hasattr(new_search_request, 'registry')
+        assert hasattr(new_search_request, 'response')
         r = rna_expression_search_generator(new_search_request)
         data = list(r['@graph'])
         assert len(data) == 2
