@@ -218,3 +218,44 @@ def test_rnaseq_views_rnaget_report_view(client, rnaseq_data_in_elasticsearch):
         '/rnaget-report/?type=RNAExpression&expression.tpm=gt:9.1&searchTerm=RNF19A'
     )
     assert len(r.json['@graph']) == 4
+
+
+@pytest.mark.integration
+def test_rnaseq_views_rnaget_search_cached_facets_view(client, rnaseq_data_in_elasticsearch):
+    r = client.get('/rnaget-search-cached-facets/?type=RNAExpression')
+    assert '@graph' in r.json
+    assert len(r.json['@graph']) == 16
+    assert r.json['@graph'][0]['expression']['tpm'] >= 0
+    assert r.status_code == 200
+    assert 'facets' in r.json
+    assert len(r.json['facets']) == 8
+
+
+@pytest.mark.integration
+def test_rnaseq_views_rnaget_report_cached_facets_view(client, rnaseq_data_in_elasticsearch):
+    r = client.get('/rnaget-report-cached-facets/?type=RNAExpression')
+    assert '@graph' in r.json
+    assert len(r.json['@graph']) == 16
+    assert r.json['@graph'][0]['expression']['tpm'] >= 0
+    assert r.status_code == 200
+    assert 'facets' in r.json
+    assert len(r.json['facets']) == 8
+
+
+@pytest.mark.integration
+def test_rnaseq_views_rnaget_rna_expression_search_generator(rnaseq_data_in_elasticsearch):
+    from types import GeneratorType
+    from genomic_data_service.rnaseq.views import rna_expression_search_generator
+    from genomic_data_service.searches.requests import make_search_request
+    from genomic_data_service import app
+    path = (
+        '/dummy/?type=RNAExpression&searchTerm=RNF19A&field=expression.fpkm&field=gene.symbol'
+    )
+    with app.test_request_context(path=path):
+        search_request = make_search_request()
+        r = rna_expression_search_generator(search_request)
+        assert isinstance(r['@graph'], GeneratorType)
+        data = list(r['@graph'])
+        assert len(data) == 4
+        assert data[0]['expression']['fpkm'] >= 0
+        assert data[0]['gene']['symbol'] == 'RNF19A'
