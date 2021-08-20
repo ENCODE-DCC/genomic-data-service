@@ -20,7 +20,7 @@ SUPPORTED_CHROMOSOMES = [
 ]
 
 SEARCH_ENDPOINT = 'https://www.encodeproject.org/search/'
-SUPPORTED_ASSEMBLIES = ['GRCh38', 'mm10']
+SUPPORTED_ASSEMBLIES = ['GRCh38', 'GRCh37', 'hg19', 'GRCm38', 'mm10']
 ALLOWED_STATUSES = ['released']
 ASSAY_TITLES = [
     'TF ChIP-seq',
