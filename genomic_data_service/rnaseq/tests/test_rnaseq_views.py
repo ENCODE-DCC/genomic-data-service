@@ -41,8 +41,6 @@ def test_rnaseq_views_rnaget_search_quick(client, rnaseq_data_in_elasticsearch):
 def test_rnaseq_views_rnaget_search_view(client, rnaseq_data_in_elasticsearch):
     r = client.get('/rnaget-search/?type=RNAExpression')
     assert '@graph' in r.json
-    print({k: v for k, v in r.json.items() if k != '@graph'})
-    print(r.json.keys())
     assert len(r.json['@graph']) == 16
     assert r.json['@graph'][0]['expression']['tpm'] >= 0
     assert r.status_code == 200
