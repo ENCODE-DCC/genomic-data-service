@@ -259,3 +259,46 @@ def test_rnaseq_views_rnaget_rna_expression_search_generator(rnaseq_data_in_elas
         assert len(data) == 4
         assert data[0]['expression']['fpkm'] >= 0
         assert data[0]['gene']['symbol'] == 'RNF19A'
+
+
+@pytest.mark.integration
+def test_rnaseq_views_rnaget_rna_expression_search_generator_manual_request(rnaseq_data_in_elasticsearch):
+    from types import GeneratorType
+    from genomic_data_service.rnaseq.views import rna_expression_search_generator
+    from genomic_data_service.searches.requests import make_search_request
+    from genomic_data_service import app
+    from flask import Request
+    from snosearch.parsers import QueryString
+    request = Request(
+        {
+            'PATH_INFO': '/dummy/',
+            'QUERY_STRING': 'type=RNAExpression&searchTerm=RNF19A&field=expression.fpkm&field=gene.symbol',
+        }
+    )
+    with app.app_context():
+        search_request = make_search_request(request=request)
+        r = rna_expression_search_generator(search_request)
+        assert isinstance(r['@graph'], GeneratorType)
+        data = list(r['@graph'])
+        assert len(data) == 4
+        assert data[0]['expression']['fpkm'] >= 0
+        assert data[0]['gene']['symbol'] == 'RNF19A'
+        qs = QueryString(search_request)
+        qs.drop('field')
+        qs.drop('limit')
+        qs.extend(
+            [
+                ('field', 'expression.tpm'),
+                ('field', 'file.@id'),
+                ('limit', '2'),
+            ]
+        )
+        assert qs.get_query_string() == (
+            'type=RNAExpression&searchTerm=RNF19A&field=expression.tpm&field=file.%40id&limit=2'
+        )
+        new_search_request = qs.get_request_with_new_query_string()
+        r = rna_expression_search_generator(new_search_request)
+        data = list(r['@graph'])
+        assert len(data) == 2
+        assert data[0]['expression']['tpm'] >= 0
+        assert 'file' in data[0]

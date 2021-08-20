@@ -5,6 +5,7 @@ from genomic_data_service.searches.requests import make_search_request
 
 from snosearch.fields import AllResponseField
 from snosearch.fields import BasicReportWithFacetsResponseField
+from snosearch.fields import BasicReportWithoutFacetsResponseField
 from snosearch.fields import BasicSearchResponseField
 from snosearch.fields import BasicSearchWithFacetsResponseField
 from snosearch.fields import BasicSearchWithoutFacetsResponseField
@@ -189,7 +190,6 @@ def rnaget_report_cached_facets():
                 at_type=['RNAExpressionReport']
             ),
             IDResponseField(),
-            ContextResponseField(),
             CachedFacetsResponseField(
                 client=rna_client,
                 default_item_types=[
