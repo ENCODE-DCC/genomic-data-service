@@ -38,7 +38,7 @@ def test_rnaseq_views_rnaget_search_quick(client, rnaseq_data_in_elasticsearch):
 
 
 @pytest.mark.integration
-def test_rnaseq_views_rnaget_search(client, rnaseq_data_in_elasticsearch):
+def test_rnaseq_views_rnaget_search_view(client, rnaseq_data_in_elasticsearch):
     r = client.get('/rnaget-search/?type=RNAExpression')
     assert '@graph' in r.json
     print({k: v for k, v in r.json.items() if k != '@graph'})
@@ -63,7 +63,7 @@ def test_rnaseq_views_rnaget_search(client, rnaseq_data_in_elasticsearch):
         assert expected_key in r.json
     assert r.json['notification'] == 'Success'
     assert r.json['@id'] == '/rnaget-search/?type=RNAExpression'
-    assert r.json['@type'] == ['RNAExpression']
+    assert r.json['@type'] == ['RNAExpressionSearch']
     assert r.json['clear_filters'] == '/rnaget-search/?type=RNAExpression'
     assert r.json['columns'] == {
         '@id': {'title': 'ID'},
@@ -192,7 +192,7 @@ def test_rnaseq_views_rnaget_search(client, rnaseq_data_in_elasticsearch):
 
 
 @pytest.mark.integration
-def test_rnaseq_views_rnaget_search_no_results_raises_404(client, rnaseq_data_in_elasticsearch):
+def test_rnaseq_views_rnaget_search_view_no_results_raises_404(client, rnaseq_data_in_elasticsearch):
     r = client.get('/rnaget-search/?type=RNAExpression&searchTerm=no match term')
     assert '@graph' in r.json
     assert len(r.json['@graph']) == 0
@@ -201,3 +201,20 @@ def test_rnaseq_views_rnaget_search_no_results_raises_404(client, rnaseq_data_in
     assert r.json['notification'] == 'No results found'
     assert len(r.json['@graph']) == 0
     assert r.status_code == 404
+
+
+@pytest.mark.integration
+def test_rnaseq_views_rnaget_report_view(client, rnaseq_data_in_elasticsearch):
+    r = client.get('/rnaget-report/?type=RNAExpression')
+    assert '@graph' in r.json
+    assert len(r.json['@graph']) == 16
+    assert r.status_code == 200
+    assert r.json['notification'] == 'Success'
+    assert r.json['@type'] == ['RNAExpressionReport']
+    assert r.json['clear_filters'] == '/rnaget-report/?type=RNAExpression'
+    r = client.get('/rnaget-report/?type=RNAExpression&expression.tpm=gt:9.1&field=expression.tpm')
+    assert len(r.json['@graph']) == 8
+    r = client.get(
+        '/rnaget-report/?type=RNAExpression&expression.tpm=gt:9.1&searchTerm=RNF19A'
+    )
+    assert len(r.json['@graph']) == 4
