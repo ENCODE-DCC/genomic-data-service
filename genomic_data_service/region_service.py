@@ -1,7 +1,7 @@
 from genomic_data_service import region_search_es
 
 REGIONS_PER_PAGE = 100
-AGGREGATION_SIZE = 1000
+AGGREGATION_SIZE = 9999
 DEFAULT_INTERVAL_MATCH = 'INTERSECTS'
 INTERVAL_MATCH_OPTIONS = ['CONTAINS', 'WITHIN', 'INTERSECTS']
 
@@ -55,9 +55,10 @@ class RegionService():
         self.regions_per_file = []
         for agg in res['aggregations']['files'].get('buckets', []):
             self.regions_per_file.append({
-                'file_url': f"https://www.encodeproject.org/{agg['key']}",
+                'uuid': agg['key'],
                 'count': agg['doc_count']
             })
+        self.regions_per_file = sorted(self.regions_per_file, key=lambda k: k['count'], reverse=True)
 
         self.regions = []
         for r in res['hits']['hits']:
