@@ -20,7 +20,7 @@ setup(
         'redis',
         'celery==4.4.6',
         'flower==0.9.4',
-        'snovault-search @ git+https://github.com/ENCODE-DCC/snovault-search.git@add-adapter-and-tests',
+        'snovault-search==1.0.1',
         'sqlalchemy==1.3.22',
         'psycopg2',
     ],
