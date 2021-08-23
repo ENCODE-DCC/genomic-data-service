@@ -14,17 +14,30 @@ REGDB_SCORE_CHUNK_SIZE = 30000
 REGDB_STR_SCORES = ['1a', '1b', '1c', '1d', '1e', '1f', '2a', '2b', '2c', '3a', '3b', '4', '5', '6']
 REGDB_NUM_SCORES = [1000, 950, 900, 850, 800, 750, 600, 550, 500, 450, 400, 300, 200, 100]
 
-TRAINED_REG_MODEL = pickle.load(
-    open('./ml_models/rf_model.sav', 'rb')
-)
+try:
+    TRAINED_REG_MODEL = pickle.load(
+        open('./ml_models/rf_model.sav', 'rb')
+    )
+except FileNotFoundError:
+    TRAINED_REG_MODEL = None
 
-LOCAL_BIGWIGS = {
-    'IC_matched_max': pyBigWig.open(
+try:
+    IC_MATCHED_MAX_BW = pyBigWig.open(
         './ml_models/bigwig_files/IC_matched_max.bw'
-    ),
-    'IC_max': pyBigWig.open(
+    )
+except RuntimeError:
+    IC_MATCHED_MAX_BW = None
+
+try:
+    IC_MAX_BW = pyBigWig.open(
         './ml_models/bigwig_files/IC_max.bw'
     )
+except RuntimeError:
+    IC_MAX_BW = None
+
+LOCAL_BIGWIGS = {
+    'IC_matched_max': IC_MATCHED_MAX_BW,
+    'IC_max': IC_MAX_BW,
 }
 
 SEARCH_MAX = 9999

@@ -1,0 +1,31 @@
+version: 2.1
+
+workflows:
+  gds-tests:
+    jobs:
+      - install-and-test
+
+jobs:
+  install-and-test:
+    docker:
+      - image: encodedcc/gds_test
+    steps:
+      - checkout
+      - run:
+          name: Install
+          command: |
+            pip install --upgrade pip
+            pip install coveralls
+            pip install -e .[test]
+      - run:
+          name: Unit tests
+          command: |
+            pytest -s -v --cov=genomic_data_service -m 'not integration'
+      - run:
+          name: Integration tests
+          command: |
+            pytest -s -v --cov=genomic_data_service --cov-append -m 'integration'
+      - run:
+          name: Upload coverage report
+          command:
+            coveralls

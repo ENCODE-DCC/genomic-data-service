@@ -11,20 +11,24 @@ setup(
         'Flask-Migrate',
         'Flask-Script',
         'Flask-Excel',
-        'elasticsearch',
+        'elasticsearch==5.4.0',
         'requests',
         'pyBigWig',
         'scikit-learn==0.20.3',
-        'pytest==6.2.4',
-        'pytest-mock==3.6.1',
         'gunicorn',
         'boto3',
         'redis',
         'celery==4.4.6',
         'flower==0.9.4',
+        'snovault-search==1.0.1',
         'sqlalchemy==1.3.22',
         'psycopg2',
-        'boto3'
     ],
-    tests_require=['pytest']
+    extras_require={
+        'test': [
+            'pytest==6.2.4',
+            'pytest-mock==3.6.1',
+            'pytest-cov==2.12.1',
+        ]
+    }
 )

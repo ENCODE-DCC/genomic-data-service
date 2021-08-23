@@ -1,3 +1,5 @@
+[![CircleCI](https://circleci.com/gh/ENCODE-DCC/genomic-data-service/tree/dev.svg?style=svg)](https://circleci.com/gh/ENCODE-DCC/genomic-data-service/tree/dev)
+[![Coverage Status](https://coveralls.io/repos/github/ENCODE-DCC/genomic-data-service/badge.svg?branch=dev)](https://coveralls.io/github/ENCODE-DCC/genomic-data-service?branch=dev)
 # Genomic Data Services
 
 Flask based web service providing genomic region search, based on regulomedb.org.

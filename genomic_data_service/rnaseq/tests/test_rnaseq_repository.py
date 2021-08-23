@@ -137,8 +137,7 @@ def test_rnaseq_repository_elasticsearch_init():
     assert isinstance(es, Elasticsearch)
 
 
-@pytest.mark.elasticsearch
-@pytest.mark.skip(reason='Starts elasticsearch')
+@pytest.mark.integration
 def test_rnaseq_repository_elasticsearch_load(mocker, mock_portal, raw_expressions, elasticsearch_client):
     from genomic_data_service.rnaseq.repository.elasticsearch import Elasticsearch
     es = Elasticsearch(
@@ -228,10 +227,10 @@ def test_rnaseq_repository_elasticsearch_load(mocker, mock_portal, raw_expressio
     data = es.data
     assert len(data) == 1
     assert data[0]['_source']['embedded']['expression_id'] == '/expressions/ENCFF241WYH/ENSG00000034677.12/'
+    es.clear()
 
 
-@pytest.mark.elasticsearch
-@pytest.mark.skip(reason='Starts elasticsearch')
+@pytest.mark.integration
 def test_rnaseq_repository_elasticsearch_bulk_load(mocker, raw_files, raw_expressions, repositories, elasticsearch_client):
     from genomic_data_service.rnaseq.repository.elasticsearch import Elasticsearch
     from genomic_data_service.rnaseq.domain.file import RnaSeqFile
@@ -247,12 +246,13 @@ def test_rnaseq_repository_elasticsearch_bulk_load(mocker, raw_files, raw_expres
     es.bulk_load(as_documents)
     data = es.data
     assert len(data) == 4
+    data.sort(key=lambda d: d['_id'])
     assert data[0]['_id'] == '/expressions/ENCFF241WYH/ENSG00000034677.12/'
     assert data[3]['_id'] == '/expressions/ENCFF241WYH/ENSG00000060982.14/'
+    es.clear()
 
 
-@pytest.mark.elasticsearch
-@pytest.mark.skip(reason='Starts Elasticsearch')
+@pytest.mark.integration
 def test_rnaseq_repository_elasticsearch_bulk_load_from_files(mocker, mock_portal, raw_expressions, elasticsearch_client):
     from genomic_data_service.rnaseq.repository.elasticsearch import Elasticsearch
     mocker.patch(
@@ -266,5 +266,7 @@ def test_rnaseq_repository_elasticsearch_bulk_load_from_files(mocker, mock_porta
     es.bulk_load_from_files(files)
     data = es.data
     assert len(data) == 16
-    assert data[0]['_id'] == '/expressions/ENCFF241WYH/ENSG00000034677.12/'
+    data.sort(key=lambda d: d['_id'])
+    assert data[0]['_id'] == '/expressions/ENCFF106SZG/ENSG00000034677.12/'
     assert data[15]['_id'] == '/expressions/ENCFF730OTJ/ENSG00000060982.14/'
+    es.clear()
