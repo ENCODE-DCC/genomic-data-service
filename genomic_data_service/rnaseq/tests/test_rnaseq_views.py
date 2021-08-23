@@ -199,6 +199,13 @@ def test_rnaseq_views_rnaget_search_view_no_results_raises_404(client, rnaseq_da
     assert r.json['notification'] == 'No results found'
     assert len(r.json['@graph']) == 0
     assert r.status_code == 404
+    r = client.get(
+        '/rnaget-search/?type=RNAExpression&type=XYZ'
+    )
+    assert r.status_code == 400
+    assert (
+        r.json['message'] == "400 Bad Request: Invalid types: ['XYZ']"
+    )
 
 
 @pytest.mark.integration
@@ -217,17 +224,24 @@ def test_rnaseq_views_rnaget_report_view(client, rnaseq_data_in_elasticsearch):
     )
     assert len(r.json['@graph']) == 4
     r = client.get(
+        '/rnaget-report/?type=RNAExpression&type=RNAExpression'
+    )
+    assert r.status_code == 400
+    assert (
+        r.json['message'] == "400 Bad Request: Report view requires specifying a single type: [('type', 'RNAExpression'), ('type', 'RNAExpression')]"
+    )
+    r = client.get(
         '/rnaget-report/?type=RNAExpression&type=XYZ'
     )
     assert r.status_code == 400
     assert (
-        r.json['message'] == "400 Bad Request: Report view requires specifying a single type: [('type', 'RNAExpression'), ('type', 'XYZ')]"
+        r.json['message'] == "400 Bad Request: Invalid types: ['XYZ']"
     )
 
 
 @pytest.mark.integration
 def test_rnaseq_views_rnaget_search_cached_facets_view(client, rnaseq_data_in_elasticsearch):
-    r = client.get('/rnaget-search-cached-facets/?type=RNAExpression')
+    r = client.get('/rnaget-search/?type=RNAExpression')
     assert '@graph' in r.json
     assert len(r.json['@graph']) == 16
     assert r.json['@graph'][0]['expression']['tpm'] >= 0
@@ -238,7 +252,7 @@ def test_rnaseq_views_rnaget_search_cached_facets_view(client, rnaseq_data_in_el
 
 @pytest.mark.integration
 def test_rnaseq_views_rnaget_report_cached_facets_view(client, rnaseq_data_in_elasticsearch):
-    r = client.get('/rnaget-report-cached-facets/?type=RNAExpression')
+    r = client.get('/rnaget-report/?type=RNAExpression')
     assert '@graph' in r.json
     assert len(r.json['@graph']) == 16
     assert r.json['@graph'][0]['expression']['tpm'] >= 0
