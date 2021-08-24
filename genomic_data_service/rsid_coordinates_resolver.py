@@ -11,6 +11,7 @@ from genomic_data_service.constants import (
 
 log = logging.getLogger(__name__)
 
+
 def ensembl_assembly_mapper(location, species, input_assembly, output_assembly):
     # maps location on GRCh38 to hg19 for example
     url = (ENSEMBL_URL + 'map/' + species + '/'
@@ -31,6 +32,36 @@ def ensembl_assembly_mapper(location, species, input_assembly, output_assembly):
     end = data['end']
 
     return (chromosome, start, end)
+
+
+def get_ensemblid_coordinates(id, assembly):
+    species = GENOME_TO_ALIAS[assembly]
+    url = '{ensembl}lookup/id/{id}?content-type=application/json'.format(
+        ensembl=ENSEMBL_URL,
+        id=id
+    )
+    try:
+        response = requests.get(url).json()
+    except:
+        return('', '', '')
+    else:
+        if 'error' in response:
+            return ('', '', '')
+
+        location = '{chr}:{start}-{end}'.format(
+            chr=response['seq_region_name'],
+            start=response['start'],
+            end=response['end']
+        )
+        if response['assembly_name'] == assembly:
+            chromosome, start, end = re.split(':|-', location)
+            return('chr' + chromosome, start, end)
+        elif assembly == 'GRCh37':
+            return ensembl_assembly_mapper(location, species, 'GRCh38', assembly)
+        elif assembly == 'GRCm37':
+            return ensembl_assembly_mapper(location, species, 'GRCm38', 'NCBIM37')
+        else:
+            return ('', '', '')
 
 
 def get_rsid_coordinates_from_atlas(atlas, assembly, rsid):
@@ -105,6 +136,11 @@ def get_coordinates(query_term, assembly='GRCh37', atlas=None):
         if query_match:
             chrom, start, end = get_rsid_coordinates(query_match.group(0),
                                                      assembly, atlas)
+        else:
+            query_match = re.match(r'^ensg\d+', query_term)
+            if query_match:
+                chrom, start, end = get_ensemblid_coordinates(query_term.upper(), assembly)
+
     try:
         start, end = int(start), int(end)
     except (ValueError, TypeError):
