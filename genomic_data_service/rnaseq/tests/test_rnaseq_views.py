@@ -332,7 +332,6 @@ def test_rnaseq_views_rnaget_expression_matrix_view(client, rnaseq_data_in_elast
     from io import StringIO
     import csv
     r = client.get('/rnaget-expression-matrix/?type=RNAExpression')
-    print(dir(r))
     actual = list(
         csv.reader(
             StringIO(
@@ -341,7 +340,6 @@ def test_rnaseq_views_rnaget_expression_matrix_view(client, rnaseq_data_in_elast
             delimiter='\t',
         )
     )
-    print(actual)
     expected = [
         ['featureID', 'geneSymbol', '/files/ENCFF106SZG/', '/files/ENCFF241WYH/', '/files/ENCFF273KTX/', '/files/ENCFF730OTJ/'],
         ['ENSG00000039987.6', '', '0.01', '0.01', '0.01', '0.01'],
