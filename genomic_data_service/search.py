@@ -128,6 +128,10 @@ def region_search():
     region_service.intercepting_regions()
 
     return jsonify({
+        'chr': region_service.chrm,
+        'start': region_service.start,
+        'end': region_service.end,
+        'expand': region_service.expand,
         'total_regions': region_service.total_regions,
         'regions': region_service.regions,
         'regions_per_file': region_service.regions_per_file

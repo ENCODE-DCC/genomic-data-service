@@ -21,7 +21,7 @@ class RegionService():
         else:
             self.start = params.get('start')
             self.end = params.get('end')
-            self.chrm = 'chr' + params.get('chr', '*')
+            self.chrm = params.get('chr', '*')
 
         self.expand = int(params.get('expand', 0)) * 1000
 
@@ -43,8 +43,8 @@ class RegionService():
             'query': {
                 'range': {
                     'coordinates': {
-                        'gte': self.start - self.expand,
-                        'lte': self.end + self.expand,
+                        'gte': int(self.start) - self.expand,
+                        'lte': int(self.end) + self.expand,
                         'relation': self.interval
                     }
                 }
