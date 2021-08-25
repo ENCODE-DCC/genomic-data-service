@@ -325,3 +325,28 @@ def test_rnaseq_views_rnaget_rna_expression_search_generator_manual_request(rnas
         assert len(data) == 2
         assert data[0]['expression']['tpm'] >= 0
         assert 'file' in data[0]
+
+
+@pytest.mark.integration
+def test_rnaseq_views_rnaget_expression_matrix_view(client, rnaseq_data_in_elasticsearch):
+    from io import StringIO
+    import csv
+    r = client.get('/rnaget-expression-matrix/?type=RNAExpression')
+    print(dir(r))
+    actual = list(
+        csv.reader(
+            StringIO(
+                r.data.decode()
+            ),
+            delimiter='\t',
+        )
+    )
+    print(actual)
+    expected = [
+        ['featureID', 'geneSymbol', '/files/ENCFF106SZG/', '/files/ENCFF241WYH/', '/files/ENCFF273KTX/', '/files/ENCFF730OTJ/'],
+        ['ENSG00000039987.6', '', '0.01', '0.01', '0.01', '0.01'],
+        ['ENSG00000055732.12', '', '0.27', '0.27', '0.27', '0.27'],
+        ['ENSG00000060982.14', '', '10.18', '10.18', '10.18', '10.18'],
+        ['ENSG00000034677.12', 'RNF19A', '9.34', '9.34', '9.34', '9.34']
+    ]
+    assert actual == expected

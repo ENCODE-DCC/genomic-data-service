@@ -1,4 +1,6 @@
 from genomic_data_service import app
+from genomic_data_service.rnaseq.matrix import ExpressionMatrix
+from genomic_data_service.rnaseq.matrix import get_rna_expression_search_request
 from genomic_data_service.searches.constants import DEFAULT_RNA_EXPRESSION_SORT
 from genomic_data_service.searches.constants import RESERVED_KEYS
 from genomic_data_service.searches.requests import make_search_request
@@ -162,3 +164,12 @@ def rna_expression_search_generator(search_request):
         ]
     )
     return fgr.render()
+
+
+@app.route('/rnaget-expression-matrix/', methods=['GET'])
+def rnaget_expression_matrix():
+    search_request = get_rna_expression_search_request(make_search_request())
+    expression_array = rna_expression_search_generator(search_request)['@graph']
+    em = ExpressionMatrix()
+    em.from_array(expression_array)
+    return em.as_response()
