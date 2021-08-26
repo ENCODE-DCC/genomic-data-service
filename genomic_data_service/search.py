@@ -18,10 +18,11 @@ def build_response(block):
         }
     }
 
+
 @app.route('/search/', methods=['GET'])
 def search():
     """
-    Peak analysis for a single region.
+    Peak analysis for a single region. Used by RegulomeDB.
     Ex params:
        genome=GRCh37
        regions=chr2%3A754011-754012
@@ -102,30 +103,36 @@ def search():
     return jsonify(build_response(result))
 
 
+# General region search endpoint, accepts any region length
 @app.route('/region-search/', methods=['GET'])
 def region_search():
     """
     Returns all regions matching the queried interval.
     Ex params:
+       query=rs75982468 or chr10:5894499-5894500 or ENSG00000088320.3 (rsids or coordinate ranges or ensembl id)
        start=754000
        end=754012
-       chr=1 (optional)
+       chr=1
        files_only = false (default) 
-       intervals=[intersects, contain, within] (default = contain)
+       page=1 (default)
+       limit=100 (default)
+       assembly=GRCh38 (default)
+       expand=0 (in kb, value used to expand the query)
+       interval=[intersects, contain, within] (default = contain)
        format=json
     """
 
-    begin = time.time()
+    atlas = RegulomeAtlas(regulome_es)
 
-    region_service = RegionService(request.args)
+    region_service = RegionService(request.args, atlas)
     region_service.intercepting_regions()
 
-    end = time.time()
-
     return jsonify({
-        'es_execution_time': region_service.execution_time,
+        'chr': region_service.chrm,
+        'start': region_service.start,
+        'end': region_service.end,
+        'expand': region_service.expand,
         'total_regions': region_service.total_regions,
-        'endpoint_time': end - begin,
         'regions': region_service.regions,
         'regions_per_file': region_service.regions_per_file
     })

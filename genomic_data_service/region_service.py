@@ -1,4 +1,5 @@
 from genomic_data_service import region_search_es
+from genomic_data_service.rsid_coordinates_resolver import get_coordinates
 
 REGIONS_PER_PAGE = 100
 AGGREGATION_SIZE = 9999
@@ -7,18 +8,34 @@ INTERVAL_MATCH_OPTIONS = ['CONTAINS', 'WITHIN', 'INTERSECTS']
 
 
 class RegionService():
-    def __init__(self, params):
-        self.start = params.get('start')
-        self.end = params.get('end')
-        self.chrm = 'chr' + params.get('chr', '*')
+    def __init__(self, params, atlas):
+        self.assembly = params.get('assembly', 'GRCh38')
+
+        self.query = params.get('query')
+
+        if self.query:
+            try:
+                self.chrm, self.start, self.end = get_coordinates(self.query, assembly=self.assembly, atlas=atlas)
+            except ValueError:
+                self.chrm, self.start, self.end = (None, None, None)
+        else:
+            self.start = params.get('start')
+            self.end = params.get('end')
+            self.chrm = params.get('chr', '*')
+
+        self.expand = int(params.get('expand', 0)) * 1000
+
         self.page = int(params.get('page', 1)) - 1
         self.limit = params.get('limit', REGIONS_PER_PAGE)
         self.files_only = params.get('files_only', '').lower() == 'true'
-        self.assembly = params.get('assembly', 'GRCh38').lower()
 
         self.interval = params.get('interval', DEFAULT_INTERVAL_MATCH).upper()
         if self.interval not in INTERVAL_MATCH_OPTIONS:
             self.interval = DEFAULT_INTERVAL_MATCH
+
+        self.regions_per_file = []
+        self.regions = []
+        self.total_regions = 0
 
 
     def region_search_query(self):
@@ -26,8 +43,8 @@ class RegionService():
             'query': {
                 'range': {
                     'coordinates': {
-                        'gte': self.start,
-                        'lte': self.end,
+                        'gte': int(self.start) - self.expand,
+                        'lte': int(self.end) + self.expand,
                         'relation': self.interval
                     }
                 }
@@ -47,12 +64,13 @@ class RegionService():
 
 
     def intercepting_regions(self):
-        res = region_search_es.search(index=self.chrm, doc_type=self.assembly, _source=True, body=self.region_search_query())
+        if not (self.chrm and self.start and self.end):
+            return
 
-        self.execution_time = res['took'] / 1000.0
+        res = region_search_es.search(index=self.chrm, doc_type=self.assembly.lower(), _source=True, body=self.region_search_query())
+
         self.total_regions = res['hits']['total']
 
-        self.regions_per_file = []
         for agg in res['aggregations']['files'].get('buckets', []):
             self.regions_per_file.append({
                 'uuid': agg['key'],
@@ -60,7 +78,6 @@ class RegionService():
             })
         self.regions_per_file = sorted(self.regions_per_file, key=lambda k: k['count'], reverse=True)
 
-        self.regions = []
         for r in res['hits']['hits']:
             self.regions.append({
                 'chrom': r['_index'],

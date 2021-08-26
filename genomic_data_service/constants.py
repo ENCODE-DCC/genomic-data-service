@@ -1,6 +1,9 @@
 GENOME_TO_ALIAS = {
     'GRCh37': 'hg19',
     'GRCh38': 'GRCh38',
+    'GRCm38': 'mm10',
+    'mm10'  : 'mm10',
+    'hg19'  : 'hg19',
 }
 
 GENOME_TO_SPECIES = {
