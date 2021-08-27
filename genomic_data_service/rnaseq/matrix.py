@@ -48,6 +48,7 @@ class ExpressionMatrix:
 
     COLUMN_KEYS = (
         ('file', '@id'),
+        ('dataset', 'biosample_summary'),
     )
 
     # Only supporting single value and no agg function for now,
@@ -132,6 +133,7 @@ class ExpressionMatrix:
 RNA_EXPRESSION_DEFAULT_PARAMS = [
     ('field', 'expression.gene_id'),
     ('field', 'file.@id'),
+    ('field', 'dataset.biosample_summary'),
     ('field', 'gene.symbol'),
     ('field', 'expression.tpm'),
     ('limit', 'all'),

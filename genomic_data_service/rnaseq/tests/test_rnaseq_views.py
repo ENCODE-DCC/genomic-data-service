@@ -341,7 +341,14 @@ def test_rnaseq_views_rnaget_expression_matrix_view(client, rnaseq_data_in_elast
         )
     )
     expected = [
-        ['featureID', 'geneSymbol', '/files/ENCFF106SZG/', '/files/ENCFF241WYH/', '/files/ENCFF273KTX/', '/files/ENCFF730OTJ/'],
+        [
+            'featureID',
+            'geneSymbol',
+            '/files/ENCFF106SZG/, GM23338 originated from GM23248',
+            '/files/ENCFF241WYH/, muscle of trunk tissue female embryo (113 days)',
+            '/files/ENCFF273KTX/, uterus tissue female adult (53 years)',
+            '/files/ENCFF730OTJ/, GM23338 originated from GM23248'
+        ],
         ['ENSG00000039987.6', '', '0.01', '0.01', '0.01', '0.01'],
         ['ENSG00000055732.12', '', '0.27', '0.27', '0.27', '0.27'],
         ['ENSG00000060982.14', '', '10.18', '10.18', '10.18', '10.18'],
