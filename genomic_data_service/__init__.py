@@ -4,12 +4,15 @@ from os import environ
 
 from genomic_data_service.searches.configs import add_registry
 from genomic_data_service.rnaseq.client import add_rna_client
+from genomic_data_service.rnaseq.rnaget import rnaget_api
 
 
 def is_web_app():
     return ('FLASK_APP' in environ)
 
 app = Flask(__name__)
+app.register_blueprint(rnaget_api, url_prefix='/rnaget/')
+
 
 if 'GENOMIC_DATA_SERVICE_SETTINGS' in environ:
     app.config.from_envvar('GENOMIC_DATA_SERVICE_SETTINGS')
