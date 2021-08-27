@@ -34,3 +34,8 @@ def project_id(project_id):
     if not projects:
         abort(404, 'Project not found')
     return jsonify(projects)
+
+
+@rnaget_api.route('/projects/filters', methods=['GET'])
+def project_filters():
+    return jsonify([])

@@ -47,3 +47,10 @@ def test_rnaseq_rnaget_project_by_id_not_found_view(client):
     r = client.get('/rnaget/projects/NOTENCODE')
     assert r.status_code == 404
     assert r.json['message'] == '404 Not Found: Project not found'
+
+
+@pytest.mark.integration
+def test_rnaseq_rnaget_project_filters(client):
+    r = client.get('/rnaget/projects/filters')
+    assert r.status_code == 200
+    assert r.json == []
