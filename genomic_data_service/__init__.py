@@ -4,7 +4,7 @@ from os import environ
 
 from genomic_data_service.searches.configs import add_registry
 from genomic_data_service.rnaseq.client import add_rna_client
-from genomic_data_service.rnaseq.rnaget import rnaget_api
+from genomic_data_service.rnaseq.rnaget.api import rnaget_api
 
 
 def is_web_app():
