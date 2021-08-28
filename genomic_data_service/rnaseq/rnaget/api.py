@@ -1,7 +1,9 @@
 from flask import abort
 from flask import Blueprint
 from flask import jsonify
+from flask import redirect
 from flask import request as current_request
+from flask import url_for
 
 from genomic_data_service.rnaseq.remote.portal import get_json
 from genomic_data_service.rnaseq.rnaget.constants import BASE_SEARCH_URL
@@ -10,6 +12,7 @@ from genomic_data_service.rnaseq.rnaget.constants import EXPRESSION_IDS
 from genomic_data_service.rnaseq.rnaget.constants import PROJECTS
 from genomic_data_service.rnaseq.rnaget.constants import TICKET_PATH
 from genomic_data_service.rnaseq.rnaget.mapping import convert_facet_to_filter
+from genomic_data_service.rnaseq.rnaget.mapping import convert_list_filters_to_expression_filters
 from genomic_data_service.rnaseq.rnaget.mapping import convert_study_fields
 from genomic_data_service.rnaseq.rnaget.mapping import map_fields
 from genomic_data_service.searches.requests import make_search_request
@@ -138,29 +141,29 @@ def get_format_or_raise_400():
     return format_
 
 
-def expressions_matrix():
-    pass
+def expressions_matrix(query_string):
+    endpoint = url_for('rnaget_expression_matrix')
+    location = (
+        f'{endpoint}'
+        f'?{query_string}'
+    )
+    return redirect(location)
 
 
-def expressions_report():
-    pass
+def expressions_report(query_string):
+    endpoint = url_for('rnaget_search_quick')
+    location = (
+        f'{endpoint}'
+        f'?{query_string}'
+    )
+    return redirect(location)
 
 
 def expressions_factory():
     format_ = get_format_or_raise_400()
     if format_ == 'tsv':
-        return expressions_matrix()
-    return expression_report()
-
-
-def parse_expression_filters():
-    return []
-
-
-@rnaget_api.route('/expressions/bytes', methods=['GET'])
-def expressions_bytes():
-    expressions = expressions_factory()
-    return expressions
+        return expressions_matrix
+    return expressions_report
 
 
 def get_ticket_url(query_string):
@@ -173,11 +176,7 @@ def get_ticket_url(query_string):
     return path
 
 
-def make_expression_ticket():
-    qs = QueryString(
-        make_search_request()
-    )
-    query_string = qs.get_query_string()
+def make_expression_ticket(query_string):
     return {
         'format': get_format(),
         'units': get_unit(),
@@ -187,12 +186,33 @@ def make_expression_ticket():
 
 @rnaget_api.route('/expressions/ticket', methods=['GET'])
 def expressions_ticket():
-    return make_expression_ticket()
+    qs = QueryString(make_search_request())
+    return make_expression_ticket(
+        qs.get_query_string()
+    )
 
 
 @rnaget_api.route('/expressions/<expression_id>/ticket', methods=['GET'])
 def expressions_id_ticket(expression_id):
-    return {}
+    qs = QueryString(make_search_request())
+    qs.append(
+        ('expressionID', expression_id)
+    )
+    return make_expression_ticket(
+        qs.get_query_string()
+    )
+
+
+@rnaget_api.route('/expressions/bytes', methods=['GET'])
+def expressions_bytes():
+    qs = QueryString(make_search_request())
+    qs = convert_list_filters_to_expression_filters(qs)
+    qs.append(
+        ('type', 'RNAExpression')
+    )
+    query_string = qs.get_query_string()
+    expressions = expressions_factory()
+    return expressions(query_string)
 
 
 @rnaget_api.route('/expressions/<expression_id>/bytes', methods=['GET'])

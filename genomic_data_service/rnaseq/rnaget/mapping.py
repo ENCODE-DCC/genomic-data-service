@@ -1,4 +1,5 @@
 from genomic_data_service.rnaseq.rnaget.constants import DATASET_FROM_TO_FIELD_MAP
+from genomic_data_service.rnaseq.rnaget.constants import EXPRESSION_LIST_FILTERS_MAP
 
 
 def map_fields(item, from_to_field_map):
@@ -31,3 +32,24 @@ def convert_facet_to_filter(facet):
             for value in facet.get('terms', [])
         ],
     }
+
+
+def convert_list_filters_to_expression_filters(qs):
+    for list_filter, expression_filter in EXPRESSION_LIST_FILTERS_MAP.items():
+        value = qs.get_one_value(
+            params=qs.get_key_filters(
+                key=list_filter
+            )
+        ) or ''
+        values = [
+            v.strip()
+            for v in value.split(',')
+        ]
+        filters = [
+            (expression_filter, value)
+            for value in values
+            if value
+        ]
+        qs.extend(filters)
+        qs.drop(list_filter)
+    return qs

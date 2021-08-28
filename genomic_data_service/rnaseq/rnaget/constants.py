@@ -97,11 +97,11 @@ EXPRESSION_IDS = [
 ]
 
 
-EXPRESSION_FILTERS = [
-    'sampleIDList',
-    'featureIDList',
-    'featureNameList',
-]
+EXPRESSION_LIST_FILTERS_MAP = {
+    'sampleIDList': 'file.@id',
+    'featureIDList': 'expression.gene_id',
+    'featureNameList': 'gene.symbol'
+}
 
 
 TICKET_PATH = 'rnaget/expressions/bytes'

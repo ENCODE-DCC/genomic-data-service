@@ -1,14 +1,6 @@
 import pytest
 
 
-@pytest.fixture
-def client():
-    from genomic_data_service import app
-    app.config['DEBUG'] = True
-    with app.test_client() as client:
-        yield client
-
-
 def test_rnaseq_rnaget_mapping_map_fields():
     from genomic_data_service.rnaseq.rnaget.mapping import map_fields
     item = {
@@ -61,6 +53,37 @@ def test_rnaseq_rnaget_mapping_convert_facet_to_filter():
         ]
     }
     assert convert_facet_to_filter(facet) == expected_filter
+
+
+def test_rnaseq_rnaget_mapping_convert_list_filters_to_expression_filters():
+    from genomic_data_service.rnaseq.rnaget.mapping import convert_list_filters_to_expression_filters
+    from snosearch.parsers import QueryString
+    from snosearch.adapters.flask.requests import RequestAdapter
+    from flask import Request
+    r = Request(
+        {
+            'QUERY_STRING': (
+                'format=tsv'
+                '&sampleIDList=/files/ENCFF1/,/files/ENCFF2/'
+                '&featureIDList=ENSG1, ENSG2, ENSG3'
+                '&featureNameList=CTCF,POMC'
+            )
+        }
+    )
+    qs = QueryString(RequestAdapter(r))
+    assert qs.get_query_string() == (
+        'format=tsv'
+        '&sampleIDList=/files/ENCFF1/%2C/files/ENCFF2/'
+        '&featureIDList=ENSG1%2C+ENSG2%2C+ENSG3'
+        '&featureNameList=CTCF%2CPOMC'
+    )
+    qs = convert_list_filters_to_expression_filters(qs)
+    assert qs.get_query_string() == (
+        'format=tsv'
+        '&file.@id=/files/ENCFF1/&file.@id=/files/ENCFF2/'
+        '&expression.gene_id=ENSG1&expression.gene_id=ENSG2&expression.gene_id=ENSG3'
+        '&gene.symbol=CTCF&gene.symbol=POMC'
+    )
 
 
 @pytest.mark.integration
@@ -190,13 +213,6 @@ def test_rnaseq_rnaget_expressions_units_view(client):
 
 
 @pytest.mark.integration
-def test_rnaseq_rnaget_expressions_bytes_view(client):
-    r = client.get('/rnaget/expressions/bytes')
-    print(r.json)
-    assert False
-
-
-@pytest.mark.integration
 def test_rnaseq_rnaget_expressions_ticket_view(client):
     r = client.get('/rnaget/expressions/ticket')
     assert r.json == {
@@ -222,7 +238,6 @@ def test_rnaseq_rnaget_expressions_ticket_view(client):
         '&sampleIDList=ENCFF1,ENCFF2&featureIDList=ENSG1,ENSG2'
         '&featureNameList=GATA1,POMC,CTCF'
     )
-    print(r.json)
     assert r.json == {
         'format': 'tsv',
         'units': 'tpm',
@@ -235,3 +250,149 @@ def test_rnaseq_rnaget_expressions_ticket_view(client):
             '&featureNameList=GATA1%2CPOMC%2CCTCF'
         )
     }
+
+
+@pytest.mark.integration
+def test_rnaseq_rnaget_expressions_ticket_by_expression_id_view(client):
+    r = client.get('/rnaget/expressions/EXPID001/ticket')
+    assert r.json == {
+        'format': None,
+        'units': None,
+        'url': 'http://localhost/rnaget/expressions/bytes?expressionID=EXPID001'
+    }
+
+
+@pytest.mark.integration
+def test_rnaseq_rnaget_expressions_bytes_view_raise_400_when_format_not_specified(client):
+    r = client.get('/rnaget/expressions/bytes')
+    assert r.status_code == 400
+    assert r.json['message'] == '400 Bad Request: Must specify format'
+
+
+@pytest.mark.integration
+def test_rnaseq_rnaget_expressions_bytes_tsv_view(client, rnaseq_data_in_elasticsearch):
+    from io import StringIO
+    import csv
+    r = client.get(
+        '/rnaget/expressions/bytes?format=tsv',
+        follow_redirects=True
+    )
+    actual = list(
+        csv.reader(
+            StringIO(
+                r.data.decode()
+            ),
+            delimiter='\t',
+        )
+    )
+    expected = [
+        [
+            'featureID',
+            'geneSymbol',
+            '/files/ENCFF106SZG/, GM23338 originated from GM23248',
+            '/files/ENCFF241WYH/, muscle of trunk tissue female embryo (113 days)',
+            '/files/ENCFF273KTX/, uterus tissue female adult (53 years)',
+            '/files/ENCFF730OTJ/, GM23338 originated from GM23248'
+        ],
+        ['ENSG00000039987.6', '', '0.01', '0.01', '0.01', '0.01'],
+        ['ENSG00000055732.12', '', '0.27', '0.27', '0.27', '0.27'],
+        ['ENSG00000060982.14', '', '10.18', '10.18', '10.18', '10.18'],
+        ['ENSG00000034677.12', 'RNF19A', '9.34', '9.34', '9.34', '9.34']
+    ]
+    assert actual == expected
+    r = client.get(
+        '/rnaget/expressions/bytes?format=tsv&featureNameList=RNF19A',
+        follow_redirects=True
+    )
+    actual = list(
+        csv.reader(
+            StringIO(
+                r.data.decode()
+            ),
+            delimiter='\t',
+        )
+    )
+    expected = [
+        [
+            'featureID',
+            'geneSymbol',
+            '/files/ENCFF106SZG/, GM23338 originated from GM23248',
+            '/files/ENCFF241WYH/, muscle of trunk tissue female embryo (113 days)',
+            '/files/ENCFF273KTX/, uterus tissue female adult (53 years)',
+            '/files/ENCFF730OTJ/, GM23338 originated from GM23248'
+        ],
+        ['ENSG00000034677.12', 'RNF19A', '9.34', '9.34', '9.34', '9.34']
+    ]
+    assert actual == expected
+    r = client.get(
+        (
+            '/rnaget/expressions/bytes?format=tsv'
+            '&featureNameList=RNF19A'
+            '&sampleIDList=/files/ENCFF106SZG/,/files/ENCFF241WYH/'
+        ),
+        follow_redirects=True
+    )
+    actual = list(
+        csv.reader(
+            StringIO(
+                r.data.decode()
+            ),
+            delimiter='\t',
+        )
+    )
+    expected = [
+        [
+            'featureID',
+            'geneSymbol',
+            '/files/ENCFF106SZG/, GM23338 originated from GM23248',
+            '/files/ENCFF241WYH/, muscle of trunk tissue female embryo (113 days)',
+        ],
+        ['ENSG00000034677.12', 'RNF19A', '9.34', '9.34']
+    ]
+    assert actual == expected
+    r = client.get(
+        (
+            '/rnaget/expressions/bytes?format=tsv'
+            '&featureNameList=RNF19A'
+            '&sampleIDList=/files/ENCFF106SZG/,/files/ENCFF241WYH/'
+            '&dataset.biosample_summary=muscle of trunk tissue female embryo (113 days)'
+        ),
+        follow_redirects=True
+    )
+    actual = list(
+        csv.reader(
+            StringIO(
+                r.data.decode()
+            ),
+            delimiter='\t',
+        )
+    )
+    expected = [
+        [
+            'featureID',
+            'geneSymbol',
+            '/files/ENCFF241WYH/, muscle of trunk tissue female embryo (113 days)',
+        ],
+        ['ENSG00000034677.12', 'RNF19A', '9.34']
+    ]
+    assert actual == expected
+
+
+@pytest.mark.integration
+def test_rnaseq_rnaget_expressions_bytes_json_view(client, rnaseq_data_in_elasticsearch):
+    from io import StringIO
+    import csv
+    r = client.get(
+        '/rnaget/expressions/bytes?format=json',
+        follow_redirects=True
+    )
+    assert len(r.json['@graph']) == 16
+    r = client.get(
+        (
+            '/rnaget/expressions/bytes?format=json'
+            '&featureNameList=RNF19A'
+            '&sampleIDList=/files/ENCFF106SZG/,/files/ENCFF241WYH/'
+        ),
+        follow_redirects=True
+    )
+    assert len(r.json['@graph']) == 2
