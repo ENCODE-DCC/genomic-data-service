@@ -9,6 +9,32 @@ def client():
         yield client
 
 
+def test_rnaseq_rnaget_map_field():
+    from genomic_data_service.rnaseq.rnaget.mapping import map_fields
+    item = {
+        'a': 1,
+        'b': 2,
+        'c': 3,
+    }
+    from_to_field_map = {
+        'c': 'x'
+    }
+    assert map_fields(item, from_to_field_map) == {'x': 3, 'a': 1, 'b': 2}
+    from_to_field_map = {
+        'c': 'y',
+        't': 'b',
+        'a': 'abc',
+    }
+    assert map_fields(item, from_to_field_map) == {'y': 3, 'abc': 1, 'b': 2}
+    item = {
+        '@id': 'xyz',
+    }
+    from_to_field_map = {
+        '@id': 'id',
+    }
+    assert map_fields(item, from_to_field_map) == {'id': 'xyz'}
+
+
 @pytest.mark.integration
 def test_rnaseq_rnaget_projects_view(client):
     r = client.get('/rnaget/projects')
@@ -54,3 +80,20 @@ def test_rnaseq_rnaget_project_filters(client):
     r = client.get('/rnaget/projects/filters')
     assert r.status_code == 200
     assert r.json == []
+
+
+@pytest.mark.integration
+def test_rnaseq_rnaget_studies_view(client):
+    r = client.get('/rnaget/studies')
+    assert r.status_code == 200
+    assert len(r.json) == 25
+    r = client.get('/rnaget/studies?limit=2')
+    assert len(r.json) == 2
+    assert 'id' in r.json[0]
+    assert '@id' not in r.json[0]
+    assert 'accession' in r.json[0]
+    r = client.get('/rnaget/studies?limit=1&field=description')
+    assert len(r.json) == 1
+    assert 'id' in r.json[0]
+    assert 'accession' not in r.json[0]
+    assert 'description' in r.json[0]
