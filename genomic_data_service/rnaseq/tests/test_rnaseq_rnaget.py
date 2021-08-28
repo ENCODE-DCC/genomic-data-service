@@ -139,3 +139,25 @@ def test_rnaseq_rnaget_study_by_id_view_not_found(client):
     r = client.get('/rnaget/studies/NOTANID')
     assert r.status_code == 404
     assert r.json['message'] == '404 Not Found: Study not found'
+
+
+@pytest.mark.integration
+def test_rnaseq_rnaget_study_by_id_view(client):
+    r = client.get('/rnaget/studies/filters')
+    assert r.status_code == 200
+    print(len(r.json))
+    assert r.json[1] == {
+        'description': 'Assay type',
+        'filter': 'assay_slims',
+        'values': ['Transcription']
+    }
+    assert r.json[4] == {
+        'description': 'Perturbation',
+        'filter': 'perturbed',
+        'values': [0, 1]
+    }
+    assert r.json[5] == {
+        'description': 'Organism',
+        'filter': 'replicates.library.biosample.donor.organism.scientific_name',
+        'values': ['Homo sapiens', 'Mus musculus']
+    }

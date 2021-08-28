@@ -6,6 +6,7 @@ from genomic_data_service.rnaseq.remote.portal import get_json
 from genomic_data_service.rnaseq.rnaget.constants import BASE_SEARCH_URL
 from genomic_data_service.rnaseq.rnaget.constants import DATASET_FILTERS
 from genomic_data_service.rnaseq.rnaget.constants import PROJECTS
+from genomic_data_service.rnaseq.rnaget.mapping import convert_facet_to_filter
 from genomic_data_service.rnaseq.rnaget.mapping import convert_study_fields
 from genomic_data_service.rnaseq.rnaget.mapping import map_fields
 from genomic_data_service.searches.requests import make_search_request
@@ -82,7 +83,7 @@ def studies_id(study_id):
 @rnaget_api.route('/studies/filters', methods=['GET'])
 def study_filters():
     filters = [
-        convert_facets_to_filters(facet)
+        convert_facet_to_filter(facet)
         for facet in get_studies()['facets']
     ]
     return jsonify(filters)
