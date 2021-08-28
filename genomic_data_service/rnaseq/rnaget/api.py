@@ -5,8 +5,8 @@ from flask import jsonify
 from genomic_data_service.rnaseq.remote.portal import get_json
 from genomic_data_service.rnaseq.rnaget.constants import BASE_SEARCH_URL
 from genomic_data_service.rnaseq.rnaget.constants import DATASET_FILTERS
-from genomic_data_service.rnaseq.rnaget.constants import DATASET_FROM_TO_FIELD_MAP
 from genomic_data_service.rnaseq.rnaget.constants import PROJECTS
+from genomic_data_service.rnaseq.rnaget.mapping import convert_study_fields
 from genomic_data_service.rnaseq.rnaget.mapping import map_fields
 from genomic_data_service.searches.requests import make_search_request
 
@@ -41,13 +41,44 @@ def project_filters():
     return jsonify([])
 
 
+def get_studies(filters=None):
+    filters = filters or []
+    qs = QueryString(
+        make_search_request()
+    )
+    qs.extend(
+        DATASET_FILTERS + filters
+    )
+    url = (
+        f'{BASE_SEARCH_URL}'
+        f'?{qs.get_query_string()}'
+    )
+    return get_json(url)['@graph']
+
+
 @rnaget_api.route('/studies', methods=['GET'])
 def studies():
-    qs = QueryString(make_search_request())
-    qs.extend(DATASET_FILTERS)
-    url = f'{BASE_SEARCH_URL}?{qs.get_query_string()}'
-    results = [
-        map_fields(item, DATASET_FROM_TO_FIELD_MAP)
-        for item in get_json(url)['@graph']
+    studies = [
+        convert_study_fields(study)
+        for study in get_studies()
     ]
-    return jsonify(results)
+    return jsonify(studies)
+
+
+@rnaget_api.route('/studies/<study_id>', methods=['GET'])
+def studies_id(study_id):
+    filters = [
+        ('accession', study_id),
+    ]
+    studies = [
+        convert_study_fields(study)
+        for study in get_studies(filters=filters)
+    ]
+    if not studies:
+        abort(404, 'Study not found')
+    return jsonify(studies)
+
+
+@rnaget_api.route('/studies/filters', methods=['GET'])
+def study_filters():
+    return jsonify(Study.FILTERS)

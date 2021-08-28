@@ -90,10 +90,24 @@ def test_rnaseq_rnaget_studies_view(client):
     r = client.get('/rnaget/studies?limit=2')
     assert len(r.json) == 2
     assert 'id' in r.json[0]
-    assert '@id' not in r.json[0]
-    assert 'accession' in r.json[0]
+    assert '@id' in r.json[0]
+    assert 'accession' not in r.json[0]
     r = client.get('/rnaget/studies?limit=1&field=description')
     assert len(r.json) == 1
     assert 'id' in r.json[0]
-    assert 'accession' not in r.json[0]
     assert 'description' in r.json[0]
+
+
+@pytest.mark.integration
+def test_rnaseq_rnaget_study_by_id_view(client):
+    r = client.get('/rnaget/studies/ENCSR558SEE')
+    assert r.status_code == 200
+    assert len(r.json) == 1
+    assert r.json[0]['id'] == 'ENCSR558SEE'
+
+
+@pytest.mark.integration
+def test_rnaseq_rnaget_study_by_id_view_not_found(client):
+    r = client.get('/rnaget/studies/NOTANID')
+    assert r.status_code == 404
+    assert r.json['message'] == '404 Not Found: Study not found'

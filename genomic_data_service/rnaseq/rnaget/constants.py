@@ -24,9 +24,22 @@ DATASET_FILTERS = [
     ('files.file_type', 'tsv'),
     ('format', 'json'),
     ('frame', 'object'),
+    ('field', 'accession'),
+    ('field', 'assay_term_name'),
+    ('field', 'assay_title'),
+    ('field', 'assembly'),
+    ('field', 'award'),
+    ('field', 'biosample_ontology'),
+    ('field', 'biosample_summary'),
+    ('field', 'date_created'),
+    ('field', 'description'),
+    ('field', 'files'),
+    ('field', 'lab'),
+    ('field', 'replicates'),
+    ('field', 'status'),
 ]
 
 
 DATASET_FROM_TO_FIELD_MAP = {
-    '@id': 'id',
+    'accession': 'id',
 }

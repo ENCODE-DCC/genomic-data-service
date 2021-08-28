@@ -1,3 +1,6 @@
+from genomic_data_service.rnaseq.rnaget.constants import DATASET_FROM_TO_FIELD_MAP
+
+
 def map_fields(item, from_to_field_map):
     new_item = {}
     for from_field, to_field in from_to_field_map.items():
@@ -13,3 +16,7 @@ def map_fields(item, from_to_field_map):
         **new_item,
         **filtered_item,
     }
+
+
+def convert_study_fields(study):
+    return map_fields(study, DATASET_FROM_TO_FIELD_MAP)
