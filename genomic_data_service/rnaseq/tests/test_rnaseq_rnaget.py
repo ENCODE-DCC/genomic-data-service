@@ -145,7 +145,7 @@ def test_rnaseq_rnaget_study_by_id_view_not_found(client):
 def test_rnaseq_rnaget_study_by_id_view(client):
     r = client.get('/rnaget/studies/filters')
     assert r.status_code == 200
-    print(len(r.json))
+    assert len(r.json) == 35
     assert r.json[1] == {
         'description': 'Assay type',
         'filter': 'assay_slims',
