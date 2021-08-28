@@ -53,14 +53,14 @@ def get_studies(filters=None):
         f'{BASE_SEARCH_URL}'
         f'?{qs.get_query_string()}'
     )
-    return get_json(url)['@graph']
+    return get_json(url)
 
 
 @rnaget_api.route('/studies', methods=['GET'])
 def studies():
     studies = [
         convert_study_fields(study)
-        for study in get_studies()
+        for study in get_studies()['@graph']
     ]
     return jsonify(studies)
 
@@ -72,7 +72,7 @@ def studies_id(study_id):
     ]
     studies = [
         convert_study_fields(study)
-        for study in get_studies(filters=filters)
+        for study in get_studies(filters=filters)['@graph']
     ]
     if not studies:
         abort(404, 'Study not found')
@@ -81,4 +81,8 @@ def studies_id(study_id):
 
 @rnaget_api.route('/studies/filters', methods=['GET'])
 def study_filters():
-    return jsonify(Study.FILTERS)
+    filters = [
+        convert_facets_to_filters(facet)
+        for facet in get_studies()['facets']
+    ]
+    return jsonify(filters)

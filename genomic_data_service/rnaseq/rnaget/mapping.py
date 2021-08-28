@@ -20,3 +20,14 @@ def map_fields(item, from_to_field_map):
 
 def convert_study_fields(study):
     return map_fields(study, DATASET_FROM_TO_FIELD_MAP)
+
+
+def convert_facet_to_filter(facet):
+    return {
+        'filter': facet.get('field'),
+        'description': facet.get('title'),
+        'values': [
+            value.get('key')
+            for value in facet.get('terms', [])
+        ],
+    }

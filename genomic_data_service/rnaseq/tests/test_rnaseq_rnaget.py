@@ -9,7 +9,7 @@ def client():
         yield client
 
 
-def test_rnaseq_rnaget_map_field():
+def test_rnaseq_rnaget_mapping_map_fields():
     from genomic_data_service.rnaseq.rnaget.mapping import map_fields
     item = {
         'a': 1,
@@ -33,6 +33,34 @@ def test_rnaseq_rnaget_map_field():
         '@id': 'id',
     }
     assert map_fields(item, from_to_field_map) == {'id': 'xyz'}
+
+
+def test_rnaseq_rnaget_mapping_convert_facet_to_filter():
+    from genomic_data_service.rnaseq.rnaget.mapping import convert_facet_to_filter
+    facet = {
+        'field': 'target.label',
+        'title': 'Target of assay',
+        'terms': [
+            {
+                'key': 'HLH54F',
+                'doc_count': 3
+            },
+            {
+                'key': 'zfh2',
+                'doc_count': 3
+            }
+        ],
+        'total': 783,
+    }
+    expected_filter = {
+        'filter': 'target.label',
+        'description': 'Target of assay',
+        'values': [
+            'HLH54F',
+            'zfh2',
+        ]
+    }
+    assert convert_facet_to_filter(facet) == expected_filter
 
 
 @pytest.mark.integration
