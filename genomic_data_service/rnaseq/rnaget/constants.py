@@ -95,3 +95,10 @@ EXPRESSION_IDS = [
         ]
     }
 ]
+
+
+EXPRESSION_FILTERS = [
+    'sampleIDList',
+    'featureIDList',
+    'featureNameList',
+]

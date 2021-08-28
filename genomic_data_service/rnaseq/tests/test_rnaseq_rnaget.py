@@ -175,3 +175,22 @@ def test_rnaseq_rnaget_expression_ids_view(client):
         ],
         'id': 'EXPID001'
     }
+
+
+@pytest.mark.integration
+def test_rnaseq_rnaget_formats_view(client):
+    r = client.get('/rnaget/formats')
+    assert r.json == ['tsv', 'json']
+
+
+@pytest.mark.integration
+def test_rnaseq_rnaget_units_view(client):
+    r = client.get('/rnaget/units')
+    assert r.json == ['tpm']
+
+
+@pytest.mark.integration
+def test_rnaseq_rnaget_expressions_bytes_view(client):
+    r = client.get('/rnaget/expressions/bytes')
+    print(r.json)
+    assert False

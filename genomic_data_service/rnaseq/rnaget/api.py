@@ -101,6 +101,12 @@ def expressions_formats():
     return jsonify(formats)
 
 
+@rnaget_api.route('/expressions/units', methods=['GET'])
+def expressions_units():
+    units = ['tpm']
+    return jsonify(units)
+
+
 def expression_factory(format_):
     if format_ == 'tsv':
         return get_expression_matrix()
@@ -118,8 +124,24 @@ def expressions_bytes():
 
 
 def make_expression_ticket():
+    filters = filters or []
+    qs = QueryString(
+        make_search_request()
+    )
+    qs.extend(
+        DATASET_FILTERS + filters
+    )
+    url = (
+        f'{BASE_SEARCH_URL}'
+        f'?{qs.get_query_string()}'
+    )
+    return get_json(url)
     request.host
-    return {}
+    return {
+        'format': '',
+        'units': '',
+        'url': '',
+    }
 
 
 @rnaget_api.route('/expressions/ticket', methods=['GET'])
