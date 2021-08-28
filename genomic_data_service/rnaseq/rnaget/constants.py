@@ -102,3 +102,6 @@ EXPRESSION_FILTERS = [
     'featureIDList',
     'featureNameList',
 ]
+
+
+TICKET_PATH = 'rnaget/expressions/bytes'

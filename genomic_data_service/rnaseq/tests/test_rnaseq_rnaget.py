@@ -178,14 +178,14 @@ def test_rnaseq_rnaget_expression_ids_view(client):
 
 
 @pytest.mark.integration
-def test_rnaseq_rnaget_formats_view(client):
-    r = client.get('/rnaget/formats')
+def test_rnaseq_rnaget_expressions_formats_view(client):
+    r = client.get('/rnaget/expressions/formats')
     assert r.json == ['tsv', 'json']
 
 
 @pytest.mark.integration
-def test_rnaseq_rnaget_units_view(client):
-    r = client.get('/rnaget/units')
+def test_rnaseq_rnaget_expressions_units_view(client):
+    r = client.get('/rnaget/expressions/units')
     assert r.json == ['tpm']
 
 
@@ -194,3 +194,44 @@ def test_rnaseq_rnaget_expressions_bytes_view(client):
     r = client.get('/rnaget/expressions/bytes')
     print(r.json)
     assert False
+
+
+@pytest.mark.integration
+def test_rnaseq_rnaget_expressions_ticket_view(client):
+    r = client.get('/rnaget/expressions/ticket')
+    assert r.json == {
+        'format': None,
+        'units': None,
+        'url': 'http://localhost/rnaget/expressions/bytes'
+    }
+    r = client.get('/rnaget/expressions/ticket?format=tsv')
+    assert r.json == {
+        'format': 'tsv',
+        'units': None,
+        'url': 'http://localhost/rnaget/expressions/bytes?format=tsv'
+    }
+    r = client.get('/rnaget/expressions/ticket?format=tsv&units=tpm')
+    assert r.json == {
+        'format': 'tsv',
+        'units': 'tpm',
+        'url': 'http://localhost/rnaget/expressions/bytes?format=tsv&units=tpm'
+    }
+    r = client.get(
+        '/rnaget/expressions/ticket?format=tsv&units=tpm'
+        '&assay_title=Total RNA-seq&expression.tpm=gt:45'
+        '&sampleIDList=ENCFF1,ENCFF2&featureIDList=ENSG1,ENSG2'
+        '&featureNameList=GATA1,POMC,CTCF'
+    )
+    print(r.json)
+    assert r.json == {
+        'format': 'tsv',
+        'units': 'tpm',
+        'url': (
+            'http://localhost/rnaget/expressions/bytes'
+            '?format=tsv&units=tpm&assay_title=Total+RNA-seq'
+            '&expression.tpm=gt%3A45'
+            '&sampleIDList=ENCFF1%2CENCFF2'
+            '&featureIDList=ENSG1%2CENSG2'
+            '&featureNameList=GATA1%2CPOMC%2CCTCF'
+        )
+    }
