@@ -161,3 +161,17 @@ def test_rnaseq_rnaget_study_by_id_view(client):
         'filter': 'replicates.library.biosample.donor.organism.scientific_name',
         'values': ['Homo sapiens', 'Mus musculus']
     }
+
+
+@pytest.mark.integration
+def test_rnaseq_rnaget_expression_ids_view(client):
+    r = client.get('/rnaget/expressions')
+    assert len(r.json) == 6
+    assert r.json[0] == {
+        'description': 'All polyA plus RNA-seq samples in humans.',
+        'filters': [
+            ['assay_title', 'polyA plus RNA-seq'],
+            ['replicates.library.biosample.donor.organism.scientific_name', 'Homo sapiens']
+        ],
+        'id': 'EXPID001'
+    }

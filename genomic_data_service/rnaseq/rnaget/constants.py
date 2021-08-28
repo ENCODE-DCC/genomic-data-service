@@ -43,3 +43,55 @@ DATASET_FILTERS = [
 DATASET_FROM_TO_FIELD_MAP = {
     'accession': 'id',
 }
+
+
+EXPRESSION_IDS = [
+    {
+        'id': 'EXPID001',
+        'description': 'All polyA plus RNA-seq samples in humans.',
+        'filters': [
+            ('assay_title', 'polyA plus RNA-seq'),
+            ('replicates.library.biosample.donor.organism.scientific_name', 'Homo sapiens'),
+        ]
+    },
+    {
+        'id': 'EXPID002',
+        'description': 'All total RNA-seq samples in humans.',
+        'filters': [
+            ('assay_title', 'total RNA-seq'),
+            ('replicates.library.biosample.donor.organism.scientific_name', 'Homo sapiens'),
+        ]
+    },
+    {
+        'id': 'EXPID003',
+        'description': 'All polyA minus RNA-seq samples in humans.',
+        'filters': [
+            ('assay_title', 'polyA minus RNA-seq'),
+            ('replicates.library.biosample.donor.organism.scientific_name', 'Homo sapiens'),
+        ]
+    },
+    {
+        'id': 'EXPID004',
+        'description': 'All polyA plus RNA-seq samples in mouse.',
+        'filters': [
+            ('assay_title', 'polyA plus RNA-seq'),
+            ('replicates.library.biosample.donor.organism.scientific_name', 'Mus musculus'),
+        ]
+    },
+    {
+        'id': 'EXPID005',
+        'description': 'All total RNA-seq samples in mouse.',
+        'filters': [
+            ('assay_title', 'total RNA-seq'),
+            ('replicates.library.biosample.donor.organism.scientific_name', 'Mus musculus'),
+        ]
+    },
+    {
+        'id': 'EXPID006',
+        'description': 'All polyA minus RNA-seq samples in mouse.',
+        'filters': [
+            ('assay_title', 'polyA minus RNA-seq'),
+            ('replicates.library.biosample.donor.organism.scientific_name', 'Mus musculus'),
+        ]
+    }
+]
