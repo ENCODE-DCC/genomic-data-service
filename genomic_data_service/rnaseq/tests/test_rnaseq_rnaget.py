@@ -73,14 +73,14 @@ def test_rnaseq_rnaget_mapping_convert_list_filters_to_expression_filters():
     qs = QueryString(RequestAdapter(r))
     assert qs.get_query_string() == (
         'format=tsv'
-        '&sampleIDList=/files/ENCFF1/%2C/files/ENCFF2/'
+        '&sampleIDList=%2Ffiles%2FENCFF1%2F%2C%2Ffiles%2FENCFF2%2F'
         '&featureIDList=ENSG1%2C+ENSG2%2C+ENSG3'
         '&featureNameList=CTCF%2CPOMC'
     )
     qs = convert_list_filters_to_expression_filters(qs)
     assert qs.get_query_string() == (
         'format=tsv'
-        '&file.@id=/files/ENCFF1/&file.@id=/files/ENCFF2/'
+        '&file.%40id=%2Ffiles%2FENCFF1%2F&file.%40id=%2Ffiles%2FENCFF2%2F'
         '&expression.gene_id=ENSG1&expression.gene_id=ENSG2&expression.gene_id=ENSG3'
         '&gene.symbol=CTCF&gene.symbol=POMC'
     )
