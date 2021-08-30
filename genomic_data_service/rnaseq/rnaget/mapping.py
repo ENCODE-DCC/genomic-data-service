@@ -1,4 +1,5 @@
 from genomic_data_service.rnaseq.rnaget.constants import DATASET_FROM_TO_FIELD_MAP
+from genomic_data_service.rnaseq.rnaget.constants import EXPRESSION_IDS_MAP
 from genomic_data_service.rnaseq.rnaget.constants import EXPRESSION_LIST_FILTERS_MAP
 
 
@@ -52,4 +53,24 @@ def convert_list_filters_to_expression_filters(qs):
         ]
         qs.extend(filters)
         qs.drop(list_filter)
+    return qs
+
+
+def convert_expression_ids_to_expression_filters(qs):
+    expression_ids = qs.param_values_to_list(
+        params=qs.get_key_filters(
+            key='expressionID'
+        )
+    )
+    for expression_id in expression_ids:
+        qs.extend(
+            EXPRESSION_IDS_MAP.get(
+                expression_id,
+                {}
+            ).get(
+                'filters',
+                []
+            )
+        )
+    qs.drop('expressionID')
     return qs

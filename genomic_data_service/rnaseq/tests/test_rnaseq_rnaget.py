@@ -394,6 +394,20 @@ def test_rnaseq_rnaget_expressions_bytes_json_view(client, rnaseq_data_in_elasti
 
 
 @pytest.mark.integration
+def test_rnaseq_rnaget_expressions_id_bytes_view_raise_400_when_format_not_specified(client):
+    r = client.get('/rnaget/expressions/EXPID001/bytes')
+    assert r.status_code == 400
+    assert r.json['message'] == '400 Bad Request: Must specify format'
+
+
+@pytest.mark.integration
+def test_rnaseq_rnaget_expressions_id_bytes_view_raise_400_when_expression_id_does_not_exist(client):
+    r = client.get('/rnaget/expressions/NOTEXPID001/bytes?format=tsv')
+    assert r.status_code == 400
+    assert r.json['message'] == '400 Bad Request: Invalid ID supplied'
+
+
+@pytest.mark.integration
 def test_rnaseq_rnaget_expressions_filters_view(client, rnaseq_data_in_elasticsearch):
     r = client.get('/rnaget/expressions/filters')
     assert r.status_code == 200

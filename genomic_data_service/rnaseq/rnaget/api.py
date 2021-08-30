@@ -17,6 +17,7 @@ from genomic_data_service.rnaseq.rnaget.expressions import get_unit
 from genomic_data_service.rnaseq.rnaget.expressions import get_expressions
 from genomic_data_service.rnaseq.rnaget.expressions import make_expression_ticket
 from genomic_data_service.rnaseq.rnaget.expressions import make_rnaget_expressions_search_request
+from genomic_data_service.rnaseq.rnaget.expressions import validate_expression_id_or_raise_400
 from genomic_data_service.rnaseq.rnaget.studies import get_studies
 from genomic_data_service.searches.requests import make_search_request
 
@@ -111,7 +112,7 @@ def expressions_ticket():
 @rnaget_api.route('/expressions/<expression_id>/ticket', methods=['GET'])
 def expressions_id_ticket(expression_id):
     qs = QueryString(make_search_request())
-    qs.append(
+    qs.add(
         ('expressionID', expression_id)
     )
     return make_expression_ticket(
@@ -128,7 +129,15 @@ def expressions_bytes():
 
 @rnaget_api.route('/expressions/<expression_id>/bytes', methods=['GET'])
 def expressions_id_bytes(expression_id):
-    return []
+    validate_expression_id_or_raise_400(expression_id)
+    filters = [
+        ('expressionID', expression_id),
+    ]
+    search_request = make_rnaget_expressions_search_request(
+        filters=filters
+    )
+    expressions = expressions_factory()
+    return expressions(search_request)
 
 
 @rnaget_api.route('/expressions/filters', methods=['GET'])

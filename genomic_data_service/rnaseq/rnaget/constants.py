@@ -97,6 +97,12 @@ EXPRESSION_IDS = [
 ]
 
 
+EXPRESSION_IDS_MAP = {
+    expression_id['id']: expression_id
+    for expression_id in EXPRESSION_IDS
+}
+
+
 EXPRESSION_LIST_FILTERS_MAP = {
     'sampleIDList': 'file.@id',
     'featureIDList': 'expression.gene_id',
