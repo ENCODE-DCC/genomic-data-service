@@ -274,8 +274,7 @@ def test_rnaseq_rnaget_expressions_bytes_tsv_view(client, rnaseq_data_in_elastic
     from io import StringIO
     import csv
     r = client.get(
-        '/rnaget/expressions/bytes?format=tsv',
-        follow_redirects=True
+        '/rnaget/expressions/bytes?format=tsv'
     )
     actual = list(
         csv.reader(
@@ -301,8 +300,7 @@ def test_rnaseq_rnaget_expressions_bytes_tsv_view(client, rnaseq_data_in_elastic
     ]
     assert actual == expected
     r = client.get(
-        '/rnaget/expressions/bytes?format=tsv&featureNameList=RNF19A',
-        follow_redirects=True
+        '/rnaget/expressions/bytes?format=tsv&featureNameList=RNF19A'
     )
     actual = list(
         csv.reader(
@@ -329,8 +327,7 @@ def test_rnaseq_rnaget_expressions_bytes_tsv_view(client, rnaseq_data_in_elastic
             '/rnaget/expressions/bytes?format=tsv'
             '&featureNameList=RNF19A'
             '&sampleIDList=/files/ENCFF106SZG/,/files/ENCFF241WYH/'
-        ),
-        follow_redirects=True
+        )
     )
     actual = list(
         csv.reader(
@@ -356,8 +353,7 @@ def test_rnaseq_rnaget_expressions_bytes_tsv_view(client, rnaseq_data_in_elastic
             '&featureNameList=RNF19A'
             '&sampleIDList=/files/ENCFF106SZG/,/files/ENCFF241WYH/'
             '&dataset.biosample_summary=muscle of trunk tissue female embryo (113 days)'
-        ),
-        follow_redirects=True
+        )
     )
     actual = list(
         csv.reader(
@@ -383,8 +379,7 @@ def test_rnaseq_rnaget_expressions_bytes_json_view(client, rnaseq_data_in_elasti
     from io import StringIO
     import csv
     r = client.get(
-        '/rnaget/expressions/bytes?format=json',
-        follow_redirects=True
+        '/rnaget/expressions/bytes?format=json'
     )
     assert len(r.json['@graph']) == 16
     r = client.get(

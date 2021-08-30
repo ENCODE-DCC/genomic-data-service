@@ -237,7 +237,7 @@ def test_rnaseq_views_rnaget_report_cached_facets_view(client, rnaseq_data_in_el
 @pytest.mark.integration
 def test_rnaseq_views_rnaget_rna_expression_search_generator(rnaseq_data_in_elasticsearch):
     from types import GeneratorType
-    from genomic_data_service.rnaseq.views import rna_expression_search_generator
+    from genomic_data_service.rnaseq.searches import rna_expression_search_generator
     from genomic_data_service.searches.requests import make_search_request
     from genomic_data_service import app
     path = (
@@ -256,7 +256,7 @@ def test_rnaseq_views_rnaget_rna_expression_search_generator(rnaseq_data_in_elas
 @pytest.mark.integration
 def test_rnaseq_views_rnaget_rna_expression_search_generator_manual_request(rnaseq_data_in_elasticsearch):
     from types import GeneratorType
-    from genomic_data_service.rnaseq.views import rna_expression_search_generator
+    from genomic_data_service.rnaseq.searches import rna_expression_search_generator
     from genomic_data_service.searches.requests import make_search_request
     from genomic_data_service import app
     from flask import Request

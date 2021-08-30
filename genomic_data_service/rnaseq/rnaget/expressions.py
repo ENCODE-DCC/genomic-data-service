@@ -1,9 +1,10 @@
 from flask import abort
 from flask import request as current_request
-from flask import redirect
 from flask import url_for
 
 from genomic_data_service.rnaseq.rnaget.constants import TICKET_PATH
+from genomic_data_service.rnaseq.searches import rnaget_expression_matrix
+from genomic_data_service.rnaseq.searches import rnaget_search_quick
 from genomic_data_service.searches.requests import make_search_request
 
 from snosearch.parsers import QueryString
@@ -38,29 +39,11 @@ def get_format_or_raise_400():
     return format_
 
 
-def expressions_matrix(query_string):
-    endpoint = url_for('rnaget_expression_matrix_view')
-    location = (
-        f'{endpoint}'
-        f'?{query_string}'
-    )
-    return redirect(location)
-
-
-def expressions_report(query_string):
-    endpoint = url_for('rnaget_search_quick_view')
-    location = (
-        f'{endpoint}'
-        f'?{query_string}'
-    )
-    return redirect(location)
-
-
 def expressions_factory():
     format_ = get_format_or_raise_400()
     if format_ == 'tsv':
-        return expressions_matrix
-    return expressions_report
+        return rnaget_expression_matrix
+    return rnaget_search_quick
 
 
 def get_ticket_url(query_string):

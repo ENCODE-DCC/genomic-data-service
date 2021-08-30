@@ -1,7 +1,6 @@
 from flask import abort
 from flask import Blueprint
 from flask import jsonify
-from flask import redirect
 from flask import request as current_request
 
 from genomic_data_service.rnaseq.rnaget.constants import EXPRESSION_IDS
@@ -12,8 +11,6 @@ from genomic_data_service.rnaseq.rnaget.mapping import convert_list_filters_to_e
 from genomic_data_service.rnaseq.rnaget.mapping import convert_study_fields
 from genomic_data_service.rnaseq.rnaget.mapping import map_fields
 from genomic_data_service.rnaseq.rnaget.expressions import expressions_factory
-from genomic_data_service.rnaseq.rnaget.expressions import expressions_matrix
-from genomic_data_service.rnaseq.rnaget.expressions import expressions_report
 from genomic_data_service.rnaseq.rnaget.expressions import get_format
 from genomic_data_service.rnaseq.rnaget.expressions import get_format_or_raise_400
 from genomic_data_service.rnaseq.rnaget.expressions import get_ticket_url
@@ -128,9 +125,11 @@ def expressions_bytes():
     qs.append(
         ('type', 'RNAExpression')
     )
-    query_string = qs.get_query_string()
+    search_request = make_search_request(
+        qs.get_request_with_new_query_string()
+    )
     expressions = expressions_factory()
-    return expressions(query_string)
+    return expressions(search_request)
 
 
 @rnaget_api.route('/expressions/<expression_id>/bytes', methods=['GET'])
