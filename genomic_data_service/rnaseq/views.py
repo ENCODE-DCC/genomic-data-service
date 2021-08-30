@@ -1,6 +1,6 @@
 from genomic_data_service import app
 from genomic_data_service.rnaseq.matrix import ExpressionMatrix
-from genomic_data_service.rnaseq.matrix import get_rna_expression_search_request
+from genomic_data_service.rnaseq.matrix import make_rna_expression_search_request
 from genomic_data_service.searches.constants import DEFAULT_RNA_EXPRESSION_SORT
 from genomic_data_service.searches.constants import RESERVED_KEYS
 from genomic_data_service.searches.requests import make_search_request
@@ -27,9 +27,8 @@ from snosearch.responses import FieldedGeneratorResponse
 from snosearch.responses import FieldedResponse
 
 
-@app.route('/rnaget-search-quick/', methods=['GET'])
-def rnaget_search_quick():
-    search_request = make_search_request()
+
+def rnaget_search_quick(search_request):
     rna_client = search_request.registry['RNA_CLIENT']
     fr = FieldedResponse(
         _meta={
@@ -51,9 +50,13 @@ def rnaget_search_quick():
     return fr.render()
 
 
-@app.route('/rnaget-search/', methods=['GET'])
-def rnaget_search():
+@app.route('/rnaget-search-quick/', methods=['GET'])
+def rnaget_search_quick_view():
     search_request = make_search_request()
+    return rnaget_search_quick(search_request)
+
+
+def rnaget_search(search_request):
     rna_client = search_request.registry['RNA_CLIENT']
     fr = FieldedResponse(
         _meta={
@@ -96,9 +99,13 @@ def rnaget_search():
     return fr.render()
 
 
-@app.route('/rnaget-report/', methods=['GET'])
-def rnaget_report():
+@app.route('/rnaget-search/', methods=['GET'])
+def rnaget_search_view():
     search_request = make_search_request()
+    return rnaget_search(search_request)
+
+
+def rnaget_report(search_request):
     rna_client = search_request.registry['RNA_CLIENT']
     fr = FieldedResponse(
         _meta={
@@ -141,6 +148,12 @@ def rnaget_report():
     return fr.render()
 
 
+@app.route('/rnaget-report/', methods=['GET'])
+def rnaget_report_view():
+    search_request = make_search_request()
+    return rnaget_report(search_request)
+
+
 def rna_expression_search_generator(search_request):
     '''
     For internal use (no view). Like search_quick but returns raw generator
@@ -166,10 +179,15 @@ def rna_expression_search_generator(search_request):
     return fgr.render()
 
 
-@app.route('/rnaget-expression-matrix/', methods=['GET'])
-def rnaget_expression_matrix():
-    search_request = get_rna_expression_search_request(make_search_request())
+def rnaget_expression_matrix(search_request):
+    search_request = make_rna_expression_search_request(search_request)
     expression_array = rna_expression_search_generator(search_request)['@graph']
     em = ExpressionMatrix()
     em.from_array(expression_array)
     return em.as_response()
+
+
+@app.route('/rnaget-expression-matrix/', methods=['GET'])
+def rnaget_expression_matrix_view():
+    search_request = make_search_request()
+    return rnaget_expression_matrix(search_request)

@@ -140,7 +140,7 @@ RNA_EXPRESSION_DEFAULT_PARAMS = [
 ]
 
 
-def get_rna_expression_search_request(search_request):
+def make_rna_expression_search_request(search_request):
     qs = QueryString(search_request)
     qs.drop('field')
     qs.drop('limit')
