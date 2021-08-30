@@ -263,6 +263,12 @@ def test_rnaseq_rnaget_expressions_ticket_by_expression_id_view(client):
 
 
 @pytest.mark.integration
+def test_rnaseq_rnaget_expressions_ticket_by_expression_id_view_raise_400(client):
+    r = client.get('/rnaget/expressions/NOTEXPID001/ticket')
+    assert r.status_code == 400
+
+
+@pytest.mark.integration
 def test_rnaseq_rnaget_expressions_bytes_view_raise_400_when_format_not_specified(client):
     r = client.get('/rnaget/expressions/bytes')
     assert r.status_code == 400

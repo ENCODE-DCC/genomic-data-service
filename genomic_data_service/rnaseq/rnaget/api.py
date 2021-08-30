@@ -111,8 +111,9 @@ def expressions_ticket():
 
 @rnaget_api.route('/expressions/<expression_id>/ticket', methods=['GET'])
 def expressions_id_ticket(expression_id):
+    validate_expression_id_or_raise_400(expression_id)
     qs = QueryString(make_search_request())
-    qs.add(
+    qs.append(
         ('expressionID', expression_id)
     )
     return make_expression_ticket(
