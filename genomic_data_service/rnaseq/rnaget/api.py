@@ -135,7 +135,7 @@ def expressions_id_bytes(expression_id):
 def expressions_filters():
     filters = [
         convert_facet_to_filter(facet)
-        for facet in get_expressions()['facets']
+        for facet in get_expressions().json['facets']
     ]
     return jsonify(filters)
 

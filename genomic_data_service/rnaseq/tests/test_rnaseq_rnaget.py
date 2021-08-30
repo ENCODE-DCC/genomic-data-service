@@ -391,3 +391,64 @@ def test_rnaseq_rnaget_expressions_bytes_json_view(client, rnaseq_data_in_elasti
         follow_redirects=True
     )
     assert len(r.json['@graph']) == 2
+
+
+@pytest.mark.integration
+def test_rnaseq_rnaget_expressions_filters_view(client, rnaseq_data_in_elasticsearch):
+    r = client.get('/rnaget/expressions/filters')
+    assert r.status_code == 200
+    assert len(r.json) == 7
+    assert r.json == [
+        {
+            'description': 'Data Type',
+            'filter': 'type',
+            'values': ['RNAExpression']
+        },
+        {
+            'description': 'Assay title',
+            'filter': 'file.assay_title',
+            'values': [
+                'total RNA-seq',
+                'polyA plus RNA-seq'
+            ]
+        },
+        {
+            'description': 'Biosample classification',
+            'filter': 'file.biosample_ontology.classification',
+            'values': [
+                'cell line',
+                'tissue'
+            ]
+        },
+        {
+            'description': 'Biosample term name',
+            'filter': 'file.biosample_ontology.term_name',
+            'values': [
+                'GM23338',
+                'muscle of trunk',
+                'uterus'
+            ]
+        },
+        {
+            'description': 'Assembly',
+            'filter': 'file.assembly',
+            'values': [
+                'GRCh38'
+            ]
+        },
+        {
+            'description': 'Organism',
+            'filter': 'dataset.replicates.library.biosample.donor.organism.scientific_name',
+            'values': [
+                'Homo sapiens'
+            ]
+        },
+        {
+            'description': 'Biosample sex',
+            'filter': 'dataset.replicates.library.biosample.sex',
+            'values': [
+                'female',
+                'male'
+            ]
+        }
+    ]
