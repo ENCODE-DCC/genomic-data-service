@@ -3,19 +3,23 @@ from flask import Blueprint
 from flask import jsonify
 from flask import redirect
 from flask import request as current_request
-from flask import url_for
 
-from genomic_data_service.rnaseq.remote.portal import get_json
-from genomic_data_service.rnaseq.rnaget.constants import BASE_SEARCH_URL
-from genomic_data_service.rnaseq.rnaget.constants import DATASET_FILTERS
 from genomic_data_service.rnaseq.rnaget.constants import EXPRESSION_IDS
 from genomic_data_service.rnaseq.rnaget.constants import PROJECTS
 from genomic_data_service.rnaseq.rnaget.constants import SERVICE_INFO
-from genomic_data_service.rnaseq.rnaget.constants import TICKET_PATH
 from genomic_data_service.rnaseq.rnaget.mapping import convert_facet_to_filter
 from genomic_data_service.rnaseq.rnaget.mapping import convert_list_filters_to_expression_filters
 from genomic_data_service.rnaseq.rnaget.mapping import convert_study_fields
 from genomic_data_service.rnaseq.rnaget.mapping import map_fields
+from genomic_data_service.rnaseq.rnaget.expressions import expressions_factory
+from genomic_data_service.rnaseq.rnaget.expressions import expressions_matrix
+from genomic_data_service.rnaseq.rnaget.expressions import expressions_report
+from genomic_data_service.rnaseq.rnaget.expressions import get_format
+from genomic_data_service.rnaseq.rnaget.expressions import get_format_or_raise_400
+from genomic_data_service.rnaseq.rnaget.expressions import get_ticket_url
+from genomic_data_service.rnaseq.rnaget.expressions import get_unit
+from genomic_data_service.rnaseq.rnaget.expressions import make_expression_ticket
+from genomic_data_service.rnaseq.rnaget.studies import get_studies
 from genomic_data_service.searches.requests import make_search_request
 
 from snosearch.parsers import QueryString
@@ -47,21 +51,6 @@ def project_id(project_id):
 @rnaget_api.route('/projects/filters', methods=['GET'])
 def project_filters():
     return jsonify([])
-
-
-def get_studies(filters=None):
-    filters = filters or []
-    qs = QueryString(
-        make_search_request()
-    )
-    qs.extend(
-        DATASET_FILTERS + filters
-    )
-    url = (
-        f'{BASE_SEARCH_URL}'
-        f'?{qs.get_query_string()}'
-    )
-    return get_json(url)
 
 
 @rnaget_api.route('/studies', methods=['GET'])
@@ -111,78 +100,6 @@ def expressions_formats():
 def expressions_units():
     units = ['tpm']
     return jsonify(units)
-
-
-def get_format():
-    qs = QueryString(
-        make_search_request()
-    )
-    return qs.get_one_value(
-        params=qs.get_key_filters(
-            key='format'
-        )
-    )
-
-
-def get_unit():
-    qs = QueryString(
-        make_search_request()
-    )
-    return qs.get_one_value(
-        params=qs.get_key_filters(
-            key='units'
-        )
-    )
-
-
-def get_format_or_raise_400():
-    format_ = get_format()
-    if not format_:
-        abort(400, 'Must specify format')
-    return format_
-
-
-def expressions_matrix(query_string):
-    endpoint = url_for('rnaget_expression_matrix')
-    location = (
-        f'{endpoint}'
-        f'?{query_string}'
-    )
-    return redirect(location)
-
-
-def expressions_report(query_string):
-    endpoint = url_for('rnaget_search_quick')
-    location = (
-        f'{endpoint}'
-        f'?{query_string}'
-    )
-    return redirect(location)
-
-
-def expressions_factory():
-    format_ = get_format_or_raise_400()
-    if format_ == 'tsv':
-        return expressions_matrix
-    return expressions_report
-
-
-def get_ticket_url(query_string):
-    path = (
-        f'{current_request.host_url}'
-        f'{TICKET_PATH}'
-    )
-    if query_string:
-        path += f'?{query_string}'
-    return path
-
-
-def make_expression_ticket(query_string):
-    return {
-        'format': get_format(),
-        'units': get_unit(),
-        'url': get_ticket_url(query_string),
-    }
 
 
 @rnaget_api.route('/expressions/ticket', methods=['GET'])
