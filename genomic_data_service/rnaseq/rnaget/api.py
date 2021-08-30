@@ -7,7 +7,6 @@ from genomic_data_service.rnaseq.rnaget.constants import EXPRESSION_IDS
 from genomic_data_service.rnaseq.rnaget.constants import PROJECTS
 from genomic_data_service.rnaseq.rnaget.constants import SERVICE_INFO
 from genomic_data_service.rnaseq.rnaget.mapping import convert_facet_to_filter
-from genomic_data_service.rnaseq.rnaget.mapping import convert_list_filters_to_expression_filters
 from genomic_data_service.rnaseq.rnaget.mapping import convert_study_fields
 from genomic_data_service.rnaseq.rnaget.mapping import map_fields
 from genomic_data_service.rnaseq.rnaget.expressions import expressions_factory
@@ -15,7 +14,9 @@ from genomic_data_service.rnaseq.rnaget.expressions import get_format
 from genomic_data_service.rnaseq.rnaget.expressions import get_format_or_raise_400
 from genomic_data_service.rnaseq.rnaget.expressions import get_ticket_url
 from genomic_data_service.rnaseq.rnaget.expressions import get_unit
+from genomic_data_service.rnaseq.rnaget.expressions import get_expressions
 from genomic_data_service.rnaseq.rnaget.expressions import make_expression_ticket
+from genomic_data_service.rnaseq.rnaget.expressions import make_rnaget_expressions_search_request
 from genomic_data_service.rnaseq.rnaget.studies import get_studies
 from genomic_data_service.searches.requests import make_search_request
 
@@ -120,14 +121,7 @@ def expressions_id_ticket(expression_id):
 
 @rnaget_api.route('/expressions/bytes', methods=['GET'])
 def expressions_bytes():
-    qs = QueryString(make_search_request())
-    qs = convert_list_filters_to_expression_filters(qs)
-    qs.append(
-        ('type', 'RNAExpression')
-    )
-    search_request = make_search_request(
-        qs.get_request_with_new_query_string()
-    )
+    search_request = make_rnaget_expressions_search_request()
     expressions = expressions_factory()
     return expressions(search_request)
 
@@ -139,7 +133,11 @@ def expressions_id_bytes(expression_id):
 
 @rnaget_api.route('/expressions/filters', methods=['GET'])
 def expressions_filters():
-    return jsonify([])
+    filters = [
+        convert_facet_to_filter(facet)
+        for facet in get_expressions()['facets']
+    ]
+    return jsonify(filters)
 
 
 @rnaget_api.route('/service-info', methods=['GET'])

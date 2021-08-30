@@ -3,8 +3,10 @@ from flask import request as current_request
 from flask import url_for
 
 from genomic_data_service.rnaseq.rnaget.constants import TICKET_PATH
+from genomic_data_service.rnaseq.rnaget.mapping import convert_list_filters_to_expression_filters
 from genomic_data_service.rnaseq.searches import rnaget_expression_matrix
 from genomic_data_service.rnaseq.searches import rnaget_search_quick
+from genomic_data_service.rnaseq.searches import rnaget_search
 from genomic_data_service.searches.requests import make_search_request
 
 from snosearch.parsers import QueryString
@@ -62,3 +64,24 @@ def make_expression_ticket(query_string):
         'units': get_unit(),
         'url': get_ticket_url(query_string),
     }
+
+
+def make_rnaget_expressions_search_request(filters=None):
+    filters = filters or []
+    qs = QueryString(
+        make_search_request()
+    )
+    qs = convert_list_filters_to_expression_filters(qs)
+    qs.extend(
+        [
+            ('type', 'RNAExpression'),
+        ] + filters
+    )
+    return make_search_request(
+        qs.get_request_with_new_query_string()
+    )
+
+
+def get_expressions():
+    search_request = make_rnaget_expressions_search_request()
+    return rnaget_search(search_request)

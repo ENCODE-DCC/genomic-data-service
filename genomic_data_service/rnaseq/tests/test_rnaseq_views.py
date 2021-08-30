@@ -108,17 +108,6 @@ def test_rnaseq_views_rnaget_search_view(client, rnaseq_data_in_elasticsearch):
             'open_on_load': True
         },
         {
-            'field': 'gene.symbol',
-            'title': 'Gene symbol',
-            'terms': [
-                {'key': 'RNF19A', 'doc_count': 4}
-            ],
-            'total': 16,
-            'type': 'typeahead',
-            'appended': False,
-            'open_on_load': True
-        },
-        {
             'field': 'file.assembly',
             'title': 'Assembly',
             'terms': [
@@ -220,7 +209,7 @@ def test_rnaseq_views_rnaget_search_cached_facets_view(client, rnaseq_data_in_el
     assert r.json['@graph'][0]['expression']['tpm'] >= 0
     assert r.status_code == 200
     assert 'facets' in r.json
-    assert len(r.json['facets']) == 8
+    assert len(r.json['facets']) == 7
 
 
 @pytest.mark.integration
@@ -231,7 +220,7 @@ def test_rnaseq_views_rnaget_report_cached_facets_view(client, rnaseq_data_in_el
     assert r.json['@graph'][0]['expression']['tpm'] >= 0
     assert r.status_code == 200
     assert 'facets' in r.json
-    assert len(r.json['facets']) == 8
+    assert len(r.json['facets']) == 7
 
 
 @pytest.mark.integration
