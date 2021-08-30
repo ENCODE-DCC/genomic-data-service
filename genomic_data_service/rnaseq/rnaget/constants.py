@@ -105,3 +105,27 @@ EXPRESSION_LIST_FILTERS_MAP = {
 
 
 TICKET_PATH = 'rnaget/expressions/bytes'
+
+
+SERVICE_INFO = {
+    'id': 'org.ga4gh.encodeproject',
+    'name': 'ENCODE RNAget',
+    'type': {
+        'group': 'org.encodeproject',
+        'artifact': 'rnaget',
+        'version': '1.1.0'
+    },
+    'description': 'This service implements the GA4GH RNAget API for ENCODE data',
+    'organization': {
+        'name': 'ENCODE',
+        'url': 'https://www.encodeproject.org'
+    },
+    'contactUrl': 'mailto:encode-help@lists.stanford.edu',
+    'version': '0.0.2',
+    'supported': {
+        'projects': True,
+        'studies': True,
+        'expressions': True,
+        'continuous': False
+    }
+}

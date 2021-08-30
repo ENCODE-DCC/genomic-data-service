@@ -10,6 +10,7 @@ from genomic_data_service.rnaseq.rnaget.constants import BASE_SEARCH_URL
 from genomic_data_service.rnaseq.rnaget.constants import DATASET_FILTERS
 from genomic_data_service.rnaseq.rnaget.constants import EXPRESSION_IDS
 from genomic_data_service.rnaseq.rnaget.constants import PROJECTS
+from genomic_data_service.rnaseq.rnaget.constants import SERVICE_INFO
 from genomic_data_service.rnaseq.rnaget.constants import TICKET_PATH
 from genomic_data_service.rnaseq.rnaget.mapping import convert_facet_to_filter
 from genomic_data_service.rnaseq.rnaget.mapping import convert_list_filters_to_expression_filters
@@ -227,29 +228,7 @@ def expressions_filters():
 
 @rnaget_api.route('/service-info', methods=['GET'])
 def service_info():
-    info = {
-        'id': 'org.ga4gh.encodeproject',
-        'name': 'ENCODE RNAget',
-        'type': {
-            'group': 'org.encodeproject',
-            'artifact': 'rnaget',
-            'version': '1.2.0'
-        },
-        'description': 'This service implements the GA4GH RNAget API for ENCODE data',
-        'organization': {
-            'name': 'ENCODE',
-            'url': 'https://www.encodeproject.org'
-        },
-        'contactUrl': 'mailto:encode-help@lists.stanford.edu',
-        'version': '0.0.2',
-        'supported': {
-            'projects': True,
-            'studies': True,
-            'expressions': True,
-            'continuous': False
-        }
-    }
-    return jsonify(info)
+    return jsonify(SERVICE_INFO)
 
 
 @rnaget_api.route('/continuous/<continuous_id>/ticket', methods=['GET'])
