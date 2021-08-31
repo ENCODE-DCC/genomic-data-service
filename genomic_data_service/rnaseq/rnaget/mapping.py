@@ -74,3 +74,17 @@ def convert_expression_ids_to_expression_filters(qs):
         )
     qs.drop('expressionID')
     return qs
+
+
+def convert_study_ids_to_expression_filters(qs):
+    study_ids = qs.param_values_to_list(
+        params=qs.get_key_filters(
+            key='studyID'
+        )
+    )
+    for study_id in study_ids:
+        qs.append(
+            ('dataset.@id', f'/experiments/{study_id}/')
+        )
+    qs.drop('studyID')
+    return qs

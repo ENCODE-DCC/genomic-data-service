@@ -472,6 +472,11 @@ def test_rnaseq_rnaget_expressions_id_bytes_json_view(client, rnaseq_data_in_ela
         '/rnaget/expressions/EXPID001/bytes?format=json'
     )
     assert len(r.json['@graph']) == 4
+    r = client.get(
+        '/rnaget/expressions/EXPID001/bytes?format=json&studyID=ENCSR906HEV'
+    )
+    assert len(r.json['@graph']) == 4
+    assert r.json['@graph'][0]['dataset']['@id'] == '/experiments/ENCSR906HEV/'
 
 
 @pytest.mark.integration

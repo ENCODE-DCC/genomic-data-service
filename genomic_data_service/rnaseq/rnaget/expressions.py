@@ -6,6 +6,7 @@ from genomic_data_service.rnaseq.rnaget.constants import EXPRESSION_IDS_MAP
 from genomic_data_service.rnaseq.rnaget.constants import TICKET_PATH
 from genomic_data_service.rnaseq.rnaget.mapping import convert_expression_ids_to_expression_filters
 from genomic_data_service.rnaseq.rnaget.mapping import convert_list_filters_to_expression_filters
+from genomic_data_service.rnaseq.rnaget.mapping import convert_study_ids_to_expression_filters
 from genomic_data_service.rnaseq.searches import rnaget_expression_matrix
 from genomic_data_service.rnaseq.searches import rnaget_search_quick
 from genomic_data_service.rnaseq.searches import rnaget_search
@@ -80,6 +81,7 @@ def make_rnaget_expressions_search_request(filters=None):
     )
     qs = convert_list_filters_to_expression_filters(qs)
     qs = convert_expression_ids_to_expression_filters(qs)
+    qs = convert_study_ids_to_expression_filters(qs)
     return make_search_request(
         qs.get_request_with_new_query_string()
     )
