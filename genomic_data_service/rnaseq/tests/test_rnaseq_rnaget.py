@@ -193,8 +193,8 @@ def test_rnaseq_rnaget_expression_ids_view(client):
     assert r.json[0] == {
         'description': 'All polyA plus RNA-seq samples in humans.',
         'filters': [
-            ['assay_title', 'polyA plus RNA-seq'],
-            ['replicates.library.biosample.donor.organism.scientific_name', 'Homo sapiens']
+            ['file.assay_title', 'polyA plus RNA-seq'],
+            ['dataset.replicates.library.biosample.donor.organism.scientific_name', 'Homo sapiens']
         ],
         'id': 'EXPID001'
     }
@@ -411,6 +411,68 @@ def test_rnaseq_rnaget_expressions_id_bytes_view_raise_400_when_expression_id_do
     r = client.get('/rnaget/expressions/NOTEXPID001/bytes?format=tsv')
     assert r.status_code == 400
     assert r.json['message'] == '400 Bad Request: Invalid ID supplied'
+
+
+@pytest.mark.integration
+def test_rnaseq_rnaget_expressions_id_bytes_tsv_view(client, rnaseq_data_in_elasticsearch):
+    from io import StringIO
+    import csv
+    r = client.get(
+        '/rnaget/expressions/EXPID002/bytes?format=tsv'
+    )
+    actual = list(
+        csv.reader(
+            StringIO(
+                r.data.decode()
+            ),
+            delimiter='\t',
+        )
+    )
+    expected = [
+        [
+            'featureID',
+            'geneSymbol',
+            '/files/ENCFF106SZG/, GM23338 originated from GM23248',
+            '/files/ENCFF273KTX/, uterus tissue female adult (53 years)',
+            '/files/ENCFF730OTJ/, GM23338 originated from GM23248'
+        ],
+        ['ENSG00000039987.6', '', '0.01', '0.01', '0.01'],
+        ['ENSG00000055732.12', '', '0.27', '0.27', '0.27'],
+        ['ENSG00000060982.14', '', '10.18', '10.18', '10.18'],
+        ['ENSG00000034677.12', 'RNF19A', '9.34', '9.34', '9.34']
+    ]
+    assert actual == expected
+    r = client.get(
+        '/rnaget/expressions/EXPID001/bytes?format=tsv'
+    )
+    actual = list(
+        csv.reader(
+            StringIO(
+                r.data.decode()
+            ),
+            delimiter='\t',
+        )
+    )
+    expected = [
+        [
+            'featureID',
+            'geneSymbol',
+            '/files/ENCFF241WYH/, muscle of trunk tissue female embryo (113 days)',
+        ],
+        ['ENSG00000039987.6', '', '0.01'],
+        ['ENSG00000055732.12', '', '0.27'],
+        ['ENSG00000060982.14', '', '10.18'],
+        ['ENSG00000034677.12', 'RNF19A', '9.34']
+    ]
+    assert actual == expected
+
+
+@pytest.mark.integration
+def test_rnaseq_rnaget_expressions_id_bytes_json_view(client, rnaseq_data_in_elasticsearch):
+    r = client.get(
+        '/rnaget/expressions/EXPID001/bytes?format=json'
+    )
+    assert len(r.json['@graph']) == 4
 
 
 @pytest.mark.integration
