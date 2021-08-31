@@ -134,7 +134,7 @@ class ExpressionMatrix:
 
 class RangeExpressionMatrix(ExpressionMatrix):
     '''
-    Like ExpressionMatrix but drops rows with NaN. This allows returning matrix
+    Like ExpressionMatrix but drops rows with NaN. This allows returning a matrix
     where features are filtered by threshold values.
     '''
     FILL_VALUE = np.nan
