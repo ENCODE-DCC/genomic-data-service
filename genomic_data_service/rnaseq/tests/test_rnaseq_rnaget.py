@@ -534,3 +534,46 @@ def test_rnaseq_rnaget_expressions_filters_view(client, rnaseq_data_in_elasticse
             ]
         }
     ]
+
+
+@pytest.mark.integration
+def test_rnaseq_rnaget_service_info(client):
+    r = client.get('/rnaget/service-info')
+    assert r.json == {
+        'contactUrl': 'mailto:encode-help@lists.stanford.edu',
+        'description': 'This service implements the GA4GH RNAget API for ENCODE data',
+        'id': 'org.ga4gh.encodeproject',
+        'name': 'ENCODE RNAget',
+        'organization': {
+            'name': 'ENCODE',
+            'url': 'https://www.encodeproject.org'
+        },
+        'supported': {
+            'continuous': False,
+            'expressions': True,
+            'projects': True,
+            'studies': True
+        },
+        'type': {
+            'artifact': 'rnaget',
+            'group': 'org.encodeproject',
+            'version': '1.1.0'
+        },
+        'version': '0.0.2'
+    }
+
+
+@pytest.mark.integration
+def test_rnaseq_rnaget_continuous_not_implemented(client):
+    r = client.get('/rnaget/continuous/ABC/ticket')
+    assert r.status_code == 501
+    r = client.get('/rnaget/continuous/ABC/bytes')
+    assert r.status_code == 501
+    r = client.get('/rnaget/continuous/ticket')
+    assert r.status_code == 501
+    r = client.get('/rnaget/continuous/bytes')
+    assert r.status_code == 501
+    r = client.get('/rnaget/continuous/formats')
+    assert r.status_code == 501
+    r = client.get('/rnaget/continuous/filters')
+    assert r.status_code == 501
