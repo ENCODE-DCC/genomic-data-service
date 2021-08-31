@@ -202,3 +202,55 @@ def test_reports_expressions_matrix_expression_matrix_as_tsv():
         b'ENSG00000115138.10\tPOMC\t0.0\t2.94\t0.02\n'
     ]
     assert actual_tsv == expected_tsv
+
+
+def test_reports_expressions_matrix_range_expression_matrix_as_matrix():
+    from collections import Counter
+    from genomic_data_service.rnaseq.matrix import RangeExpressionMatrix
+    rem = RangeExpressionMatrix()
+    rem.from_array(EXPRESSION_ARRAY)
+    matrix = list(rem.as_matrix())
+    expected_matrix = [
+        ['featureID', 'geneSymbol', '/files/ENCFF004JWA/, ABC', '/files/ENCFF006IHP/, DEF', '/files/ENCFF008KUV/, GHI'],
+        ['ENSG00000102974.15', 'CTCF', 14.1, 55.53, 16.36],
+        ['ENSG00000100393.12', 'EP300', 19.19, 75.65, 8.0],
+        ['ENSG00000115138.10', 'POMC', 0.0, 2.94, 0.02]
+    ]
+    assert matrix == expected_matrix
+    assert len(EXPRESSION_ARRAY) == 9
+    FILTERED_EXPRESSION_ARRAY = [
+        expression
+        for expression in EXPRESSION_ARRAY
+        if expression['expression']['tpm'] > 1.5
+    ]
+    assert len(FILTERED_EXPRESSION_ARRAY) == 7
+    symbol_count = Counter([
+        expression['gene']['symbol']
+        for expression in FILTERED_EXPRESSION_ARRAY
+    ])
+    assert symbol_count['POMC'] == 1
+    assert symbol_count['CTCF'] == 3
+    assert symbol_count['EP300'] == 3
+    rem = RangeExpressionMatrix()
+    rem.from_array(FILTERED_EXPRESSION_ARRAY)
+    matrix = list(rem.as_matrix())
+    expected_matrix = [
+        ['featureID', 'geneSymbol', '/files/ENCFF004JWA/, ABC', '/files/ENCFF006IHP/, DEF', '/files/ENCFF008KUV/, GHI'],
+        ['ENSG00000102974.15', 'CTCF', 14.1, 55.53, 16.36],
+        ['ENSG00000100393.12', 'EP300', 19.19, 75.65, 8.0]
+    ]
+    assert matrix == expected_matrix
+    FILTERED_EXPRESSION_ARRAY = [
+        expression
+        for expression in EXPRESSION_ARRAY
+        if expression['expression']['tpm'] < 75
+    ]
+    assert len(FILTERED_EXPRESSION_ARRAY) == 8
+    rem = RangeExpressionMatrix()
+    rem.from_array(FILTERED_EXPRESSION_ARRAY)
+    matrix = list(rem.as_matrix())
+    expected_matrix = [
+        ['featureID', 'geneSymbol', '/files/ENCFF004JWA/, ABC', '/files/ENCFF006IHP/, DEF', '/files/ENCFF008KUV/, GHI'],
+        ['ENSG00000102974.15', 'CTCF', 14.1, 55.53, 16.36],
+        ['ENSG00000115138.10', 'POMC', 0.0, 2.94, 0.02]
+    ]

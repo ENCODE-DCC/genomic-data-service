@@ -1,3 +1,5 @@
+import numpy as np
+
 from flask import Response
 
 from genomic_data_service.reports.csv import CSVGenerator
@@ -128,6 +130,20 @@ class ExpressionMatrix:
                 self.CONTENT_DISPOSITION,
             ]
         )
+
+
+class RangeExpressionMatrix(ExpressionMatrix):
+    '''
+    Like ExpressionMatrix but drops rows with NaN. This allows returning matrix
+    where features are filtered by threshold values.
+    '''
+    FILL_VALUE = np.nan
+
+    def as_matrix(self):
+        for row in super().as_matrix():
+            if self.FILL_VALUE in row:
+                continue
+            yield row
 
 
 RNA_EXPRESSION_DEFAULT_PARAMS = [
