@@ -23,20 +23,6 @@ DATASET_FILTERS = [
     ('assembly', 'mm10'),
     ('files.file_type', 'tsv'),
     ('format', 'json'),
-    ('frame', 'object'),
-    ('field', 'accession'),
-    ('field', 'assay_term_name'),
-    ('field', 'assay_title'),
-    ('field', 'assembly'),
-    ('field', 'award'),
-    ('field', 'biosample_ontology'),
-    ('field', 'biosample_summary'),
-    ('field', 'date_created'),
-    ('field', 'description'),
-    ('field', 'files'),
-    ('field', 'lab'),
-    ('field', 'replicates'),
-    ('field', 'status'),
 ]
 
 

@@ -145,7 +145,6 @@ def test_rnaseq_rnaget_studies_view(client):
     assert 'accession' not in r.json[0]
     r = client.get('/rnaget/studies?limit=1&field=description')
     assert len(r.json) == 1
-    assert 'id' in r.json[0]
     assert 'description' in r.json[0]
 
 
