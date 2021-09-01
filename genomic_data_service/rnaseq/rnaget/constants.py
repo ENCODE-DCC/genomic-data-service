@@ -121,7 +121,7 @@ SERVICE_INFO = {
     'type': {
         'group': 'org.encodeproject',
         'artifact': 'rnaget',
-        'version': '1.1.0'
+        'version': '1.2.0'
     },
     'description': 'This service implements the GA4GH RNAget API for ENCODE data',
     'organization': {
