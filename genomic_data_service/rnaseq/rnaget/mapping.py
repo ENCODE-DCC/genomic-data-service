@@ -94,17 +94,6 @@ def convert_study_ids_to_expression_filters(qs):
     return qs
 
 
-def maybe_add_default_expression_id(qs):
-    must_have_filters = qs.get_keys_filters(
-        keys=ADD_DEFAULT_IF_NONE_FILTERS
-    )
-    if not must_have_filters:
-        qs.append(
-            ('expressionID', DEFAULT_EXPRESSION_ID)
-        )
-    return qs
-
-
 def maybe_block_request(qs):
     format_ = qs.get_one_value(
         params=qs.get_key_filters(
