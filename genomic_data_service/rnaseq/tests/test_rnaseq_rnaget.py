@@ -507,6 +507,135 @@ def test_rnaseq_rnaget_expressions_id_bytes_tsv_view(client, rnaseq_data_in_elas
 
 
 @pytest.mark.integration
+def test_rnaseq_rnaget_expressions_id_bytes_tsv_fpkm_view(client, rnaseq_data_in_elasticsearch):
+    from io import StringIO
+    import csv
+    r = client.get(
+        '/rnaget/expressions/EXPID002/bytes?format=tsv&file.@id=*&units=fpkm'
+    )
+    actual = list(
+        csv.reader(
+            StringIO(
+                r.data.decode()
+            ),
+            delimiter='\t',
+        )
+    )
+    expected = [
+        ['# http://localhost/rnaget/expressions/EXPID002/bytes?format=tsv&file.%40id=*&units=fpkm'],
+        [
+            'featureID',
+            'geneSymbol',
+            '/files/ENCFF106SZG/, GM23338 originated from GM23248',
+            '/files/ENCFF273KTX/, uterus tissue female adult (53 years)',
+            '/files/ENCFF730OTJ/, GM23338 originated from GM23248'
+        ],
+        ['ENSG00000039987.6', '', '0.02', '0.02', '0.02'],
+        ['ENSG00000055732.12', '', '0.41', '0.41', '0.41'],
+        ['ENSG00000060982.14', '', '15.8', '15.8', '15.8'],
+        ['ENSG00000034677.12', 'RNF19A', '14.49', '14.49', '14.49']
+    ]
+    assert actual == expected
+
+
+@pytest.mark.integration
+def test_rnaseq_rnaget_expressions_id_bytes_tsv_min_max_view(client, rnaseq_data_in_elasticsearch):
+    from io import StringIO
+    import csv
+    r = client.get(
+        '/rnaget/expressions/EXPID002/bytes?format=tsv'
+        '&file.@id=*&units=fpkm&feature_min_value=0.03'
+    )
+    actual = list(
+        csv.reader(
+            StringIO(
+                r.data.decode()
+            ),
+            delimiter='\t',
+        )
+    )
+    expected = [
+        [
+            (
+                '# http://localhost/rnaget/expressions/EXPID002/bytes?format=tsv&file.%40id=*'
+                '&units=fpkm&feature_min_value=0.03'
+            )
+        ],
+        [
+            'featureID',
+            'geneSymbol',
+            '/files/ENCFF106SZG/, GM23338 originated from GM23248',
+            '/files/ENCFF273KTX/, uterus tissue female adult (53 years)',
+            '/files/ENCFF730OTJ/, GM23338 originated from GM23248'
+        ],
+        ['ENSG00000055732.12', '', '0.41', '0.41', '0.41'],
+        ['ENSG00000060982.14', '', '15.8', '15.8', '15.8'],
+        ['ENSG00000034677.12', 'RNF19A', '14.49', '14.49', '14.49']
+    ]
+    assert actual == expected
+    r = client.get(
+        '/rnaget/expressions/EXPID002/bytes?format=tsv'
+        '&file.@id=*&units=fpkm&feature_min_value=0.03&feature_max_value=14.49'
+    )
+    actual = list(
+        csv.reader(
+            StringIO(
+                r.data.decode()
+            ),
+            delimiter='\t',
+        )
+    )
+    expected = [
+        [
+            (
+                '# http://localhost/rnaget/expressions/EXPID002/bytes?format=tsv&file.%40id=*'
+                '&units=fpkm&feature_min_value=0.03&feature_max_value=14.49'
+            )
+        ],
+        [
+            'featureID',
+            'geneSymbol',
+            '/files/ENCFF106SZG/, GM23338 originated from GM23248',
+            '/files/ENCFF273KTX/, uterus tissue female adult (53 years)',
+            '/files/ENCFF730OTJ/, GM23338 originated from GM23248'
+        ],
+        ['ENSG00000055732.12', '', '0.41', '0.41', '0.41'],
+        ['ENSG00000034677.12', 'RNF19A', '14.49', '14.49', '14.49']
+    ]
+    assert actual == expected
+    r = client.get(
+        '/rnaget/expressions/EXPID001/bytes?format=tsv'
+        '&file.@id=*&units=tpm&feature_min_value=0.2'
+        '&feature_min_value=5'
+    )
+    actual = list(
+        csv.reader(
+            StringIO(
+                r.data.decode()
+            ),
+            delimiter='\t',
+        )
+    )
+    expected = [
+        [
+            (
+                '# http://localhost/rnaget/expressions/EXPID001/bytes'
+                '?format=tsv&file.%40id=*&units=tpm&feature_min_value=0.2'
+                '&feature_min_value=5'
+            )
+        ],
+        [
+            'featureID',
+            'geneSymbol',
+            '/files/ENCFF241WYH/, muscle of trunk tissue female embryo (113 days)',
+        ],
+        ['ENSG00000060982.14', '', '10.18'],
+        ['ENSG00000034677.12', 'RNF19A', '9.34']
+    ]
+    assert actual == expected
+
+
+@pytest.mark.integration
 def test_rnaseq_rnaget_expressions_id_bytes_json_view(client, rnaseq_data_in_elasticsearch):
     r = client.get(
         '/rnaget/expressions/EXPID001/bytes?format=json'

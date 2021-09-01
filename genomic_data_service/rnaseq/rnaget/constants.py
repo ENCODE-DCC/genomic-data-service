@@ -151,3 +151,9 @@ BLOCK_IF_NONE_FILTERS = [
 
 
 DEFAULT_EXPRESSION_ID = 'EXPID007'
+
+
+EXTRANEOUS_PARAMS = [
+    'units',
+    'projectID',
+]

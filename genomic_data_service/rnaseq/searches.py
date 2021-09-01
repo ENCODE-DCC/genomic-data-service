@@ -23,6 +23,8 @@ from snosearch.responses import FieldedResponse
 
 from genomic_data_service.rnaseq.matrix import make_rna_expression_search_request
 from genomic_data_service.rnaseq.matrix import ExpressionMatrix
+from genomic_data_service.rnaseq.matrix import TPMExpressionMatrix
+from genomic_data_service.rnaseq.matrix import FPKMExpressionMatrix
 from genomic_data_service.searches.constants import DEFAULT_RNA_EXPRESSION_SORT
 from genomic_data_service.searches.constants import RESERVED_KEYS
 
@@ -165,16 +167,31 @@ def rnaget_expression_search(search_request):
     return rna_expression_search_generator(search_request)['@graph']
 
 
-def rnaget_expression_matrix(search_request):
+def load_matrix(search_request, matrix_class):
     expression_array = rnaget_expression_search(search_request)
-    em = ExpressionMatrix()
-    em.from_array(expression_array)
+    matrix = matrix_class()
+    matrix.from_array(expression_array)
+    return matrix
+
+
+def rnaget_expression_matrix(search_request):
+    em = load_matrix(search_request, ExpressionMatrix)
     return em.as_response()
 
 
 def rnaget_expression_matrix_with_url(search_request):
-    expression_array = rnaget_expression_search(search_request)
-    em = ExpressionMatrix()
+    em = load_matrix(search_request, ExpressionMatrix)
     em.add_comment(current_request.url)
-    em.from_array(expression_array)
     return em.as_response()
+
+
+def rnaget_tpm_expression_matrix_with_url(search_request):
+    tem = load_matrix(search_request, TPMExpressionMatrix)
+    tem.add_comment(current_request.url)
+    return tem.as_response()
+
+
+def rnaget_fpkm_expression_matrix_with_url(search_request):
+    fem = load_matrix(search_request, FPKMExpressionMatrix)
+    fem.add_comment(current_request.url)
+    return fem.as_response()

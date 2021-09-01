@@ -152,12 +152,27 @@ class RangeExpressionMatrix(ExpressionMatrix):
             yield row
 
 
+class TPMExpressionMatrix(RangeExpressionMatrix):
+    VALUE_KEY = (
+        'expression',
+        'tpm',
+    )
+
+
+class FPKMExpressionMatrix(RangeExpressionMatrix):
+    VALUE_KEY = (
+        'expression',
+        'fpkm',
+    )
+
+
 RNA_EXPRESSION_DEFAULT_PARAMS = [
     ('field', 'expression.gene_id'),
     ('field', 'file.@id'),
     ('field', 'dataset.biosample_summary'),
     ('field', 'gene.symbol'),
     ('field', 'expression.tpm'),
+    ('field', 'expression.fpkm'),
     ('limit', 'all'),
 ]
 

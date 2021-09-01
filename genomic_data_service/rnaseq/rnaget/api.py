@@ -13,7 +13,6 @@ from genomic_data_service.rnaseq.rnaget.expressions import expressions_factory
 from genomic_data_service.rnaseq.rnaget.expressions import get_format
 from genomic_data_service.rnaseq.rnaget.expressions import get_format_or_raise_400
 from genomic_data_service.rnaseq.rnaget.expressions import get_ticket_url
-from genomic_data_service.rnaseq.rnaget.expressions import get_unit
 from genomic_data_service.rnaseq.rnaget.expressions import get_expressions
 from genomic_data_service.rnaseq.rnaget.expressions import make_expression_ticket
 from genomic_data_service.rnaseq.rnaget.expressions import make_rnaget_expressions_search_request

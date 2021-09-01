@@ -5,10 +5,13 @@ from flask import url_for
 from genomic_data_service.rnaseq.rnaget.constants import EXPRESSION_IDS_MAP
 from genomic_data_service.rnaseq.rnaget.constants import TICKET_PATH
 from genomic_data_service.rnaseq.rnaget.mapping import convert_expression_ids_to_expression_filters
+from genomic_data_service.rnaseq.rnaget.mapping import convert_feature_min_and_max_value_to_expression_filters
 from genomic_data_service.rnaseq.rnaget.mapping import convert_list_filters_to_expression_filters
 from genomic_data_service.rnaseq.rnaget.mapping import convert_study_ids_to_expression_filters
+from genomic_data_service.rnaseq.rnaget.mapping import drop_extraneous_params
 from genomic_data_service.rnaseq.rnaget.mapping import maybe_block_request
-from genomic_data_service.rnaseq.searches import rnaget_expression_matrix_with_url
+from genomic_data_service.rnaseq.searches import rnaget_tpm_expression_matrix_with_url
+from genomic_data_service.rnaseq.searches import rnaget_fpkm_expression_matrix_with_url
 from genomic_data_service.rnaseq.searches import rnaget_search_quick
 from genomic_data_service.rnaseq.searches import rnaget_search
 from genomic_data_service.searches.requests import make_search_request
@@ -27,7 +30,7 @@ def get_format():
     )
 
 
-def get_unit():
+def get_units():
     qs = QueryString(
         make_search_request()
     )
@@ -45,10 +48,17 @@ def get_format_or_raise_400():
     return format_
 
 
+def matrix_factory():
+    units = get_units()
+    if units == 'fpkm':
+        return rnaget_fpkm_expression_matrix_with_url
+    return rnaget_tpm_expression_matrix_with_url
+
+
 def expressions_factory():
     format_ = get_format_or_raise_400()
     if format_ == 'tsv':
-        return rnaget_expression_matrix_with_url
+        return matrix_factory()
     return rnaget_search_quick
 
 
@@ -65,7 +75,7 @@ def get_ticket_url(query_string):
 def make_expression_ticket(query_string):
     return {
         'format': get_format(),
-        'units': get_unit(),
+        'units': get_units(),
         'url': get_ticket_url(query_string),
     }
 
@@ -83,6 +93,8 @@ def make_rnaget_expressions_search_request(filters=None):
     qs = convert_list_filters_to_expression_filters(qs)
     qs = convert_expression_ids_to_expression_filters(qs)
     qs = convert_study_ids_to_expression_filters(qs)
+    qs = convert_feature_min_and_max_value_to_expression_filters(qs)
+    qs = drop_extraneous_params(qs)
     qs = maybe_block_request(qs)
     return make_search_request(
         qs.get_request_with_new_query_string()

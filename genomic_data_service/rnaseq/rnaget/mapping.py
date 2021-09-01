@@ -5,6 +5,7 @@ from genomic_data_service.rnaseq.rnaget.constants import DATASET_FROM_TO_FIELD_M
 from genomic_data_service.rnaseq.rnaget.constants import DEFAULT_EXPRESSION_ID
 from genomic_data_service.rnaseq.rnaget.constants import EXPRESSION_IDS_MAP
 from genomic_data_service.rnaseq.rnaget.constants import EXPRESSION_LIST_FILTERS_MAP
+from genomic_data_service.rnaseq.rnaget.constants import EXTRANEOUS_PARAMS
 
 
 def map_fields(item, from_to_field_map):
@@ -94,6 +95,43 @@ def convert_study_ids_to_expression_filters(qs):
     return qs
 
 
+def get_units_or_default(qs):
+    units = qs.get_one_value(
+        params=qs.get_key_filters(
+            key='units'
+        )
+    )
+    if units == 'fpkm':
+        return units
+    return 'tpm'
+
+
+def convert_feature_min_and_max_value_to_expression_filters(qs):
+    units = get_units_or_default(qs)
+    key = f'expression.{units}'
+    feature_min_values = qs.param_values_to_list(
+        params=qs.get_key_filters(
+            key='feature_min_value'
+        )
+    )
+    feature_max_values = qs.param_values_to_list(
+        params=qs.get_key_filters(
+            key='feature_max_value'
+        )
+    )
+    for min_value in feature_min_values:
+        qs.append(
+            (key, f'gte:{min_value}')
+        )
+    for max_value in feature_max_values:
+        qs.append(
+            (key, f'lte:{max_value}')
+        )
+    qs.drop('feature_min_value')
+    qs.drop('feature_max_value')
+    return qs
+
+
 def maybe_block_request(qs):
     format_ = qs.get_one_value(
         params=qs.get_key_filters(
@@ -105,4 +143,10 @@ def maybe_block_request(qs):
     )
     if format_ == 'tsv' and not must_have_filters:
         abort(400, 'Must filter by feature (gene) or sample property')
+    return qs
+
+
+def drop_extraneous_params(qs):
+    for param in EXTRANEOUS_PARAMS:
+        qs.drop(param)
     return qs
