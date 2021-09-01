@@ -1,3 +1,5 @@
+from flask import request as current_request
+
 from snosearch.fields import AllResponseField
 from snosearch.fields import BasicReportWithFacetsResponseField
 from snosearch.fields import BasicReportWithoutFacetsResponseField
@@ -158,9 +160,21 @@ def rna_expression_search_generator(search_request):
     return fgr.render()
 
 
-def rnaget_expression_matrix(search_request):
+def rnaget_expression_search(search_request):
     search_request = make_rna_expression_search_request(search_request)
-    expression_array = rna_expression_search_generator(search_request)['@graph']
+    return rna_expression_search_generator(search_request)['@graph']
+
+
+def rnaget_expression_matrix(search_request):
+    expression_array = rnaget_expression_search(search_request)
     em = ExpressionMatrix()
+    em.from_array(expression_array)
+    return em.as_response()
+
+
+def rnaget_expression_matrix_with_url(search_request):
+    expression_array = rnaget_expression_search(search_request)
+    em = ExpressionMatrix()
+    em.add_comment(current_request.url)
     em.from_array(expression_array)
     return em.as_response()

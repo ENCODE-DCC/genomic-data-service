@@ -8,7 +8,7 @@ from genomic_data_service.rnaseq.rnaget.mapping import convert_expression_ids_to
 from genomic_data_service.rnaseq.rnaget.mapping import convert_list_filters_to_expression_filters
 from genomic_data_service.rnaseq.rnaget.mapping import convert_study_ids_to_expression_filters
 from genomic_data_service.rnaseq.rnaget.mapping import maybe_block_request
-from genomic_data_service.rnaseq.searches import rnaget_expression_matrix
+from genomic_data_service.rnaseq.searches import rnaget_expression_matrix_with_url
 from genomic_data_service.rnaseq.searches import rnaget_search_quick
 from genomic_data_service.rnaseq.searches import rnaget_search
 from genomic_data_service.searches.requests import make_search_request
@@ -48,7 +48,7 @@ def get_format_or_raise_400():
 def expressions_factory():
     format_ = get_format_or_raise_400()
     if format_ == 'tsv':
-        return rnaget_expression_matrix
+        return rnaget_expression_matrix_with_url
     return rnaget_search_quick
 
 

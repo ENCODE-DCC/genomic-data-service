@@ -96,7 +96,7 @@ class ExpressionMatrix:
             self._groupby(row, column, value)
 
     def add_comment(self, comment):
-        self.comments.append(f'# {comment}')
+        self.comments.append(f'# {comment}\n')
 
     def as_matrix(self):
         # Could allow custom sorting by row, column, or values.

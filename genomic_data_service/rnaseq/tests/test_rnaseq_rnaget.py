@@ -300,6 +300,14 @@ def test_rnaseq_rnaget_expressions_bytes_tsv_view(client, rnaseq_data_in_elastic
     )
     expected = [
         [
+            (
+                '# http://localhost/rnaget/expressions/bytes'
+                '?format=tsv&sampleIDList=%2Ffiles%2FENCFF106SZG%2F,'
+                '%2Ffiles%2FENCFF241WYH%2F,%2Ffiles%2FENCFF273KTX%2F,'
+                '%2Ffiles%2FENCFF730OTJ%2F'
+            )
+        ],
+        [
             'featureID',
             'geneSymbol',
             '/files/ENCFF106SZG/, GM23338 originated from GM23248',
@@ -326,6 +334,9 @@ def test_rnaseq_rnaget_expressions_bytes_tsv_view(client, rnaseq_data_in_elastic
     )
     expected = [
         [
+            '# http://localhost/rnaget/expressions/bytes?format=tsv&featureNameList=RNF19A'
+        ],
+        [
             'featureID',
             'geneSymbol',
             '/files/ENCFF106SZG/, GM23338 originated from GM23248',
@@ -353,6 +364,13 @@ def test_rnaseq_rnaget_expressions_bytes_tsv_view(client, rnaseq_data_in_elastic
     )
     expected = [
         [
+            (
+                '# http://localhost/rnaget/expressions/bytes'
+                '?format=tsv&featureNameList=RNF19A'
+                '&sampleIDList=%2Ffiles%2FENCFF106SZG%2F,%2Ffiles%2FENCFF241WYH%2F'
+            )
+        ],
+        [
             'featureID',
             'geneSymbol',
             '/files/ENCFF106SZG/, GM23338 originated from GM23248',
@@ -378,6 +396,13 @@ def test_rnaseq_rnaget_expressions_bytes_tsv_view(client, rnaseq_data_in_elastic
         )
     )
     expected = [
+        [
+            (
+                '# http://localhost/rnaget/expressions/bytes?format=tsv'
+                '&featureNameList=RNF19A&sampleIDList=%2Ffiles%2FENCFF106SZG%2F,%2Ffiles%2FENCFF241WYH%2F'
+                '&dataset.biosample_summary=muscle%20of%20trunk%20tissue%20female%20embryo%20(113%20days)'
+            )
+        ],
         [
             'featureID',
             'geneSymbol',
@@ -438,6 +463,9 @@ def test_rnaseq_rnaget_expressions_id_bytes_tsv_view(client, rnaseq_data_in_elas
     )
     expected = [
         [
+            '# http://localhost/rnaget/expressions/EXPID002/bytes?format=tsv&searchTerm=(GM23338%7Ctissue)'
+        ],
+        [
             'featureID',
             'geneSymbol',
             '/files/ENCFF106SZG/, GM23338 originated from GM23248',
@@ -462,6 +490,9 @@ def test_rnaseq_rnaget_expressions_id_bytes_tsv_view(client, rnaseq_data_in_elas
         )
     )
     expected = [
+        [
+            '# http://localhost/rnaget/expressions/EXPID001/bytes?format=tsv&file.%40id=*'
+        ],
         [
             'featureID',
             'geneSymbol',
