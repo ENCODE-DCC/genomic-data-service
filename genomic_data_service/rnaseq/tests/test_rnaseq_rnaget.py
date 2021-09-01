@@ -188,7 +188,7 @@ def test_rnaseq_rnaget_study_by_id_view(client):
 @pytest.mark.integration
 def test_rnaseq_rnaget_expression_ids_view(client):
     r = client.get('/rnaget/expressions')
-    assert len(r.json) == 6
+    assert len(r.json) == 7
     assert r.json[0] == {
         'description': 'All polyA plus RNA-seq samples in humans.',
         'filters': [
@@ -268,6 +268,13 @@ def test_rnaseq_rnaget_expressions_ticket_by_expression_id_view_raise_400(client
 
 
 @pytest.mark.integration
+def test_rnaseq_rnaget_expressions_bytes_view_raise_400_when_filter_not_specified(client):
+    r = client.get('/rnaget/expressions/bytes?format=tsv')
+    assert r.status_code == 400
+    assert r.json['message'] == '400 Bad Request: Must filter by feature (gene) or sample property'
+
+
+@pytest.mark.integration
 def test_rnaseq_rnaget_expressions_bytes_view_raise_400_when_format_not_specified(client):
     r = client.get('/rnaget/expressions/bytes')
     assert r.status_code == 400
@@ -280,6 +287,8 @@ def test_rnaseq_rnaget_expressions_bytes_tsv_view(client, rnaseq_data_in_elastic
     import csv
     r = client.get(
         '/rnaget/expressions/bytes?format=tsv'
+        '&sampleIDList=/files/ENCFF106SZG/,/files/ENCFF241WYH/,'
+        '/files/ENCFF273KTX/,/files/ENCFF730OTJ/'
     )
     actual = list(
         csv.reader(
@@ -417,7 +426,7 @@ def test_rnaseq_rnaget_expressions_id_bytes_tsv_view(client, rnaseq_data_in_elas
     from io import StringIO
     import csv
     r = client.get(
-        '/rnaget/expressions/EXPID002/bytes?format=tsv'
+        '/rnaget/expressions/EXPID002/bytes?format=tsv&searchTerm=(GM23338|tissue)'
     )
     actual = list(
         csv.reader(
@@ -442,7 +451,7 @@ def test_rnaseq_rnaget_expressions_id_bytes_tsv_view(client, rnaseq_data_in_elas
     ]
     assert actual == expected
     r = client.get(
-        '/rnaget/expressions/EXPID001/bytes?format=tsv'
+        '/rnaget/expressions/EXPID001/bytes?format=tsv&file.@id=*'
     )
     actual = list(
         csv.reader(

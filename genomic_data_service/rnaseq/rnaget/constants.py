@@ -79,6 +79,22 @@ EXPRESSION_IDS = [
             ('file.assay_title', 'polyA minus RNA-seq'),
             ('dataset.replicates.library.biosample.donor.organism.scientific_name', 'Mus musculus'),
         ]
+    },
+    {
+        'id': 'EXPID007',
+        'description': 'polyA plus RNA-seq for EGFR, KRAS, ALK, CTCF, POMC, and EP300 genes in human lung tissue samples',
+        'filters': [
+            ('searchTerm', 'lung'),
+            ('file.assay_title', 'polyA plus RNA-seq'),
+            ('dataset.replicates.library.biosample.donor.organism.scientific_name', 'Homo sapiens'),
+            ('gene.symbol', 'EGFR'),
+            ('gene.symbol', 'KRAS'),
+            ('gene.symbol', 'ALK'),
+            ('gene.symbol', 'POMC'),
+            ('gene.symbol', 'EP300'),
+            ('gene.symbol', 'CTCF'),
+            ('file.biosample_ontology.classification', 'tissue'),
+        ]
     }
 ]
 
@@ -121,3 +137,17 @@ SERVICE_INFO = {
         'continuous': False
     }
 }
+
+
+BLOCK_IF_NONE_FILTERS = [
+    'gene.symbol',
+    'file.@id',
+    'dataset.@id',
+    'dataset.biosample_summary',
+    'expression.gene',
+    'searchTerm',
+    'advancedQuery',
+]
+
+
+DEFAULT_EXPRESSION_ID = 'EXPID007'

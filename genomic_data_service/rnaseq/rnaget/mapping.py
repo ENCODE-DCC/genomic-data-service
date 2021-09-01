@@ -1,4 +1,8 @@
+from flask import abort
+
+from genomic_data_service.rnaseq.rnaget.constants import BLOCK_IF_NONE_FILTERS
 from genomic_data_service.rnaseq.rnaget.constants import DATASET_FROM_TO_FIELD_MAP
+from genomic_data_service.rnaseq.rnaget.constants import DEFAULT_EXPRESSION_ID
 from genomic_data_service.rnaseq.rnaget.constants import EXPRESSION_IDS_MAP
 from genomic_data_service.rnaseq.rnaget.constants import EXPRESSION_LIST_FILTERS_MAP
 
@@ -87,4 +91,29 @@ def convert_study_ids_to_expression_filters(qs):
             ('dataset.@id', f'/experiments/{study_id}/')
         )
     qs.drop('studyID')
+    return qs
+
+
+def maybe_add_default_expression_id(qs):
+    must_have_filters = qs.get_keys_filters(
+        keys=ADD_DEFAULT_IF_NONE_FILTERS
+    )
+    if not must_have_filters:
+        qs.append(
+            ('expressionID', DEFAULT_EXPRESSION_ID)
+        )
+    return qs
+
+
+def maybe_block_request(qs):
+    format_ = qs.get_one_value(
+        params=qs.get_key_filters(
+            key='format'
+        )
+    )
+    must_have_filters = qs.get_keys_filters(
+        keys=BLOCK_IF_NONE_FILTERS
+    )
+    if format_ == 'tsv' and not must_have_filters:
+        abort(400, 'Must filter by feature (gene) or sample property')
     return qs
