@@ -730,7 +730,7 @@ def test_rnaseq_rnaget_service_info(client):
         'type': {
             'artifact': 'rnaget',
             'group': 'org.encodeproject',
-            'version': '1.1.0'
+            'version': '1.2.0'
         },
         'version': '0.0.2'
     }
