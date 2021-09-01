@@ -202,6 +202,22 @@ def test_reports_expressions_matrix_expression_matrix_as_tsv():
         b'ENSG00000115138.10\tPOMC\t0.0\t2.94\t0.02\n'
     ]
     assert actual_tsv == expected_tsv
+    em = ExpressionMatrix()
+    em.from_array(EXPRESSION_ARRAY)
+    em.add_comment('https://somehost/?some=query&string=route')
+    em.add_comment('ENCODE file.@id and dataset.biosample_summary')
+    em.add_comment('Can use file.@id to get more metadata, e.g.: https://www.encodeproject.org/files/ENCFF006IHP')
+    actual_tsv = list(em.as_tsv())
+    expected_tsv = [
+        b'# https://somehost/?some=query&string=route',
+        b'# ENCODE file.@id and dataset.biosample_summary',
+        b'# Can use file.@id to get more metadata, e.g.: https://www.encodeproject.org/files/ENCFF006IHP',
+        b'featureID\tgeneSymbol\t/files/ENCFF004JWA/, ABC\t/files/ENCFF006IHP/, DEF\t/files/ENCFF008KUV/, GHI\n',
+        b'ENSG00000102974.15\tCTCF\t14.1\t55.53\t16.36\n',
+        b'ENSG00000100393.12\tEP300\t19.19\t75.65\t8.0\n',
+        b'ENSG00000115138.10\tPOMC\t0.0\t2.94\t0.02\n'
+    ]
+    assert actual_tsv == expected_tsv
 
 
 def test_reports_expressions_matrix_range_expression_matrix_as_matrix():

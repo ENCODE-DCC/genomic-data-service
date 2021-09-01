@@ -72,6 +72,7 @@ class ExpressionMatrix:
         self.rows = set()
         self.groups = {}
         self.csv = CSVGenerator()
+        self.comments = []
 
     def _groupby(self, row, column, value):
         self.rows.add(row)
@@ -93,6 +94,9 @@ class ExpressionMatrix:
                 self.VALUE_KEY,
             )
             self._groupby(row, column, value)
+
+    def add_comment(self, comment):
+        self.comments.append(f'# {comment}')
 
     def as_matrix(self):
         # Could allow custom sorting by row, column, or values.
@@ -119,6 +123,8 @@ class ExpressionMatrix:
             yield row
 
     def as_tsv(self):
+        for comment in self.comments:
+            yield comment.encode()
         for row in self.as_matrix():
             yield self.csv.writerow(row)
 
