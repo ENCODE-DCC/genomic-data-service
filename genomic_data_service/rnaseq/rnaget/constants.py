@@ -144,7 +144,7 @@ BLOCK_IF_NONE_FILTERS = [
     'file.@id',
     'dataset.@id',
     'dataset.biosample_summary',
-    'expression.gene',
+    'expression.gene_id',
     'searchTerm',
     'advancedQuery',
 ]
