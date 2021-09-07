@@ -96,7 +96,7 @@ def expressions_formats():
 
 @rnaget_api.route('/expressions/units', methods=['GET'])
 def expressions_units():
-    units = ['tpm']
+    units = ['tpm', 'fpkm']
     return jsonify(units)
 
 

@@ -208,7 +208,7 @@ def test_rnaseq_rnaget_expressions_formats_view(client):
 @pytest.mark.integration
 def test_rnaseq_rnaget_expressions_units_view(client):
     r = client.get('/rnaget/expressions/units')
-    assert r.json == ['tpm']
+    assert r.json == ['tpm', 'fpkm']
 
 
 @pytest.mark.integration
