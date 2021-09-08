@@ -156,6 +156,8 @@ def rna_expression_search_generator(search_request):
                     'RNAExpression',
                 ],
                 reserved_keys=RESERVED_KEYS,
+                max_result_window=100000,
+                scan_size=100000,
             )
         ]
     )
