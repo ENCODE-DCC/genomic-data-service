@@ -16,6 +16,7 @@ class RegionService():
         if self.query:
             try:
                 self.chrm, self.start, self.end = get_coordinates(self.query, assembly=self.assembly, atlas=atlas)
+                self.chrm = self.chrm.lower()
             except ValueError:
                 self.chrm, self.start, self.end = (None, None, None)
         else:
