@@ -1,33 +1,6 @@
 import pytest
 
 
-@pytest.fixture()
-def rnaseq_data_in_elasticsearch(mocker, mock_portal, raw_expressions, elasticsearch_client):
-    from genomic_data_service.rnaseq.repository.elasticsearch import Elasticsearch
-    mocker.patch(
-        'genomic_data_service.rnaseq.domain.file.get_expression_generator',
-        return_value=raw_expressions,
-    )
-    es = Elasticsearch(
-        elasticsearch_client
-    )
-    files = mock_portal.get_rna_seq_files()
-    print('loading rnaseq data')
-    es.bulk_load_from_files(files)
-    es._refresh()
-    print('yielding')
-    yield
-    print('clearing rnaseq data')
-    es.clear()
-
-
-@pytest.fixture
-def client():
-    from genomic_data_service import app
-    with app.test_client() as client:
-        yield client
-
-
 @pytest.mark.integration
 def test_rnaseq_views_rnaget_search_quick(client, rnaseq_data_in_elasticsearch):
     r = client.get('/rnaget-search-quick/?type=RNAExpression')
@@ -128,17 +101,6 @@ def test_rnaseq_views_rnaget_search_view(client, rnaseq_data_in_elasticsearch):
                 {'key': 'GM23338', 'doc_count': 8},
                 {'key': 'muscle of trunk', 'doc_count': 4},
                 {'key': 'uterus', 'doc_count': 4}
-            ],
-            'total': 16,
-            'type': 'typeahead',
-            'appended': False,
-            'open_on_load': True
-        },
-        {
-            'field': 'gene.symbol',
-            'title': 'Gene symbol',
-            'terms': [
-                {'key': 'RNF19A', 'doc_count': 4}
             ],
             'total': 16,
             'type': 'typeahead',
@@ -247,7 +209,7 @@ def test_rnaseq_views_rnaget_search_cached_facets_view(client, rnaseq_data_in_el
     assert r.json['@graph'][0]['expression']['tpm'] >= 0
     assert r.status_code == 200
     assert 'facets' in r.json
-    assert len(r.json['facets']) == 8
+    assert len(r.json['facets']) == 7
 
 
 @pytest.mark.integration
@@ -258,13 +220,13 @@ def test_rnaseq_views_rnaget_report_cached_facets_view(client, rnaseq_data_in_el
     assert r.json['@graph'][0]['expression']['tpm'] >= 0
     assert r.status_code == 200
     assert 'facets' in r.json
-    assert len(r.json['facets']) == 8
+    assert len(r.json['facets']) == 7
 
 
 @pytest.mark.integration
 def test_rnaseq_views_rnaget_rna_expression_search_generator(rnaseq_data_in_elasticsearch):
     from types import GeneratorType
-    from genomic_data_service.rnaseq.views import rna_expression_search_generator
+    from genomic_data_service.rnaseq.searches import rna_expression_search_generator
     from genomic_data_service.searches.requests import make_search_request
     from genomic_data_service import app
     path = (
@@ -283,7 +245,7 @@ def test_rnaseq_views_rnaget_rna_expression_search_generator(rnaseq_data_in_elas
 @pytest.mark.integration
 def test_rnaseq_views_rnaget_rna_expression_search_generator_manual_request(rnaseq_data_in_elasticsearch):
     from types import GeneratorType
-    from genomic_data_service.rnaseq.views import rna_expression_search_generator
+    from genomic_data_service.rnaseq.searches import rna_expression_search_generator
     from genomic_data_service.searches.requests import make_search_request
     from genomic_data_service import app
     from flask import Request
@@ -325,3 +287,33 @@ def test_rnaseq_views_rnaget_rna_expression_search_generator_manual_request(rnas
         assert len(data) == 2
         assert data[0]['expression']['tpm'] >= 0
         assert 'file' in data[0]
+
+
+@pytest.mark.integration
+def test_rnaseq_views_rnaget_expression_matrix_view(client, rnaseq_data_in_elasticsearch):
+    from io import StringIO
+    import csv
+    r = client.get('/rnaget-expression-matrix/?type=RNAExpression')
+    actual = list(
+        csv.reader(
+            StringIO(
+                r.data.decode()
+            ),
+            delimiter='\t',
+        )
+    )
+    expected = [
+        [
+            'featureID',
+            'geneSymbol',
+            '/files/ENCFF106SZG/, GM23338 originated from GM23248',
+            '/files/ENCFF241WYH/, muscle of trunk tissue female embryo (113 days)',
+            '/files/ENCFF273KTX/, uterus tissue female adult (53 years)',
+            '/files/ENCFF730OTJ/, GM23338 originated from GM23248'
+        ],
+        ['ENSG00000039987.6', '', '0.01', '0.01', '0.01', '0.01'],
+        ['ENSG00000055732.12', '', '0.27', '0.27', '0.27', '0.27'],
+        ['ENSG00000060982.14', '', '10.18', '10.18', '10.18', '10.18'],
+        ['ENSG00000034677.12', 'RNF19A', '9.34', '9.34', '9.34', '9.34']
+    ]
+    assert actual == expected

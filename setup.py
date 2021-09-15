@@ -20,7 +20,7 @@ setup(
         'redis',
         'celery==4.4.6',
         'flower==0.9.4',
-        'snovault-search==1.0.1',
+        'snovault-search@git+https://github.com/ENCODE-DCC/snovault-search.git@SNO-211-increase-batch-size-in-scroll-api',
         'sqlalchemy==1.3.22',
         'psycopg2',
     ],

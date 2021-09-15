@@ -240,12 +240,6 @@ types = [
                     'type': 'typeahead',
                     'length': 'long'
                 },
-                'gene.symbol': {
-                    'title': 'Gene symbol',
-                    'open_on_load': True,
-                    'type': 'typeahead',
-                    'length': 'long'
-                },
                 'file.assembly': {
                     'title': 'Assembly',
                     'open_on_load': True
