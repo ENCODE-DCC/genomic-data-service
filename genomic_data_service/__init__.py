@@ -35,12 +35,9 @@ if is_web_app:
 
     app.url_map.strict_slashes = False
 
-    import genomic_data_service.models
-
     # Enabled endpoints:
     import genomic_data_service.search
     import genomic_data_service.summary
-    import genomic_data_service.rna_seq
     
     @app.route('/healthcheck/', methods=['GET'])
     def healthcheck():
