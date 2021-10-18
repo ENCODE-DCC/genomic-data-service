@@ -11,7 +11,7 @@ def is_web_app():
     return ('FLASK_APP' in environ)
 
 app = Flask(__name__)
-app.register_blueprint(rnaget_api, url_prefix='/rnaget/')
+app.register_blueprint(rnaget_api)
 
 
 if 'GENOMIC_DATA_SERVICE_SETTINGS' in environ:
@@ -35,16 +35,14 @@ if is_web_app:
 
     app.url_map.strict_slashes = False
 
-    import genomic_data_service.models
-
     # Enabled endpoints:
     import genomic_data_service.search
     import genomic_data_service.summary
-    import genomic_data_service.rna_seq
     
     @app.route('/healthcheck/', methods=['GET'])
     def healthcheck():
         es.cluster.health()
         return 'ok'
 
+import genomic_data_service.errors
 import genomic_data_service.rnaseq.views

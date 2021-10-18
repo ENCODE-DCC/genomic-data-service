@@ -88,7 +88,7 @@ def test_rnaseq_rnaget_mapping_convert_list_filters_to_expression_filters():
 
 @pytest.mark.integration
 def test_rnaseq_rnaget_projects_view(client):
-    r = client.get('/rnaget/projects')
+    r = client.get('/projects')
     assert r.status_code == 200
     project = r.json[0]
     fields = [
@@ -104,7 +104,7 @@ def test_rnaseq_rnaget_projects_view(client):
 
 @pytest.mark.integration
 def test_rnaseq_rnaget_project_by_id_view(client):
-    r = client.get('/rnaget/projects/ENCODE')
+    r = client.get('/projects/ENCODE')
     assert r.status_code == 200
     project = r.json[0]
     fields = [
@@ -121,36 +121,36 @@ def test_rnaseq_rnaget_project_by_id_view(client):
 
 @pytest.mark.integration
 def test_rnaseq_rnaget_project_by_id_not_found_view(client):
-    r = client.get('/rnaget/projects/NOTENCODE')
+    r = client.get('/projects/NOTENCODE')
     assert r.status_code == 404
     assert r.json['message'] == '404 Not Found: Project not found'
 
 
 @pytest.mark.integration
 def test_rnaseq_rnaget_project_filters(client):
-    r = client.get('/rnaget/projects/filters')
+    r = client.get('/projects/filters')
     assert r.status_code == 200
     assert r.json == []
 
 
 @pytest.mark.integration
 def test_rnaseq_rnaget_studies_view(client):
-    r = client.get('/rnaget/studies')
+    r = client.get('/studies')
     assert r.status_code == 200
     assert len(r.json) == 25
-    r = client.get('/rnaget/studies?limit=2')
+    r = client.get('/studies?limit=2')
     assert len(r.json) == 2
     assert 'id' in r.json[0]
     assert '@id' in r.json[0]
     assert 'accession' not in r.json[0]
-    r = client.get('/rnaget/studies?limit=1&field=description')
+    r = client.get('/studies?limit=1&field=description')
     assert len(r.json) == 1
     assert 'description' in r.json[0]
 
 
 @pytest.mark.integration
 def test_rnaseq_rnaget_study_by_id_view(client):
-    r = client.get('/rnaget/studies/ENCSR558SEE')
+    r = client.get('/studies/ENCSR558SEE')
     assert r.status_code == 200
     assert len(r.json) == 1
     assert r.json[0]['id'] == 'ENCSR558SEE'
@@ -158,14 +158,14 @@ def test_rnaseq_rnaget_study_by_id_view(client):
 
 @pytest.mark.integration
 def test_rnaseq_rnaget_study_by_id_view_not_found(client):
-    r = client.get('/rnaget/studies/NOTANID')
+    r = client.get('/studies/NOTANID')
     assert r.status_code == 404
     assert r.json['message'] == '404 Not Found: Study not found'
 
 
 @pytest.mark.integration
 def test_rnaseq_rnaget_study_by_id_view(client):
-    r = client.get('/rnaget/studies/filters')
+    r = client.get('/studies/filters')
     assert r.status_code == 200
     assert len(r.json) == 35
     assert r.json[1] == {
@@ -187,7 +187,7 @@ def test_rnaseq_rnaget_study_by_id_view(client):
 
 @pytest.mark.integration
 def test_rnaseq_rnaget_expression_ids_view(client):
-    r = client.get('/rnaget/expressions')
+    r = client.get('/expressions')
     assert len(r.json) == 7
     assert r.json[0] == {
         'description': 'All polyA plus RNA-seq samples in humans.',
@@ -201,38 +201,38 @@ def test_rnaseq_rnaget_expression_ids_view(client):
 
 @pytest.mark.integration
 def test_rnaseq_rnaget_expressions_formats_view(client):
-    r = client.get('/rnaget/expressions/formats')
+    r = client.get('/expressions/formats')
     assert r.json == ['tsv', 'json']
 
 
 @pytest.mark.integration
 def test_rnaseq_rnaget_expressions_units_view(client):
-    r = client.get('/rnaget/expressions/units')
+    r = client.get('/expressions/units')
     assert r.json == ['tpm', 'fpkm']
 
 
 @pytest.mark.integration
 def test_rnaseq_rnaget_expressions_ticket_view(client):
-    r = client.get('/rnaget/expressions/ticket')
+    r = client.get('/expressions/ticket')
     assert r.json == {
         'format': None,
         'units': None,
-        'url': 'http://localhost/rnaget/expressions/bytes'
+        'url': 'http://localhost/expressions/bytes'
     }
-    r = client.get('/rnaget/expressions/ticket?format=tsv')
+    r = client.get('/expressions/ticket?format=tsv')
     assert r.json == {
         'format': 'tsv',
         'units': None,
-        'url': 'http://localhost/rnaget/expressions/bytes?format=tsv'
+        'url': 'http://localhost/expressions/bytes?format=tsv'
     }
-    r = client.get('/rnaget/expressions/ticket?format=tsv&units=tpm')
+    r = client.get('/expressions/ticket?format=tsv&units=tpm')
     assert r.json == {
         'format': 'tsv',
         'units': 'tpm',
-        'url': 'http://localhost/rnaget/expressions/bytes?format=tsv&units=tpm'
+        'url': 'http://localhost/expressions/bytes?format=tsv&units=tpm'
     }
     r = client.get(
-        '/rnaget/expressions/ticket?format=tsv&units=tpm'
+        '/expressions/ticket?format=tsv&units=tpm'
         '&assay_title=Total RNA-seq&expression.tpm=gt:45'
         '&sampleIDList=ENCFF1,ENCFF2&featureIDList=ENSG1,ENSG2'
         '&featureNameList=GATA1,POMC,CTCF'
@@ -241,7 +241,7 @@ def test_rnaseq_rnaget_expressions_ticket_view(client):
         'format': 'tsv',
         'units': 'tpm',
         'url': (
-            'http://localhost/rnaget/expressions/bytes'
+            'http://localhost/expressions/bytes'
             '?format=tsv&units=tpm&assay_title=Total+RNA-seq'
             '&expression.tpm=gt%3A45'
             '&sampleIDList=ENCFF1%2CENCFF2'
@@ -253,30 +253,30 @@ def test_rnaseq_rnaget_expressions_ticket_view(client):
 
 @pytest.mark.integration
 def test_rnaseq_rnaget_expressions_ticket_by_expression_id_view(client):
-    r = client.get('/rnaget/expressions/EXPID001/ticket')
+    r = client.get('/expressions/EXPID001/ticket')
     assert r.json == {
         'format': None,
         'units': None,
-        'url': 'http://localhost/rnaget/expressions/bytes?expressionID=EXPID001'
+        'url': 'http://localhost/expressions/bytes?expressionID=EXPID001'
     }
 
 
 @pytest.mark.integration
 def test_rnaseq_rnaget_expressions_ticket_by_expression_id_view_raise_400(client):
-    r = client.get('/rnaget/expressions/NOTEXPID001/ticket')
+    r = client.get('/expressions/NOTEXPID001/ticket')
     assert r.status_code == 400
 
 
 @pytest.mark.integration
 def test_rnaseq_rnaget_expressions_bytes_view_raise_400_when_filter_not_specified(client):
-    r = client.get('/rnaget/expressions/bytes?format=tsv')
+    r = client.get('/expressions/bytes?format=tsv')
     assert r.status_code == 400
     assert r.json['message'] == '400 Bad Request: Must filter by feature (gene) or sample property'
 
 
 @pytest.mark.integration
 def test_rnaseq_rnaget_expressions_bytes_view_raise_400_when_format_not_specified(client):
-    r = client.get('/rnaget/expressions/bytes')
+    r = client.get('/expressions/bytes')
     assert r.status_code == 400
     assert r.json['message'] == '400 Bad Request: Must specify format'
 
@@ -286,7 +286,7 @@ def test_rnaseq_rnaget_expressions_bytes_tsv_view(client, rnaseq_data_in_elastic
     from io import StringIO
     import csv
     r = client.get(
-        '/rnaget/expressions/bytes?format=tsv'
+        '/expressions/bytes?format=tsv'
         '&sampleIDList=/files/ENCFF106SZG/,/files/ENCFF241WYH/,'
         '/files/ENCFF273KTX/,/files/ENCFF730OTJ/'
     )
@@ -301,7 +301,7 @@ def test_rnaseq_rnaget_expressions_bytes_tsv_view(client, rnaseq_data_in_elastic
     expected = [
         [
             (
-                '# http://localhost/rnaget/expressions/bytes'
+                '# http://localhost/expressions/bytes'
                 '?format=tsv&sampleIDList=%2Ffiles%2FENCFF106SZG%2F,'
                 '%2Ffiles%2FENCFF241WYH%2F,%2Ffiles%2FENCFF273KTX%2F,'
                 '%2Ffiles%2FENCFF730OTJ%2F'
@@ -322,7 +322,7 @@ def test_rnaseq_rnaget_expressions_bytes_tsv_view(client, rnaseq_data_in_elastic
     ]
     assert actual == expected
     r = client.get(
-        '/rnaget/expressions/bytes?format=tsv&featureNameList=RNF19A'
+        '/expressions/bytes?format=tsv&featureNameList=RNF19A'
     )
     actual = list(
         csv.reader(
@@ -334,7 +334,7 @@ def test_rnaseq_rnaget_expressions_bytes_tsv_view(client, rnaseq_data_in_elastic
     )
     expected = [
         [
-            '# http://localhost/rnaget/expressions/bytes?format=tsv&featureNameList=RNF19A'
+            '# http://localhost/expressions/bytes?format=tsv&featureNameList=RNF19A'
         ],
         [
             'featureID',
@@ -349,7 +349,7 @@ def test_rnaseq_rnaget_expressions_bytes_tsv_view(client, rnaseq_data_in_elastic
     assert actual == expected
     r = client.get(
         (
-            '/rnaget/expressions/bytes?format=tsv'
+            '/expressions/bytes?format=tsv'
             '&featureNameList=RNF19A'
             '&sampleIDList=/files/ENCFF106SZG/,/files/ENCFF241WYH/'
         )
@@ -365,7 +365,7 @@ def test_rnaseq_rnaget_expressions_bytes_tsv_view(client, rnaseq_data_in_elastic
     expected = [
         [
             (
-                '# http://localhost/rnaget/expressions/bytes'
+                '# http://localhost/expressions/bytes'
                 '?format=tsv&featureNameList=RNF19A'
                 '&sampleIDList=%2Ffiles%2FENCFF106SZG%2F,%2Ffiles%2FENCFF241WYH%2F'
             )
@@ -381,7 +381,7 @@ def test_rnaseq_rnaget_expressions_bytes_tsv_view(client, rnaseq_data_in_elastic
     assert actual == expected
     r = client.get(
         (
-            '/rnaget/expressions/bytes?format=tsv'
+            '/expressions/bytes?format=tsv'
             '&featureNameList=RNF19A'
             '&sampleIDList=/files/ENCFF106SZG/,/files/ENCFF241WYH/'
             '&dataset.biosample_summary=muscle of trunk tissue female embryo (113 days)'
@@ -398,7 +398,7 @@ def test_rnaseq_rnaget_expressions_bytes_tsv_view(client, rnaseq_data_in_elastic
     expected = [
         [
             (
-                '# http://localhost/rnaget/expressions/bytes?format=tsv'
+                '# http://localhost/expressions/bytes?format=tsv'
                 '&featureNameList=RNF19A&sampleIDList=%2Ffiles%2FENCFF106SZG%2F,%2Ffiles%2FENCFF241WYH%2F'
                 '&dataset.biosample_summary=muscle%20of%20trunk%20tissue%20female%20embryo%20(113%20days)'
             )
@@ -418,12 +418,12 @@ def test_rnaseq_rnaget_expressions_bytes_json_view(client, rnaseq_data_in_elasti
     from io import StringIO
     import csv
     r = client.get(
-        '/rnaget/expressions/bytes?format=json'
+        '/expressions/bytes?format=json'
     )
     assert len(r.json['@graph']) == 16
     r = client.get(
         (
-            '/rnaget/expressions/bytes?format=json'
+            '/expressions/bytes?format=json'
             '&featureNameList=RNF19A'
             '&sampleIDList=/files/ENCFF106SZG/,/files/ENCFF241WYH/'
         ),
@@ -434,14 +434,14 @@ def test_rnaseq_rnaget_expressions_bytes_json_view(client, rnaseq_data_in_elasti
 
 @pytest.mark.integration
 def test_rnaseq_rnaget_expressions_id_bytes_view_raise_400_when_format_not_specified(client):
-    r = client.get('/rnaget/expressions/EXPID001/bytes')
+    r = client.get('/expressions/EXPID001/bytes')
     assert r.status_code == 400
     assert r.json['message'] == '400 Bad Request: Must specify format'
 
 
 @pytest.mark.integration
 def test_rnaseq_rnaget_expressions_id_bytes_view_raise_400_when_expression_id_does_not_exist(client):
-    r = client.get('/rnaget/expressions/NOTEXPID001/bytes?format=tsv')
+    r = client.get('/expressions/NOTEXPID001/bytes?format=tsv')
     assert r.status_code == 400
     assert r.json['message'] == '400 Bad Request: Invalid ID supplied'
 
@@ -451,7 +451,7 @@ def test_rnaseq_rnaget_expressions_id_bytes_tsv_view(client, rnaseq_data_in_elas
     from io import StringIO
     import csv
     r = client.get(
-        '/rnaget/expressions/EXPID002/bytes?format=tsv&searchTerm=(GM23338|tissue)'
+        '/expressions/EXPID002/bytes?format=tsv&searchTerm=(GM23338|tissue)'
     )
     actual = list(
         csv.reader(
@@ -463,7 +463,7 @@ def test_rnaseq_rnaget_expressions_id_bytes_tsv_view(client, rnaseq_data_in_elas
     )
     expected = [
         [
-            '# http://localhost/rnaget/expressions/EXPID002/bytes?format=tsv&searchTerm=(GM23338%7Ctissue)'
+            '# http://localhost/expressions/EXPID002/bytes?format=tsv&searchTerm=(GM23338%7Ctissue)'
         ],
         [
             'featureID',
@@ -479,7 +479,7 @@ def test_rnaseq_rnaget_expressions_id_bytes_tsv_view(client, rnaseq_data_in_elas
     ]
     assert actual == expected
     r = client.get(
-        '/rnaget/expressions/EXPID001/bytes?format=tsv&file.@id=*'
+        '/expressions/EXPID001/bytes?format=tsv&file.@id=*'
     )
     actual = list(
         csv.reader(
@@ -491,7 +491,7 @@ def test_rnaseq_rnaget_expressions_id_bytes_tsv_view(client, rnaseq_data_in_elas
     )
     expected = [
         [
-            '# http://localhost/rnaget/expressions/EXPID001/bytes?format=tsv&file.%40id=*'
+            '# http://localhost/expressions/EXPID001/bytes?format=tsv&file.%40id=*'
         ],
         [
             'featureID',
@@ -511,7 +511,7 @@ def test_rnaseq_rnaget_expressions_id_bytes_tsv_fpkm_view(client, rnaseq_data_in
     from io import StringIO
     import csv
     r = client.get(
-        '/rnaget/expressions/EXPID002/bytes?format=tsv&file.@id=*&units=fpkm'
+        '/expressions/EXPID002/bytes?format=tsv&file.@id=*&units=fpkm'
     )
     actual = list(
         csv.reader(
@@ -522,7 +522,7 @@ def test_rnaseq_rnaget_expressions_id_bytes_tsv_fpkm_view(client, rnaseq_data_in
         )
     )
     expected = [
-        ['# http://localhost/rnaget/expressions/EXPID002/bytes?format=tsv&file.%40id=*&units=fpkm'],
+        ['# http://localhost/expressions/EXPID002/bytes?format=tsv&file.%40id=*&units=fpkm'],
         [
             'featureID',
             'geneSymbol',
@@ -543,7 +543,7 @@ def test_rnaseq_rnaget_expressions_id_bytes_tsv_min_max_view(client, rnaseq_data
     from io import StringIO
     import csv
     r = client.get(
-        '/rnaget/expressions/EXPID002/bytes?format=tsv'
+        '/expressions/EXPID002/bytes?format=tsv'
         '&file.@id=*&units=fpkm&feature_min_value=0.03'
     )
     actual = list(
@@ -557,7 +557,7 @@ def test_rnaseq_rnaget_expressions_id_bytes_tsv_min_max_view(client, rnaseq_data
     expected = [
         [
             (
-                '# http://localhost/rnaget/expressions/EXPID002/bytes?format=tsv&file.%40id=*'
+                '# http://localhost/expressions/EXPID002/bytes?format=tsv&file.%40id=*'
                 '&units=fpkm&feature_min_value=0.03'
             )
         ],
@@ -574,7 +574,7 @@ def test_rnaseq_rnaget_expressions_id_bytes_tsv_min_max_view(client, rnaseq_data
     ]
     assert actual == expected
     r = client.get(
-        '/rnaget/expressions/EXPID002/bytes?format=tsv'
+        '/expressions/EXPID002/bytes?format=tsv'
         '&file.@id=*&units=fpkm&feature_min_value=0.03&feature_max_value=14.49'
     )
     actual = list(
@@ -588,7 +588,7 @@ def test_rnaseq_rnaget_expressions_id_bytes_tsv_min_max_view(client, rnaseq_data
     expected = [
         [
             (
-                '# http://localhost/rnaget/expressions/EXPID002/bytes?format=tsv&file.%40id=*'
+                '# http://localhost/expressions/EXPID002/bytes?format=tsv&file.%40id=*'
                 '&units=fpkm&feature_min_value=0.03&feature_max_value=14.49'
             )
         ],
@@ -604,7 +604,7 @@ def test_rnaseq_rnaget_expressions_id_bytes_tsv_min_max_view(client, rnaseq_data
     ]
     assert actual == expected
     r = client.get(
-        '/rnaget/expressions/EXPID001/bytes?format=tsv'
+        '/expressions/EXPID001/bytes?format=tsv'
         '&file.@id=*&units=tpm&feature_min_value=0.2'
         '&feature_min_value=5'
     )
@@ -619,7 +619,7 @@ def test_rnaseq_rnaget_expressions_id_bytes_tsv_min_max_view(client, rnaseq_data
     expected = [
         [
             (
-                '# http://localhost/rnaget/expressions/EXPID001/bytes'
+                '# http://localhost/expressions/EXPID001/bytes'
                 '?format=tsv&file.%40id=*&units=tpm&feature_min_value=0.2'
                 '&feature_min_value=5'
             )
@@ -638,11 +638,11 @@ def test_rnaseq_rnaget_expressions_id_bytes_tsv_min_max_view(client, rnaseq_data
 @pytest.mark.integration
 def test_rnaseq_rnaget_expressions_id_bytes_json_view(client, rnaseq_data_in_elasticsearch):
     r = client.get(
-        '/rnaget/expressions/EXPID001/bytes?format=json'
+        '/expressions/EXPID001/bytes?format=json'
     )
     assert len(r.json['@graph']) == 4
     r = client.get(
-        '/rnaget/expressions/EXPID001/bytes?format=json&studyID=ENCSR906HEV'
+        '/expressions/EXPID001/bytes?format=json&studyID=ENCSR906HEV'
     )
     assert len(r.json['@graph']) == 4
     assert r.json['@graph'][0]['dataset']['@id'] == '/experiments/ENCSR906HEV/'
@@ -650,7 +650,7 @@ def test_rnaseq_rnaget_expressions_id_bytes_json_view(client, rnaseq_data_in_ela
 
 @pytest.mark.integration
 def test_rnaseq_rnaget_expressions_filters_view(client, rnaseq_data_in_elasticsearch):
-    r = client.get('/rnaget/expressions/filters')
+    r = client.get('/expressions/filters')
     assert r.status_code == 200
     assert len(r.json) == 7
     assert r.json == [
@@ -711,7 +711,7 @@ def test_rnaseq_rnaget_expressions_filters_view(client, rnaseq_data_in_elasticse
 
 @pytest.mark.integration
 def test_rnaseq_rnaget_service_info(client):
-    r = client.get('/rnaget/service-info')
+    r = client.get('/service-info')
     assert r.json == {
         'contactUrl': 'mailto:encode-help@lists.stanford.edu',
         'description': 'This service implements the GA4GH RNAget API for ENCODE data',
@@ -738,15 +738,15 @@ def test_rnaseq_rnaget_service_info(client):
 
 @pytest.mark.integration
 def test_rnaseq_rnaget_continuous_not_implemented(client):
-    r = client.get('/rnaget/continuous/ABC/ticket')
+    r = client.get('/continuous/ABC/ticket')
     assert r.status_code == 501
-    r = client.get('/rnaget/continuous/ABC/bytes')
+    r = client.get('/continuous/ABC/bytes')
     assert r.status_code == 501
-    r = client.get('/rnaget/continuous/ticket')
+    r = client.get('/continuous/ticket')
     assert r.status_code == 501
-    r = client.get('/rnaget/continuous/bytes')
+    r = client.get('/continuous/bytes')
     assert r.status_code == 501
-    r = client.get('/rnaget/continuous/formats')
+    r = client.get('/continuous/formats')
     assert r.status_code == 501
-    r = client.get('/rnaget/continuous/filters')
+    r = client.get('/continuous/filters')
     assert r.status_code == 501
