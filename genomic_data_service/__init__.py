@@ -44,4 +44,5 @@ if is_web_app:
         es.cluster.health()
         return 'ok'
 
+import genomic_data_service.errors
 import genomic_data_service.rnaseq.views
