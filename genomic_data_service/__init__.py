@@ -11,7 +11,7 @@ def is_web_app():
     return ('FLASK_APP' in environ)
 
 app = Flask(__name__)
-app.register_blueprint(rnaget_api, url_prefix='/rnaget/')
+app.register_blueprint(rnaget_api)
 
 
 if 'GENOMIC_DATA_SERVICE_SETTINGS' in environ:

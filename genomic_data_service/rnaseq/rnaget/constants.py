@@ -112,7 +112,7 @@ EXPRESSION_LIST_FILTERS_MAP = {
 }
 
 
-TICKET_PATH = 'rnaget/expressions/bytes'
+TICKET_PATH = 'expressions/bytes'
 
 
 SERVICE_INFO = {
