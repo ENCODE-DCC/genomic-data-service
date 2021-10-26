@@ -160,10 +160,6 @@ types = [
                     'items': {
                         'type': 'string'
                     },
-                },
-                'expression_id': {
-                    'title': 'Expression ID',
-                    'type': 'string'
                 }
             },
             'columns': {
@@ -208,9 +204,6 @@ types = [
                 },
                 'dataset.biosample_summary': {
                     'title': 'Biosample summary'
-                },
-                'expression_id': {
-                    'title': 'Expression ID'
                 },
                 'file.genome_annotation': {
                     'title': 'Genome annotation'
