@@ -120,9 +120,8 @@ class RnaSeqFile:
 
     def _get_at_fields(self, gene_id):
         return {
-            AT_ID: self.props['@id'],
+            AT_ID: self._get_expression_id(gene_id),
             AT_TYPE: EXPRESSION_AT_TYPE,
-            EXPRESSION_ID: self._get_expression_id(gene_id),
         }
 
     def _get_indexing_fields(self, gene_id):
