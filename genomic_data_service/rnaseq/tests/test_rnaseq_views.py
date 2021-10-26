@@ -52,7 +52,6 @@ def test_rnaseq_views_rnaget_search_view(client, rnaseq_data_in_elasticsearch):
         'dataset.replicates.library.biosample.sex': {'title': 'Biosample sex'},
         'dataset.replicates.library.biosample.donor.organism.scientific_name': {'title': 'Organism'},
         'dataset.biosample_summary': {'title': 'Biosample summary'},
-        'expression_id': {'title': 'Expression ID'},
         'file.genome_annotation': {'title': 'Genome annotation'},
         'file.donors': {'title': 'Donors'},
         'file.@id': {'title': 'File'},
