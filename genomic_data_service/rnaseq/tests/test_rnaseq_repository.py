@@ -109,9 +109,8 @@ def test_rnaseq_repository_memory_bulk_load_from_files(mocker, mock_portal, raw_
                 '@id': '/genes/25897/',
                 'title': 'RNF19A (Homo sapiens)'
             },
-            '@id': '/files/ENCFF241WYH/',
+            '@id': '/expressions/ENCFF241WYH/ENSG00000034677.12/',
             '@type': ['RNAExpression', 'Item'],
-            'expression_id': '/expressions/ENCFF241WYH/ENSG00000034677.12/'
         },
         '_index': 'rna-expression',
         '_type': 'rna-expression',

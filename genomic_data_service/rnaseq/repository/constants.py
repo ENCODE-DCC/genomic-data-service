@@ -254,9 +254,6 @@ EXPRESSION_MAPPING = {
                         },
                         '@type': {
                             'type': 'keyword'
-                        },
-                        'expression_id': {
-                            'type': 'keyword'
                         }
                     }
                 }

@@ -228,9 +228,8 @@ def test_rnaseq_file_extract_as_documents(raw_files, raw_expressions, mocker):
             },
             'dataset': {},
             'gene': {},
-            '@id': '/files/ENCFF241WYH/',
+            '@id': '/expressions/ENCFF241WYH/ENSG00000034677.12/',
             '@type': ['RNAExpression', 'Item'],
-            'expression_id': '/expressions/ENCFF241WYH/ENSG00000034677.12/'
         },
         '_index': 'rna-expression',
         '_type': 'rna-expression',
@@ -335,9 +334,8 @@ def test_rnaseq_file_extract_as_documents_with_repository(raw_files, raw_express
                 '@id': '/genes/25897/',
                 'title': 'RNF19A (Homo sapiens)'
             },
-            '@id': '/files/ENCFF241WYH/',
+            '@id': '/expressions/ENCFF241WYH/ENSG00000034677.12/',
             '@type': ['RNAExpression', 'Item'],
-            'expression_id': '/expressions/ENCFF241WYH/ENSG00000034677.12/'
         },
         '_index': 'rna-expression',
         '_type': 'rna-expression',
