@@ -316,3 +316,15 @@ def test_rnaseq_views_rnaget_expression_matrix_view(client, rnaseq_data_in_elast
         ['ENSG00000034677.12', 'RNF19A', '9.34', '9.34', '9.34', '9.34']
     ]
     assert actual == expected
+
+
+@pytest.mark.integration
+def test_rnaseq_views_rnaget_search_stream_view(client, rnaseq_data_in_elasticsearch):
+    import json
+    r = client.get('/rnaget-search-stream/?type=RNAExpression')
+    assert r.status_code == 200
+    assert r.mimetype == 'application/x-ndjson'
+    data = [json.loads(d) for d in r.data.decode('utf8').splitlines()]
+    assert len(data) == 16
+    assert '@id' in data[0]
+    assert '@type' in data[0]
