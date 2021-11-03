@@ -5,7 +5,7 @@ from flask import Response
 
 class NDJSONGenerator:
     '''
-    Streams list[dicts] as newline-delimited JSON.
+    Streams list[dict] as newline-delimited JSON.
     '''
 
     NEWLINE = '\n'
