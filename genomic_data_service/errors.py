@@ -13,5 +13,5 @@ def resource_not_found(e):
 
 
 @app.errorhandler(501)
-def resource_not_found(e):
+def not_implemented(e):
     return jsonify(message=str(e)), 501
