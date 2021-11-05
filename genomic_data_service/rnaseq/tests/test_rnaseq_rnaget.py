@@ -164,7 +164,7 @@ def test_rnaseq_rnaget_study_by_id_view_not_found(client):
 
 
 @pytest.mark.integration
-def test_rnaseq_rnaget_study_by_id_view(client):
+def test_rnaseq_rnaget_study_filters_view(client):
     r = client.get('/studies/filters')
     assert r.status_code == 200
     assert len(r.json) == 35
