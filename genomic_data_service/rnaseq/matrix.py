@@ -1,5 +1,3 @@
-import numpy as np
-
 from flask import Response
 
 from genomic_data_service.reports.csv import CSVGenerator
@@ -143,7 +141,7 @@ class RangeExpressionMatrix(ExpressionMatrix):
     Like ExpressionMatrix but drops rows with NaN. This allows returning a matrix
     where features are filtered by threshold values.
     '''
-    FILL_VALUE = np.nan
+    FILL_VALUE = -1.0
 
     def as_matrix(self):
         for row in super().as_matrix():
