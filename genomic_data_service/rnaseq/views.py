@@ -42,3 +42,8 @@ def rnaget_report_view():
 def rnaget_expression_matrix_view():
     search_request = make_search_request()
     return rnaget_expression_matrix(search_request)
+
+
+@app.route('/', methods=['GET'])
+def healthcheck():
+    return 'success'
