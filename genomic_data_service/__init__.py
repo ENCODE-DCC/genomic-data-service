@@ -3,12 +3,13 @@ from flask import Flask
 from genomic_data_service.searches.configs import add_registry
 from genomic_data_service.rnaseq.client import add_rna_client
 from genomic_data_service.rnaseq.rnaget.api import rnaget_api
-
+from flask_cors import CORS
 
 def is_web_app():
     return ('FLASK_APP' in environ)
 
 app = Flask(__name__)
+CORS(app)
 app.register_blueprint(rnaget_api)
 add_registry(app)
 add_rna_client(app)

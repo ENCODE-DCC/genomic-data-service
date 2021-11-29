@@ -14,6 +14,7 @@ setup(
         'boto3',
         'numpy==1.21.3',
         'snovault-search==1.0.2',
+        'Flask-Cors==3.0.10',
     ],
     extras_require={
         'test': [
