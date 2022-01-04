@@ -250,6 +250,7 @@ write_files:
     -Dio.netty.recycler.maxCapacityPerThread=0
     -Dlog4j.shutdownHookEnabled=false
     -Dlog4j2.disable.jmx=true
+    -Dlog4j2.formatMsgNoLookups=true
     -Dlog4j.skipJansi=true
     -XX:+HeapDumpOnOutOfMemoryError
 - path: /etc/cron.daily/es-logrotate
