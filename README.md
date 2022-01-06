@@ -7,8 +7,8 @@ Flask based web service providing genomic region search, based on regulomedb.org
 Installation Requirements:
 
 * python 3.7.* (3.8+ is not supported)
-* postgres
-* elasticsearch
+* postgres (only for RNAGet?)
+* elasticsearch (5.6 currently)
 
 
 ## Application Installation
@@ -39,10 +39,15 @@ Installation Requirements:
     ```
     It will be available on port 5000.
 
-5. (Optional) Run the indexer:
+5. (Optional) Run the indexer (independent of flask application):
     ```
+    $ brew services start redis (if redis not running)
+
+    in separate windows, with virtualenv
+    $ python3 util/dev_servers/dev_servers.py (start local ES)
     $ make worker
     $ make flower
+    $ make index
     ```
     It will be available on port 5555.
 
