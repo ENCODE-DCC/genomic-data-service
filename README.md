@@ -49,7 +49,7 @@ Installation Requirements:
     $ make flower
     $ make index
     ```
-    It will be available on port 5555.
+    Monitoring via flower will be available on port 5555 (localhost unless otherwise set).
 
 
 ## Deployment
