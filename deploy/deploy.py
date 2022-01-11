@@ -148,7 +148,7 @@ def _get_run_args(main_args, instances_tag_data):
         'REDIS_IP': main_args.redis_ip,
         'REDIS_PORT': main_args.redis_port,
     }
-    config_file = ':cloud-config.yml'
+    config_file = ':deploy/cloud-config.yml'
     user_data = get_user_data(instances_tag_data['commit'], config_file, data_insert, main_args)
     run_args = {
         'count': count,
@@ -166,11 +166,10 @@ def _wait_and_tag_instances(main_args, run_args, instances_tag_data, instances, 
     domain = 'production' if main_args.profile_name == 'production' else 'instance'
     for i, instance in enumerate(instances):
         instances_tag_data['name'] = tmp_name
-        if not main_args.spot_instance:
-            print('%s.%s.regulomedb.org' % (instance.id, domain))  # Instance:i-34edd56f
-            instance.wait_until_exists()
-            tag_ec2_instance(instance, instances_tag_data)
-            print('Instance ready')
+        print('%s.%s.regulomedb.org' % (instance.id, domain))  # Instance:i-34edd56f
+        instance.wait_until_exists()
+        tag_ec2_instance(instance, instances_tag_data)
+        print('Instance ready')
 
 
 def main():
