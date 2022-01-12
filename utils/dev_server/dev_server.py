@@ -2,7 +2,7 @@ import os.path
 import sys
 import atexit
 import select
-from multiprocessing import Process
+from multiprocessing import Process, set_start_method
 try:
     import subprocess32 as subprocess
 except ImportError:
@@ -50,6 +50,7 @@ def start_elasticsearch(datadir='/tmp/genomic-server', host='127.0.0.1', port=92
 
 
 def main():
+    set_start_method("fork")
     processes = [start_elasticsearch(echo=True)]
 
     print_processes = []

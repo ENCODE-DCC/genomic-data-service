@@ -15,7 +15,7 @@ setup(
         'elasticsearch==5.4.0',
         'requests',
         'pyBigWig',
-        'scikit-learn==0.20.3',
+        'scikit-learn==1.0.1',
         'gunicorn',
         'boto3',
         'redis',
