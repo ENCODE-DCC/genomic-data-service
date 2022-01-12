@@ -22,7 +22,7 @@ SUPPORTED_CHROMOSOMES = [
 
 ENCODE_DOMAIN = 'https://www.encodeproject.org'
 REGULOME_ENCODE_ACCESSIONS_MAPPING_PATH = 'regulome_encode_accessions_mapping.pickle'
-REGULOME_ACCESSIONS_PATH = 'regulome_accessions.pickle'
+REGULOME_ACCESSIONS_PATH = 'regulome_accessions_subsampled100.pickle'
 ENCODE_SNP = ['ENCFF904UCL', 'ENCFF578KDT']
 SUPPORTED_ASSEMBLIES = ['hg19', 'GRCh38']
 REGULOME_ALLOWED_STATUSES = ['released', 'archived']
