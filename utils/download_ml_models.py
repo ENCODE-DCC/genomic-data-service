@@ -1,9 +1,8 @@
 import os
 import boto3
-from multiprocessing import Process, set_start_method
 
 BUCKET_NAME = 'regulome-ml-models'
-OBJECT_NAMES = ['rf_model.sav', 'bigwig_files/IC_matched_max.bw', 'bigwig_files/IC_max.bw']
+OBJECT_NAMES = ['rf_model1.0.1.sav', 'bigwig_files/IC_matched_max.bw', 'bigwig_files/IC_max.bw']
 LOCAL_PATH = './ml_models/'
 
 
@@ -32,7 +31,6 @@ def download_models(needs_downloading):
             s3.download_fileobj(BUCKET_NAME, filename, f)
 
 def main():
-    set_start_method("fork")
     needs_downloading = models_to_download()
 
     if len(needs_downloading) == 0:

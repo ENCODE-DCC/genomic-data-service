@@ -16,7 +16,7 @@ REGDB_NUM_SCORES = [1000, 950, 900, 850, 800, 750, 600, 550, 500, 450, 400, 300,
 
 try:
     TRAINED_REG_MODEL = pickle.load(
-        open('./ml_models/rf_model.sav', 'rb')
+        open('./ml_models/rf_model1.0.1.sav', 'rb')
     )
 except FileNotFoundError:
     TRAINED_REG_MODEL = None
