@@ -2,7 +2,7 @@ import os
 import boto3
 
 BUCKET_NAME = 'regulome-ml-models'
-OBJECT_NAMES = ['rf_model.sav', 'bigwig_files/IC_matched_max.bw', 'bigwig_files/IC_max.bw']
+OBJECT_NAMES = ['rf_model1.0.1.sav', 'bigwig_files/IC_matched_max.bw', 'bigwig_files/IC_max.bw']
 LOCAL_PATH = './ml_models/'
 
 
