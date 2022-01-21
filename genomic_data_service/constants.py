@@ -13,3 +13,36 @@ GENOME_TO_SPECIES = {
 
 ENSEMBL_URL = 'http://rest.ensembl.org/'
 ENSEMBL_URL_GRCH37 = 'http://grch37.rest.ensembl.org/'
+
+
+FILE_CH38 = {
+
+    "@id": "/files/ENCFF904UCL/",
+    "assembly": "GRCh38",
+    "file_format": "bed"
+    
+
+}
+
+FILE_HG19 = {
+
+    "@id": "/files/ENCFF578KDT/",
+    "assembly": "hg19",
+    "file_format": "bed"
+
+}
+
+DATASET = {
+        "uuid": "19b2ffe1-a645-4da5-ac4e-631f1629dca0",
+        "@id": "/references/ENCSR942EOJ/",
+        "target": [],
+        "biosample_ontology": {},
+        'biosample_term_name': None,
+        "reference_type": "index",
+        "@type": [
+        "Reference",
+        "FileSet",
+        "Dataset",
+        "Item"
+        ],
+    }

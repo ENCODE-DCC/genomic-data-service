@@ -1,10 +1,12 @@
-from genomic_data_service.region_indexer_task import index_file
+from genomic_data_service.region_indexer_task import index_file, index_local_snp_files
 from genomic_data_service.region_indexer_elastic_search import RegionIndexerElasticSearch
 
 import requests
 import pickle
 
 from os import environ
+
+from genomic_data_service.constants import FILE_CH38, FILE_HG19
 
 
 if 'ES' in environ:
@@ -28,6 +30,8 @@ SUPPORTED_ASSEMBLIES = ['hg19', 'GRCh38']
 REGULOME_ALLOWED_STATUSES = ['released', 'archived']
 REGULOME_COLLECTION_TYPES = ['assay_term_name', 'annotation_type', 'reference_type']
 REGULOME_DATASET_TYPES = ['Experiment', 'Annotation', 'Reference']
+TEST_SNP_GRCh38_CHR10 = 'ENCFF904UCL_chr10.bed.gz'
+TEST_SNP_HG19_CHR10 = 'ENCFF578KDT_chr10.bed.gz'
 REGULOME_REGION_REQUIREMENTS = {
     'chip-seq': {
         'output_type': ['optimal idr thresholded peaks'],
@@ -253,6 +257,7 @@ def fetch_datasets(files, datasets):
 
 
 def index_regulome_db(filter_files=False):
+    
     regulome_encode_accessions = pickle.load(open(REGULOME_ENCODE_ACCESSIONS_MAPPING_PATH, 'rb'))
     regulome_accessions = list(pickle.load(open(REGULOME_ACCESSIONS_PATH, 'rb')))
 
@@ -289,8 +294,59 @@ def index_regulome_db(filter_files=False):
                 es_port
             )
 
+def index_regulome_db_dev(filter_files=False):
+    
+    regulome_encode_accessions = pickle.load(open(REGULOME_ENCODE_ACCESSIONS_MAPPING_PATH, 'rb'))
+    regulome_accessions = list(pickle.load(open(REGULOME_ACCESSIONS_PATH, 'rb')))
+
+    encode_accessions = [regulome_encode_accessions[reg] for reg in regulome_accessions]
+
+    datasets = {}
+
+    per_request = 350
+    chunks = [encode_accessions[i:i + per_request] for i in range(0, len(encode_accessions), per_request)]
+
+   
+    for chunk in chunks:
+
+        files = encode_graph([f'accession={c}' for c in chunk])
+
+        files_to_index = filter_files(files) if filter_files else files
+
+        fetch_datasets(files_to_index, datasets)
+
+        for f in files_to_index:
+            dataset = datasets.get(dataset_accession(f))
+
+            if dataset is None:
+                print(f"========= No dataset {dataset_accession(f)} found for file {f['accession']}")
+                continue
+
+            index_file.delay(
+                clean_up(f, FILE_REQUIRED_FIELDS),
+                clean_up(dataset, DATASET_REQUIRED_FIELDS),
+                es_uri,
+                es_port
+            )
+    
+    index_local_snp_files.delay(
+        TEST_SNP_GRCh38_CHR10,
+        FILE_CH38,
+        es_uri,
+        es_port
+    )
+    index_local_snp_files.delay(
+        TEST_SNP_HG19_CHR10,
+        FILE_HG19,
+        es_uri,
+        es_port
+    )
 
 if __name__ == "__main__":
+
     RegionIndexerElasticSearch(es_uri, es_port, SUPPORTED_CHROMOSOMES, SUPPORTED_ASSEMBLIES).setup_indices()
 
-    index_regulome_db()
+    if 'ES' in environ:
+        index_regulome_db()
+    else:
+        index_regulome_db_dev
