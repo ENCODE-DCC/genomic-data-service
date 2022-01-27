@@ -20,3 +20,9 @@ def test_valid_params(test_client):
 def test_list_regions(test_client):
     response = test_client.get('search/?regions=chr1:39492461-39492462 chr10:11741180-11741181&genome=GRCh37')
     assert response.status_code == 200
+
+def test_params_size_all(test_client):
+    response = test_client.get('search/?regions=chr10:11741180-11741181&genome=GRCh37&limit=all')
+    data = response.json
+    print(data )
+    assert data['assembly'] == "GRCh37"
