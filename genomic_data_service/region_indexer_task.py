@@ -4,7 +4,7 @@ from elasticsearch.exceptions import NotFoundError
 from elasticsearch.helpers import bulk
 
 from genomic_data_service.region_indexer_file_reader import S3BedFileRemoteReader
-from genomic_data_service.region_indexer_local_file_reader import LocalReader
+from genomic_data_service.region_indexer_local_file_reader import LocalSnpReader
 from genomic_data_service.constants import DATASET
 import uuid
 
@@ -196,7 +196,7 @@ def index_regions_from_test_snp_file(es, uuid, file_path, file_properties):
     file_data = {}
     chroms = []
 
-    reader = LocalReader(file_path)
+    reader = LocalSnpReader(file_path)
 
     
     for (chrom, doc) in reader.parse():
