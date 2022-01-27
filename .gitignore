@@ -139,3 +139,6 @@ ml_models/
 *~
 \#*\#
 .\#*
+
+# Desktop Services Store
+.DS_Store
