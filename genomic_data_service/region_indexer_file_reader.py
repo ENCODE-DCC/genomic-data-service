@@ -1,3 +1,4 @@
+from asyncio.log import logger
 import csv
 import gzip
 import boto3
@@ -41,7 +42,7 @@ class S3BedFileRemoteReader():
             s3_bucket = "encode-public"
         s3_path   = parsed_href.path.lstrip('/')
         if parsed_href.query:
-            s3_path = parsed_href.path + '?' + prased_href.query
+            s3_path = parsed_href.path + '?' + parsed_href.query
 
         if self.should_load_file_in_memory():
             s3_response_object = s3.get_object(Bucket=s3_bucket, Key=s3_path)
@@ -68,7 +69,7 @@ class S3BedFileRemoteReader():
                 else:
                     (chrom, doc) = self.region(row, value_col=value_col, strand_col=strand_col)
             except Exception:
-                log.error('%s - failure to parse row %s:%s:%s, skipping row',
+                logger.error('%s - failure to parse row %s:%s:%s, skipping row',
                           self.file_properties['s3_uri'], row[0], row[1], row[2])
                 continue
 

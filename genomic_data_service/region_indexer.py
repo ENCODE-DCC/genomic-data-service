@@ -243,7 +243,7 @@ def fetch_datasets(files, datasets):
 
     for f in files:
         accession = dataset_accession(f)
-
+        #I think this is a bug. datasets should be fetch
         if accession in datasets:
             continue
 

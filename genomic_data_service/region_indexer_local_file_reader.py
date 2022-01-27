@@ -3,7 +3,7 @@ import csv
 import gzip
 
 
-class LocalReader():
+class LocalSnpReader():
     def __init__(self, file_path):      
         self.file_path = file_path
         self.file = gzip.open(self.file_path, mode='rt')
