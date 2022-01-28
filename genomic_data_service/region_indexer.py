@@ -30,8 +30,9 @@ SUPPORTED_ASSEMBLIES = ['hg19', 'GRCh38']
 REGULOME_ALLOWED_STATUSES = ['released', 'archived']
 REGULOME_COLLECTION_TYPES = ['assay_term_name', 'annotation_type', 'reference_type']
 REGULOME_DATASET_TYPES = ['Experiment', 'Annotation', 'Reference']
-TEST_SNP_GRCh38_CHR10 = 'ENCFF904UCL_chr10.bed.gz'
-TEST_SNP_HG19_CHR10 = 'ENCFF578KDT_chr10.bed.gz'
+TEST_SNP_FILE = 'snp.bed.gz'
+TEST_ENCODE_ACCESSIONS_PATH= 'encode_accessions.pickle'
+
 REGULOME_REGION_REQUIREMENTS = {
     'chip-seq': {
         'output_type': ['optimal idr thresholded peaks'],
@@ -296,10 +297,7 @@ def index_regulome_db(filter_files=False):
 
 def index_regulome_db_dev(filter_files=False):
     
-    regulome_encode_accessions = pickle.load(open(REGULOME_ENCODE_ACCESSIONS_MAPPING_PATH, 'rb'))
-    regulome_accessions = list(pickle.load(open(REGULOME_ACCESSIONS_PATH, 'rb')))
-
-    encode_accessions = [regulome_encode_accessions[reg] for reg in regulome_accessions]
+    encode_accessions = list(pickle.load(open(TEST_ENCODE_ACCESSIONS_PATH, 'rb')))
 
     datasets = {}
 
@@ -330,13 +328,7 @@ def index_regulome_db_dev(filter_files=False):
             )
     
     index_local_snp_files.delay(
-        TEST_SNP_GRCh38_CHR10,
-        FILE_CH38,
-        es_uri,
-        es_port
-    )
-    index_local_snp_files.delay(
-        TEST_SNP_HG19_CHR10,
+        TEST_SNP_FILE,
         FILE_HG19,
         es_uri,
         es_port
@@ -349,4 +341,4 @@ if __name__ == "__main__":
     if 'ES' in environ:
         index_regulome_db()
     else:
-        index_regulome_db_dev
+        index_regulome_db_dev()
