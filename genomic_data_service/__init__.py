@@ -1,5 +1,4 @@
-from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
+from flask import Flask, jsonify, make_response
 from os import environ
 
 from genomic_data_service.searches.configs import add_registry
@@ -23,16 +22,11 @@ else:
 add_registry(app)
 add_rna_client(app)
 
-if is_web_app:
-    from elasticsearch import Elasticsearch
-    
-    es = Elasticsearch(port=app.config['ES_PORT'], hosts=app.config['ES_HOSTS'])
 
+if is_web_app():
+    from elasticsearch import Elasticsearch
     regulome_es = Elasticsearch(port=app.config['REGULOME_ES_PORT'], hosts=app.config['REGULOME_ES_HOSTS'])
     region_search_es = Elasticsearch(port=app.config['REGION_SEARCH_ES_PORT'], hosts=app.config['REGION_SEARCH_ES_HOSTS'])
-
-    db = SQLAlchemy(app)
-
     app.url_map.strict_slashes = False
 
     # Enabled endpoints:
@@ -41,8 +35,22 @@ if is_web_app:
     
     @app.route('/healthcheck/', methods=['GET'])
     def healthcheck():
-        es.cluster.health()
-        return 'ok'
+        status = {}
+        try:
+            status['regulome_es'] = regulome_es.cluster.health()
+            status['region_search_es'] = region_search_es.cluster.health()
+        except Exception as e:
+            status['exception'] = str(e)
+
+
+        response_out = make_response(
+            jsonify(status),
+            200,                
+        )
+        response_out.headers = {
+            "Content-Type": "application/json"
+        }
+        return response_out
 
 import genomic_data_service.errors
 import genomic_data_service.rnaseq.views

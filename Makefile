@@ -13,8 +13,11 @@ run:
 clean:
 	rm -rf genomic_data_service.egg-info/
 
-test:
-	FLASK_APP=$(APP_NAME) FLASK_ENV=test GENOMIC_DATA_SERVICE_SETTINGS=../config/test.cfg pytest
+unit test:
+	FLASK_APP=$(APP_NAME) FLASK_ENV=test GENOMIC_DATA_SERVICE_SETTINGS=../config/test.cfg pytest -s -v --cov=genomic_data_service -m 'not integration'
+
+integration test:
+	FLASK_APP=$(APP_NAME) FLASK_ENV=test GENOMIC_DATA_SERVICE_SETTINGS=../config/test.cfg pytest -s -v --cov=genomic_data_service --cov-append -m 'integration'
 
 prod:
 	FLASK_APP=$(APP_NAME) GENOMIC_DATA_SERVICE_SETTINGS=../config/production.cfg gunicorn -w 4 -b 127.0.0.1:4000 wsgi:app
@@ -28,7 +31,3 @@ flower:
 index:
 	python3 genomic_data_service/region_indexer.py
 
-db:
-	FLASK_APP=$(APP_NAME) FLASK_ENV=development python3 migrate.py db init
-	FLASK_APP=$(APP_NAME) FLASK_ENV=development python3 migrate.py db migrate
-	FLASK_APP=$(APP_NAME) FLASK_ENV=development python3 migrate.py db upgrade
