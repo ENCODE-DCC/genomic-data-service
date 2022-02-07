@@ -32,12 +32,6 @@ runcmd:
 - sudo cp /home/ubuntu/genomic-data-service/deploy/celery.service /etc/systemd/system/celery.service
 - sudo cp /home/ubuntu/genomic-data-service/deploy/flower.service /etc/systemd/system/flower.service
 - sudo cp /home/ubuntu/genomic-data-service/deploy/nginx /etc/nginx/sites-available/default
-#- sudo systemctl daemon#-reload
-#- sudo service flower start
-#- sudo service celery start
-#- sudo service genomic start
-#- chmod 666 genomic.sock
-#- sudo service nginx restart
 - PUBLIC_DNS_NAME="$(curl http://169.254.169.254/latest/meta-data/public-hostname)"
 - sudo echo "127.0.0.0 $PUBLIC_DNS_NAME" | sudo tee --append /etc/hosts
 users:
