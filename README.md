@@ -102,3 +102,6 @@ A production grade data services deployment consists of three macines:
 
 After indexing has finished (region-search machine indexes in few hours, regulome machine will take couple of days) the machines can be downsized. Good size for the regulome machine is `t3a.2xlarge` and for the region-search machine `t2.xlarge` is sufficient. Do not forget to restart the services after resize.
 
+7. To deploy a regulome demo that uses your new deployment as backend, you need to edit https://github.com/ENCODE-DCC/regulome-encoded/blob/dev/ini-templates/production-template.ini and change the `genomic_data_service_url` to point to the instance running the flask app.
+
+8. To deploy an encoded demo that uses your new deployment as the region-search backend, you need to edit https://github.com/ENCODE-DCC/encoded/blob/dev/conf/pyramid/demo.ini and change the `genomic_data_service` to point to the instance running the flask app.
