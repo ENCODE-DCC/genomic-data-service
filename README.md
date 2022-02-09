@@ -28,18 +28,13 @@ Installation Requirements:
     $ pip3 install -e .
     ```
 
-3. Download our machine learning models
-    ```
-    $ python3 ./utils/download_ml_models.py
-    ```
-
-4. Run the application:
+3. Run the application:
     ```
     $ make run
     ```
     It will be available on port 5000.
 
-5. (Optional) Run the indexer (independent of flask application):
+4. (Optional) Run the indexer (independent of flask application):
     ```
     $ brew services start redis (if redis not running)
 
