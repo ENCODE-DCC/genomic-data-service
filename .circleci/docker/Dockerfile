@@ -1,7 +1,10 @@
 FROM  cimg/python@sha256:5280078dacde9c6093da25c5544d224483e89ac17b19404b8c348d00b7289bdf
 
 RUN sudo apt-get update && sudo apt-get install -y \
-    openjdk-11-jdk 
+    openjdk-11-jdk \
+    libcurl4-openssl-dev \
+    python3-dev \
+    python3-pip
 
 RUN sudo mkdir /software
 WORKDIR /software
