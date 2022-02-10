@@ -66,7 +66,7 @@ Installation Requirements:
 
 ## AWS Deployment
 
-A production grade data services deployment consists of three macines:
+A production grade data services deployment consists of three machines:
 * Main machine that runs the flask app that sends the requests to the ES machines.
 * Regulome search ES
 * ENCODED region-search ES
@@ -91,15 +91,25 @@ A production grade data services deployment consists of three macines:
 4. Create a security group allowing the main application the access to ES hosts on port 9201. This security group consists of one inbound rule with IP version `IPv4`, Type `Custom TCP`, Protocol `TCP`, Port Rance `9201` with the source <private IP of the main machine>/32. Both regulome and region-search machines need to be in this security group.
 
 5. Start each service and verify they are running correctly:
+    On the main machine:
     ```
     $ sudo systemctl daemon-reload
-    $ sudo service elasticsearch start (only on the ES machines)
     $ sudo service celery start
     $ sudo service flower start
-    $ sudo service genomic start (only on the main data service machine that runs the flask app)
-    $ chmod 777 /home/ubuntu/genomic-data-service/genomic.sock (only on the main data service machine that runs the flask app)
+    $ sudo service genomic start
+    $ chmod 777 /home/ubuntu/genomic-data-service/genomic.sock
     $ sudo service nginx restart
     ```
+
+    On the ES machines:
+    ```
+    $ sudo systemctl daemon-reload
+    $ sudo service elasticsearch start
+    $ sudo service celery start
+    $ sudo service flower start
+    $ sudo service nginx restart
+    ```
+
 6. Start regulome region indexer on the regulome ES machine:
     ```
     $ cd /home/ubuntu/genomic-data-service
