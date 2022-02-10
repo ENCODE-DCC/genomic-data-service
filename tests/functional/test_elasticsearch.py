@@ -1,3 +1,4 @@
+import re
 import pytest
 
 from genomic_data_service.region_indexer import dataset_accession
@@ -633,3 +634,32 @@ def test_regulome_score_none_evidence(regulome_elasticsearch_client):
     evidence = None
     res = atlas.regulome_score(datasets, evidence)
     assert res == None
+
+
+def test_regulome_summary_302(test_client):
+    response = test_client.get("summary/?regions=rs10823321&genome=GRCh37&maf=0.01")
+    assert response.status_code == 302
+    assert response.json == None
+
+
+def test_regulome_summary_200(test_client):
+    response = test_client.get(
+        "summary/?regions=rs10823321%0D%0Ars185797602&genome=GRCh37&maf=0.01"
+    )
+    assert response.status_code == 200
+    res = response.json
+    assert res["total"] == 2
+    assert len(res["variants"]) == 2
+    assert res["variants"][0]["chrom"] == "chr10"
+
+
+def test_regulome_summary_tsv(test_client):
+    response = test_client.get(
+        "summary/?regions=rs10823321%0D%0Ars185797602&genome=GRCh37&maf=0.01&format=tsv"
+    )
+    assert (
+        response.get_data().decode("utf-8")
+        == "chrom\tstart\tend\trsids\tprobability\tranking\tChIP\tDNase\tFootprint\tFootprint_matched\tIC_matched_max\tIC_max\tPWM\tPWM_matched\tQTL\nchr10\t70989234\t70989235\trs185797602\t0.14657\t5\tFalse\tTrue\tFalse\tFalse\t0.0\t1.7799999713897705\tFalse\tFalse\tFalse\nchr10\t70989269\t70989270\trs10823321\t0.31478\t5\tFalse\tTrue\tFalse\tFalse\t1.7799999713897705\t1.7799999713897705\tFalse\tFalse\tFalse"
+    )
+    assert response.status_code == 200
+    assert response.headers["Content-Type"] == "text/tsv"
