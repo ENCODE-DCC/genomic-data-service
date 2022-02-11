@@ -51,6 +51,18 @@ Installation Requirements:
     ```
     Monitoring via flower will be available on port 5555 (localhost unless otherwise set).
 
+## Testing
+
+1. Install test requirment:
+    ```
+    $ pip install -e '.[test]'
+    ```
+
+2. Run tests:
+    ```
+    $ make unit_test
+    $ make integration_test
+    ```
 
 ## Deployment
 
