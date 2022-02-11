@@ -13,10 +13,10 @@ run:
 clean:
 	rm -rf genomic_data_service.egg-info/
 
-unit test:
+unit_test:
 	FLASK_APP=$(APP_NAME) FLASK_ENV=test GENOMIC_DATA_SERVICE_SETTINGS=../config/test.cfg pytest -s -v --cov=genomic_data_service -m 'not integration'
 
-integration test:
+integration_test:
 	FLASK_APP=$(APP_NAME) FLASK_ENV=test GENOMIC_DATA_SERVICE_SETTINGS=../config/test.cfg pytest -s -v --cov=genomic_data_service --cov-append -m 'integration'
 
 prod:
