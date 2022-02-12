@@ -4,6 +4,9 @@ from elasticsearch.exceptions import NotFoundError
 from elasticsearch.helpers import bulk
 
 from genomic_data_service.region_indexer_file_reader import S3BedFileRemoteReader
+from genomic_data_service.region_indexer_local_file_reader import LocalSnpReader
+from genomic_data_service.constants import DATASET
+import uuid
 
 
 celery_app = Celery('regulome_indexer')
@@ -183,7 +186,56 @@ def index_regions_from_file(es, uuid, file_properties, dataset, snp=False):
     readable_file.close()
 
     add_to_residence(es, metadata)
+    
 
+def index_regions_from_test_snp_file(es, uuid, file_path, file_properties):
+    dataset = DATASET
+    metadata = metadata_doc(uuid, file_properties, dataset)
+    metadata['chroms'] = []
+
+    file_data = {}
+    chroms = []
+
+    reader = LocalSnpReader(file_path)
+
+    
+    for (chrom, doc) in reader.parse():
+        if chrom.lower() not in SUPPORTED_CHROMOSOMES:
+            continue
+
+        if doc['coordinates']['gte'] == doc['coordinates']['lt']:
+            print(
+                file_path + ' - on chromosome ' + doc[0] +
+                ', a start coordinate ' + doc[1] + ' is ' +
+                'larger than or equal to the end coordinate ' + doc[2] +', ' +
+                'skipping row'
+            )
+            continue  # Skip for 63 invalid peak in a non-ENCODE ChIP-seq result, exo_HelaS3.CTCF.bed.gz
+
+        if (chrom not in file_data) or (len(file_data[chrom]) > MAX_SNP_BULK):
+            # we are done with current chromosome and move on
+            # 1 chrom at a time saves memory (but assumes the files are in chrom order!)
+            if file_data and len(chroms) > 0:
+                index_snps(es, file_data, metadata, list(file_data.keys()))
+                
+                file_data = {}
+
+            file_data[chrom] = []
+
+            if len(chroms) == 0 or chroms[-1] != chrom:
+                chroms.append(chrom)
+
+        file_data[chrom].append(doc)
+
+
+    if len(chroms) == 0 or not file_data:
+        raise IOError('Error parsing file %s' % file_path)
+
+    index_snps(es, file_data, metadata, list(file_data.keys()))
+
+    reader.file.close()
+
+    add_to_residence(es, metadata)
 
 def list_targets(dataset):
     target_labels = []
@@ -278,3 +330,12 @@ def index_file(self, file_, dataset, es_hosts, es_port, force_reindex=False):
     index_regions_from_file(es, file_uuid, file_, dataset)
 
     return f"File {file_uuid} was indexed via {file_['href']}"
+
+@celery_app.task(bind=True, autoretry_for=(Exception,), retry_kwargs={'max_retries': 5, 'countdown': 2})
+def index_local_snp_files(self, file_path, file_properties, es_hosts, es_port):
+    es = Elasticsearch(port=es_port, hosts=es_hosts)
+    id = uuid.uuid4()
+    print("indexing local file ", file_path, id)
+    index_regions_from_test_snp_file(es, id, file_path, file_properties)
+
+    return f"File {file_path} was indexed"
