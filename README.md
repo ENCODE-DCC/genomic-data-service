@@ -73,9 +73,9 @@ A production grade data services deployment consists of three machines:
 
 1. Deploy the machines. Make sure you have activated the virtual environment created above.:
     ```
-    $python deploy/deploy.py -b <your-branch-here> -n test-data-service  --image-id ami-0787b9e5747b9e78c  --profile-name regulome --instance-type r5.2xlarge --volume-size 500
-    python deploy/deploy.py -b <your-branch-here> -n test-data-service-regulome  --image-id ami-0787b9e5747b9e78c  --profile-name regulome --instance-type r5.2xlarge --volume-size 500
-    python deploy/deploy.py -b DSERVE-77-aws-deploy -n test-data-service-encoded  --image-id ami-0787b9e5747b9e78c  --profile-name regulome --instance-type r5.2xlarge --volume-size 500
+    $ python deploy/deploy.py -b <branch> -n <data-service-name>  --profile-name regulome --instance-type r5.2xlarge --volume-size 500
+    $ python deploy/deploy.py -b <branch> -n <data-service-regulome-ES-name> --profile-name regulome --instance-type r5.2xlarge --volume-size 500
+    $ python deploy/deploy.py -b <branch> -n <test-data-service-encoded-ES-name> --profile-name regulome --instance-type r5.2xlarge --volume-size 500
     ```
 
 2. On each machine create a password for accessing the indexer:
@@ -86,7 +86,7 @@ A production grade data services deployment consists of three machines:
 
    You will use this login/password to access the flower dashboard on the machines. The dashboard is accessible in `http://<public-IP>/indexer`. This is accessible to the internet, so be prudent in choosing the login/password (admin is a bad username, it is quite easy to guess).
 
-3. On the main machine add the IP addresses of the ES machines into `/home/ubuntu/genomic-data-service/config/development.cfg`. Set the value of `REGULOME_ES_HOSTS` to the private IP address of the regulome data service machine, and the value of `REGION_SEARCH_ES_HOSTS` to the private IP address of the region search data service machine.
+3. On the main machine add the IP addresses of the ES machines into `/home/ubuntu/genomic-data-service/config/production.cfg`. Set the value of `REGULOME_ES_HOSTS` to the private IP address of the regulome data service machine, and the value of `REGION_SEARCH_ES_HOSTS` to the private IP address of the region search data service machine (note that in the normal case these values are lists with one item).
 
 4. Create a security group allowing the main application the access to ES hosts on port 9201. This security group consists of one inbound rule with IP version `IPv4`, Type `Custom TCP`, Protocol `TCP`, Port Rance `9201` with the source <private IP of the main machine>/32. Both regulome and region-search machines need to be in this security group.
 
