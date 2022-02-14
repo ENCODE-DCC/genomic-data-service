@@ -374,7 +374,7 @@ from contextlib import contextmanager
 
 
 @contextmanager
-def start_elasticsearch(host="localhost", port=9203):
+def start_elasticsearch(host="localhost", port=9201):
     import io
     import os
     import shutil
@@ -412,7 +412,7 @@ def start_elasticsearch(host="localhost", port=9203):
 
 
 @pytest.fixture(scope="session")
-def regulome_elasticsearch_client(host="127.0.0.1", port=9203):
+def regulome_elasticsearch_client(host="127.0.0.1", port=9201):
     from genomic_data_service.region_indexer_elastic_search import (
         RegionIndexerElasticSearch,
     )
