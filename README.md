@@ -59,40 +59,73 @@ Installation Requirements:
     $ make integration_test
     ```
 
-## Deployment
+## AWS Deployment
 
-In addition to the steps above, and assuming the application is located on: /home/ubuntu/genomic-data-service/:
+A production grade data services deployment consists of three machines:
+* Main machine that runs the flask app that sends the requests to the ES machines.
+* Regulome search ES
+* ENCODED region-search ES
 
-1. Install the following packages:
+### Connecting to the instances
+
+The instances have EC2 Instance Connect installed. You need to [install](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-connect-set-up.html) it to connect to the instances. Assume the instance-id of the instance you want to connect to is `i-foobarbaz123`. You would connect this instance with command:
+```
+$ mssh ubuntu@i-foobarbaz123 --profile regulome --region us-west-2
+```
+
+1. Deploy the machines. Make sure you have activated the virtual environment created above.:
     ```
-    $ sudo apt-get update
-    $ sudo apt-get install python3-psycopg2 redis-server apache2-utils nginx
+    $ python deploy/deploy.py -b <branch> -n <data-service-name>  --profile-name regulome --instance-type r5.2xlarge --volume-size 500
+    $ python deploy/deploy.py -b <branch> -n <data-service-regulome-ES-name> --profile-name regulome --instance-type r5.2xlarge --volume-size 500
+    $ python deploy/deploy.py -b <branch> -n <test-data-service-encoded-ES-name> --profile-name regulome --instance-type r5.2xlarge --volume-size 500
     ```
 
-2. Create a password for accessing the indexer:
+2. On each machine create a password for accessing the indexer:
     ```
     $ sudo mkdir -p /etc/apache2
-    $ sudo htpasswd -c /etc/apache2/.htpasswd admin   # replace 'admin' by any username
+    $ sudo htpasswd -c /etc/apache2/.htpasswd <your-user-name>
     ```
 
-3. Edit and copy the services for systemctl:
+   You will use this login/password to access the flower dashboard on the machines. The dashboard is accessible in `http://<public-IP>/indexer`. This is accessible to the internet, so be prudent in choosing the login/password (admin is a bad username, it is quite easy to guess).
+
+3. On the main machine add the IP addresses of the ES machines into `/home/ubuntu/genomic-data-service/config/production.cfg`. Set the value of `REGULOME_ES_HOSTS` to the private IP address of the regulome data service machine, and the value of `REGION_SEARCH_ES_HOSTS` to the private IP address of the region search data service machine (note that in the normal case these values are lists with one item).
+
+4. Create a security group allowing the main application the access to ES hosts on port 9201. This security group consists of one inbound rule with IP version `IPv4`, Type `Custom TCP`, Protocol `TCP`, Port Rance `9201` with the source <private IP of the main machine>/32. Both regulome and region-search machines need to be in this security group.
+
+5. Start each service and verify they are running correctly:
+    On the main machine:
     ```
-    $ sudo ln -s /home/ubuntu/genomic-data-service/deploy/flower.service /etc/systemd/system/flower.service
-    $ sudo ln -s /home/ubuntu/genomic-data-service/deploy/celery.service /etc/systemd/system/celery.service
-    $ sudo ln -s /home/ubuntu/genomic-data-service/deploy/genomic.servie /etc/systemd/system/genomic.service
     $ sudo systemctl daemon-reload
-    ```
-
-4. Start each service and verify they are running correctly:
-    ```
-    $ sudo service celery start
-    $ sudo service flower start
     $ sudo service genomic start
-    ```
-
-5. Apply the nginx configuration. We provide a working example in our `deploy` folder. If your instance will contain a single installation of the Genomic Data Service, you can just simply use it as:
-    ```
-    $ sudo cp /home/ubuntu/genomic-data-service/deploy/nginx /etc/nginx/sites-available/default
+    $ chmod 777 /home/ubuntu/genomic-data-service/genomic.sock
     $ sudo service nginx restart
     ```
 
+    On the ES machines:
+    ```
+    $ sudo systemctl daemon-reload
+    $ sudo service elasticsearch start
+    $ sudo service celery start
+    $ sudo service flower start
+    $ sudo service nginx restart
+    ```
+
+6. Start regulome region indexer on the regulome ES machine:
+    ```
+    $ cd /home/ubuntu/genomic-data-service
+    $ source genomic-venv/bin/activate
+    $ python genomic_data_service/region_indexer.py
+    ```
+
+7. Start encoded region indexer on the encoded ES machine:
+    ```
+    $ cd /home/ubuntu/genomic-data-service
+    $ source genomic-venv/bin/activate
+    $ python genomic_data_service/region_indexer_encode.py
+    ```
+
+You can monitor the indexing progress using the flower dashboard. After indexing has finished (region-search machine indexes in few hours, regulome machine will take couple of days) the machines can be downsized. Good size for the regulome machine is `t3a.2xlarge` and for the region-search machine `t2.xlarge` is sufficient. Do not forget to restart the services after resize.
+
+8. To deploy a regulome demo that uses your new deployment as backend, you need to edit https://github.com/ENCODE-DCC/regulome-encoded/blob/dev/ini-templates/production-template.ini and change the `genomic_data_service_url` to point to the instance running the flask app.
+
+9. To deploy an encoded demo that uses your new deployment as the region-search backend, you need to edit https://github.com/ENCODE-DCC/encoded/blob/dev/conf/pyramid/demo.ini and change the `genomic_data_service` to point to the instance running the flask app.

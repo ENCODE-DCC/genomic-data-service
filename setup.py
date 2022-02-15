@@ -1,8 +1,8 @@
 from setuptools import setup
 
 setup(
-    name='genomic_data_service',
-    packages=['genomic_data_service'],
+    name="genomic_data_service",
+    packages=["genomic_data_service"],
     include_package_data=True,
     install_requires=[
         'click==8.0.1',
@@ -26,10 +26,10 @@ setup(
         'psycopg2',
     ],
     extras_require={
-        'test': [
-            'pytest==6.2.4',
-            'pytest-mock==3.6.1',
-            'pytest-cov==2.12.1',
+        "test": [
+            "pytest==6.2.4",
+            "pytest-mock==3.6.1",
+            "pytest-cov==2.12.1",
         ]
-    }
+    },
 )
