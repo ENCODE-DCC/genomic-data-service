@@ -11,19 +11,22 @@ def get_genes_by_ensembl_id(genes):
 
 
 class Gene:
+
     def __init__(self, props):
         self.props = props
 
     def _extract_ensembl_ids(self):
         self._ensembl_ids = [
-            dbxref.replace(ENSEMBL_PREFIX, "")
-            for dbxref in self.props.get("dbxrefs", [])
+            dbxref.replace(ENSEMBL_PREFIX, '')
+            for dbxref in self.props.get('dbxrefs', [])
             if dbxref.startswith(ENSEMBL_PREFIX)
         ]
 
     def _extract_gene_properties(self):
         self._gene_properties = {
-            k: v for k, v in self.props.items() if k in GENE_FIELDS
+            k: v
+            for k, v in self.props.items()
+            if k in GENE_FIELDS
         }
 
     def by_ensembl_ids(self):

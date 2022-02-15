@@ -26,14 +26,20 @@ class Elasticsearch:
             body=MATCH_ALL,
             size=99999,
         )
-        return results.get("hits", {}).get("hits", [])
+        return results.get(
+            'hits',
+            {}
+        ).get(
+            'hits',
+            []
+        )
 
     def _exists(self):
         return self.es.indices.exists(self.INDEX)
 
     def _maybe_create_mapping(self):
         if not self._exists():
-            print("create mapping")
+            print('create mapping')
             self.es.indices.create(
                 index=self.INDEX,
                 body=self.MAPPING,
@@ -49,13 +55,20 @@ class Elasticsearch:
 
     def bulk_load(self, items):
         self._maybe_create_mapping()
-        return helpers.bulk(self.es, list(items), chunk_size=75000, request_timeout=200)
+        return helpers.bulk(
+            self.es,
+            list(items),
+            chunk_size=75000,
+            request_timeout=200
+        )
 
     def bulk_load_from_files(self, files):
         self._maybe_create_mapping()
         for file_ in files:
-            print("indexing", file_.props["@id"])
-            self.bulk_load(file_.as_documents())
+            print('indexing', file_.props['@id'])
+            self.bulk_load(
+                file_.as_documents()
+            )
 
     def clear(self):
         if self._exists():

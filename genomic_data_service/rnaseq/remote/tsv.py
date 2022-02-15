@@ -4,11 +4,18 @@ import requests
 
 
 def make_tsv_reader(iterable):
-    return csv.reader(iterable, delimiter="\t", quotechar='"')
+    return csv.reader(
+        iterable,
+        delimiter="\t",
+        quotechar='"'
+    )
 
 
 def iterate_response_by_row(response):
-    return (row.decode("utf-8") for row in response.iter_lines())
+    return (
+        row.decode('utf-8') 
+        for row in response.iter_lines()
+    )
 
 
 def remote_tsv_iterable(url):
@@ -26,7 +33,7 @@ def local_tsv_iterable(path):
 
 def save_file(remote_path, local_path):
     response = requests.get(remote_path)
-    with open(local_path, "wb") as file_:
+    with open(local_path, 'wb') as file_: 
         file_.write(response.content)
 
 

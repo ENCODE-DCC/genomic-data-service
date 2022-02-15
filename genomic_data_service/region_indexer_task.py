@@ -9,46 +9,28 @@ from genomic_data_service.constants import DATASET
 import uuid
 
 
-celery_app = Celery("regulome_indexer")
-celery_app.config_from_object("config.celeryconfig")
+celery_app = Celery('regulome_indexer')
+celery_app.config_from_object('config.celeryconfig')
 
 
-RESIDENTS_INDEX = "resident_regionsets"
-FOR_REGULOME_DB = "regulomedb"
+RESIDENTS_INDEX = 'resident_regionsets'
+FOR_REGULOME_DB = 'regulomedb'
 
 # TODO: move constants to centralized file
-REGULOME_COLLECTION_TYPES = ["assay_term_name", "annotation_type", "reference_type"]
+REGULOME_COLLECTION_TYPES = ['assay_term_name', 'annotation_type', 'reference_type']
 
 
 SUPPORTED_CHROMOSOMES = [
-    "chr1",
-    "chr2",
-    "chr3",
-    "chr4",
-    "chr5",
-    "chr6",
-    "chr7",
-    "chr8",
-    "chr9",
-    "chr10",
-    "chr11",
-    "chr12",
-    "chr13",
-    "chr14",
-    "chr15",
-    "chr16",
-    "chr17",
-    "chr18",
-    "chr19",
-    "chr20",
-    "chr21",
-    "chr22",
-    "chrx",
-    "chry",
+    'chr1', 'chr2', 'chr3', 'chr4', 'chr5', 'chr6', 'chr7', 'chr8', 'chr9',
+    'chr10', 'chr11', 'chr12', 'chr13', 'chr14', 'chr15', 'chr16', 'chr17',
+    'chr18', 'chr19', 'chr20', 'chr21', 'chr22', 'chrx', 'chry'
 ]
 
 # TODO: refactor
-ASSEMBLIES_MAPPING = {"grch37": "hg19", "hg38": "grch38"}
+ASSEMBLIES_MAPPING = {
+    'grch37': 'hg19',
+    'hg38': 'grch38'
+}
 
 # Max number of SNP docs hold in memory before putting into the index
 MAX_SNP_BULK = 3e6
@@ -58,46 +40,49 @@ SEARCH_MAX = 200
 
 # Columns (0-based) for value and strand to be indexed - based on RegulomeDB
 VALUE_STRAND_COL = {
-    "chip-seq": {"strand_col": 5, "value_col": 6},
-    "dnase-seq": {"strand_col": 5, "value_col": 6},
-    "faire-seq": {"strand_col": 5, "value_col": 6},
-    "chromatin state": {"value_col": 3},
-    "eqtls": {"value_col": 5},
-    "footprints": {
-        "strand_col": 5,
+    'chip-seq': {
+        'strand_col': 5,
+        'value_col': 6
     },
-    "pwms": {
-        "strand_col": 4,
+    'dnase-seq': {
+        'strand_col': 5,
+        'value_col': 6
+    },
+    'faire-seq': {
+        'strand_col': 5,
+        'value_col': 6
+    },
+    'chromatin state': {
+        'value_col': 3
+    },
+    'eqtls': {
+        'value_col': 5
+    },
+    'footprints': {
+        'strand_col': 5,
+    },
+    'pwms': {
+        'strand_col': 4,
     },
 }
 
 
 def add_to_residence(es, file_doc):
-    file_doc["chroms"] = list(set(file_doc["chroms"]))
+    file_doc['chroms'] = list(set(file_doc['chroms']))
 
-    es.index(
-        index=RESIDENTS_INDEX,
-        doc_type=FOR_REGULOME_DB,
-        body=file_doc,
-        id=str(file_doc["uuid"]),
-    )
+    es.index(index=RESIDENTS_INDEX, doc_type=FOR_REGULOME_DB, body=file_doc, id=str(file_doc['uuid']))
 
 
 def snps_bulk_iterator(snp_index, chrom, snps_for_chrom):
     for snp in snps_for_chrom:
-        yield {
-            "_index": snp_index.lower(),
-            "_type": chrom.lower(),
-            "_id": snp["rsid"],
-            "_source": snp,
-        }
+        yield {'_index': snp_index.lower(), '_type': chrom.lower(), '_id': snp['rsid'], '_source': snp}
 
 
 def index_snps(es, snps, metadata, chroms=None):
-    assembly = metadata["file"]["assembly"]
-    snp_index = "snp_" + assembly.lower()
+    assembly  = metadata['file']['assembly']
+    snp_index = 'snp_' + assembly.lower()
 
-    metadata["index"] = snp_index
+    metadata['index'] = snp_index
 
     if chroms is None:
         chroms = list(snps.keys())
@@ -106,14 +91,9 @@ def index_snps(es, snps, metadata, chroms=None):
         if len(snps[chrom]) == 0:
             continue
 
-        bulk(
-            es,
-            snps_bulk_iterator(snp_index, chrom, snps[chrom]),
-            chunk_size=100000,
-            request_timeout=1000,
-        )
+        bulk(es, snps_bulk_iterator(snp_index, chrom, snps[chrom]), chunk_size=100000, request_timeout=1000)
 
-        metadata["chroms"].append(chrom)
+        metadata['chroms'].append(chrom)
 
     return True
 
@@ -122,13 +102,13 @@ def region_bulk_iterator(chrom, assembly, uuid, docs_for_chrom):
     assembly = ASSEMBLIES_MAPPING.get(assembly, assembly).lower()
 
     for doc in docs_for_chrom:
-        doc["uuid"] = uuid
-        yield {"_index": chrom.lower(), "_type": assembly, "_source": doc}
+        doc['uuid'] = uuid
+        yield {'_index': chrom.lower(), '_type': assembly, '_source': doc}
 
 
 def index_regions(es, regions, metadata, chroms):
-    uuid = metadata["uuid"]
-    assembly = metadata["file"]["assembly"]
+    uuid     = metadata['uuid']
+    assembly = metadata['file']['assembly']
 
     if chroms is None:
         chroms = list(regions.keys())
@@ -139,13 +119,8 @@ def index_regions(es, regions, metadata, chroms):
         if len(regions[chrom]) == 0:
             continue
 
-        bulk(
-            es,
-            region_bulk_iterator(chrom_lc, assembly, uuid, regions[chrom]),
-            chunk_size=5000,
-            request_timeout=1000,
-        )
-        metadata["chroms"].append(chrom)
+        bulk(es, region_bulk_iterator(chrom_lc, assembly, uuid, regions[chrom]), chunk_size=5000, request_timeout=1000)
+        metadata['chroms'].append(chrom)
 
     return True
 
@@ -153,47 +128,35 @@ def index_regions(es, regions, metadata, chroms):
 def index_regions_from_file(es, uuid, file_properties, dataset, snp=False):
     metadata = metadata_doc(uuid, file_properties, dataset)
 
-    snp_set = dataset["@type"][0].lower() == "reference"
-    dataset_type = metadata["dataset"]["collection_type"].lower()
+    snp_set      = dataset['@type'][0].lower() == 'reference'
+    dataset_type = metadata['dataset']['collection_type'].lower()
     regulome_strand = VALUE_STRAND_COL.get(dataset_type, {})
 
-    metadata["chroms"] = []
+    metadata['chroms'] = []
 
     file_data = {}
     chroms = []
 
-    readable_file = S3BedFileRemoteReader(
-        file_properties, regulome_strand, snp_set=snp_set
-    )
+    readable_file = S3BedFileRemoteReader(file_properties, regulome_strand, snp_set=snp_set)
 
-    if file_properties["file_format"] == "bed":
+    if file_properties['file_format'] == 'bed':
         for (chrom, doc) in readable_file.parse():
             if chrom.lower() not in SUPPORTED_CHROMOSOMES:
                 continue
 
-            if doc["coordinates"]["gte"] == doc["coordinates"]["lt"]:
+            if doc['coordinates']['gte'] == doc['coordinates']['lt']:
                 print(
-                    file_properties["s3_uri"]
-                    + " - on chromosome "
-                    + row[0]
-                    + ", a start coordinate "
-                    + row[1]
-                    + " is "
-                    + "larger than or equal to the end coordinate "
-                    + row[2]
-                    + ", "
-                    + "skipping row"
+                    file_properties['s3_uri'] + ' - on chromosome ' + row[0] +
+                    ', a start coordinate ' + row[1] + ' is ' +
+                    'larger than or equal to the end coordinate ' + row[2] +', ' +
+                    'skipping row'
                 )
                 continue  # Skip for 63 invalid peak in a non-ENCODE ChIP-seq result, exo_HelaS3.CTCF.bed.gz
 
             if (chrom not in file_data) or (len(file_data[chrom]) > MAX_SNP_BULK):
                 # we are done with current chromosome and move on
                 # 1 chrom at a time saves memory (but assumes the files are in chrom order!)
-                if (
-                    not readable_file.should_load_file_in_memory()
-                    and file_data
-                    and len(chroms) > 0
-                ):
+                if not readable_file.should_load_file_in_memory() and file_data and len(chroms) > 0:
                     if snp_set:
                         index_snps(es, file_data, metadata, list(file_data.keys()))
                     else:
@@ -210,52 +173,42 @@ def index_regions_from_file(es, uuid, file_properties, dataset, snp=False):
         readable_file.close()
 
     if len(chroms) == 0 or not file_data:
-        raise IOError("Error parsing file %s" % file_properties["href"])
+        raise IOError('Error parsing file %s' % file_properties['href'])
 
     if snp_set:
         index_snps(es, file_data, metadata, list(file_data.keys()))
     else:
         index_regions(es, file_data, metadata, list(file_data.keys()))
 
-    if not readable_file.should_load_file_in_memory() and metadata["chroms"] != chroms:
-        print(
-            metadata["file"]["@id"]
-            + " chromosomes "
-            + ("SNPs" if snp_set else "regions")
-            + " indexed out of order!"
-        )
+    if not readable_file.should_load_file_in_memory() and metadata['chroms'] != chroms:
+        print(metadata['file']['@id'] + ' chromosomes ' + ('SNPs' if snp_set else 'regions')  +' indexed out of order!')
 
     readable_file.close()
 
     add_to_residence(es, metadata)
-
+    
 
 def index_regions_from_test_snp_file(es, uuid, file_path, file_properties):
     dataset = DATASET
     metadata = metadata_doc(uuid, file_properties, dataset)
-    metadata["chroms"] = []
+    metadata['chroms'] = []
 
     file_data = {}
     chroms = []
 
     reader = LocalSnpReader(file_path)
 
+    
     for (chrom, doc) in reader.parse():
         if chrom.lower() not in SUPPORTED_CHROMOSOMES:
             continue
 
-        if doc["coordinates"]["gte"] == doc["coordinates"]["lt"]:
+        if doc['coordinates']['gte'] == doc['coordinates']['lt']:
             print(
-                file_path
-                + " - on chromosome "
-                + doc[0]
-                + ", a start coordinate "
-                + doc[1]
-                + " is "
-                + "larger than or equal to the end coordinate "
-                + doc[2]
-                + ", "
-                + "skipping row"
+                file_path + ' - on chromosome ' + doc[0] +
+                ', a start coordinate ' + doc[1] + ' is ' +
+                'larger than or equal to the end coordinate ' + doc[2] +', ' +
+                'skipping row'
             )
             continue  # Skip for 63 invalid peak in a non-ENCODE ChIP-seq result, exo_HelaS3.CTCF.bed.gz
 
@@ -264,7 +217,7 @@ def index_regions_from_test_snp_file(es, uuid, file_path, file_properties):
             # 1 chrom at a time saves memory (but assumes the files are in chrom order!)
             if file_data and len(chroms) > 0:
                 index_snps(es, file_data, metadata, list(file_data.keys()))
-
+                
                 file_data = {}
 
             file_data[chrom] = []
@@ -274,8 +227,9 @@ def index_regions_from_test_snp_file(es, uuid, file_path, file_properties):
 
         file_data[chrom].append(doc)
 
+
     if len(chroms) == 0 or not file_data:
-        raise IOError("Error parsing file %s" % file_path)
+        raise IOError('Error parsing file %s' % file_path)
 
     index_snps(es, file_data, metadata, list(file_data.keys()))
 
@@ -283,11 +237,10 @@ def index_regions_from_test_snp_file(es, uuid, file_path, file_properties):
 
     add_to_residence(es, metadata)
 
-
 def list_targets(dataset):
     target_labels = []
 
-    target = dataset.get("target", dataset.get("targets"))
+    target = dataset.get('target', dataset.get('targets'))
     if target:
         if isinstance(target, dict):
             target = [target]
@@ -295,42 +248,40 @@ def list_targets(dataset):
         if isinstance(target, list):
             targets = target
             for target in targets:
-                genes = target.get("genes")
+                genes = target.get('genes')
                 if genes:
-                    target_labels.extend([gene["symbol"].upper() for gene in genes])
+                    target_labels.extend([gene['symbol'].upper() for gene in genes])
 
     return target_labels
 
 
 def metadata_doc(uuid, file_properties, dataset):
     meta_doc = {
-        "uuid": uuid,
-        "uses": FOR_REGULOME_DB,
-        "file": {
-            "uuid": uuid,
-            "@id": file_properties["@id"],
-            "assembly": file_properties.get("assembly", "unknown"),
+        'uuid': uuid,
+        'uses': FOR_REGULOME_DB,
+        'file': {
+            'uuid': uuid,
+            '@id': file_properties['@id'],
+            'assembly': file_properties.get('assembly', 'unknown')
         },
-        "dataset": {
-            "uuid": dataset["uuid"],
-            "@id": dataset["@id"],
-            "target": list_targets(dataset),
-            "biosample_ontology": dataset.get("biosample_ontology", {}),
-            "biosample_term_name": dataset.get("biosample_ontology", {}).get(
-                "term_name"
-            ),
-            "documents": [],
+        'dataset': {
+            'uuid': dataset['uuid'],
+            '@id': dataset['@id'],
+            'target': list_targets(dataset),
+            'biosample_ontology': dataset.get('biosample_ontology', {}),
+            'biosample_term_name': dataset.get('biosample_ontology', {}).get('term_name'),
+            'documents': []
         },
-        "dataset_type": dataset["@type"][0],
+        'dataset_type': dataset['@type'][0]
     }
 
     for prop in REGULOME_COLLECTION_TYPES:
         prop_value = dataset.get(prop)
         if prop_value:
-            meta_doc["dataset"]["collection_type"] = prop_value
+            meta_doc['dataset']['collection_type'] = prop_value
 
-    if meta_doc["dataset"]["collection_type"].lower() in ["footprints", "pwms"]:
-        meta_doc["dataset"]["documents"] = dataset.get("documents", [])
+    if meta_doc['dataset']['collection_type'].lower() in ['footprints', 'pwms']:
+        meta_doc['dataset']['documents'] = dataset.get('documents', [])
 
     return meta_doc
 
@@ -339,25 +290,21 @@ def remove_from_es(indexed_file, uuid, es):
     if not indexed_file:
         print("Trying to drop file: %s  NOT FOUND", uuid)
         return
-
-    if "index" in indexed_file:
-        es.delete(index=indexed_file["index"])
+    
+    if 'index' in indexed_file:
+        es.delete(index=indexed_file['index'])
     else:
-        for chrom in indexed_file["chroms"]:
-            es.delete(
-                index=chrom.lower(), doc_type=indexed_file["assembly"], id=str(uuid)
-            )
+        for chrom in indexed_file['chroms']:
+            es.delete(index=chrom.lower(), doc_type=indexed_file['assembly'], id=str(uuid))
 
         es.delete(index=RESIDENTS_INDEX, doc_type=use_type, id=str(uuid))
-
+        
         return True
 
 
 def file_in_es(uuid, es):
     try:
-        return es.get(
-            index=RESIDENTS_INDEX, id=str(uuid), doc_type=FOR_REGULOME_DB
-        ).get("_source", {})
+        return es.get(index=RESIDENTS_INDEX, id=str(uuid), doc_type=FOR_REGULOME_DB).get('_source', {})
     except NotFoundError:
         return None
     except Exception:
@@ -366,15 +313,11 @@ def file_in_es(uuid, es):
     return None
 
 
-@celery_app.task(
-    bind=True,
-    autoretry_for=(Exception,),
-    retry_kwargs={"max_retries": 5, "countdown": 2},
-)
+@celery_app.task(bind=True, autoretry_for=(Exception,), retry_kwargs={'max_retries': 5, 'countdown': 2})
 def index_file(self, file_, dataset, es_hosts, es_port, force_reindex=False):
     es = Elasticsearch(port=es_port, hosts=es_hosts)
 
-    file_uuid = file_["uuid"]
+    file_uuid = file_['uuid']
 
     indexed_file = file_in_es(file_uuid, es)
 
@@ -388,12 +331,7 @@ def index_file(self, file_, dataset, es_hosts, es_port, force_reindex=False):
 
     return f"File {file_uuid} was indexed via {file_['href']}"
 
-
-@celery_app.task(
-    bind=True,
-    autoretry_for=(Exception,),
-    retry_kwargs={"max_retries": 5, "countdown": 2},
-)
+@celery_app.task(bind=True, autoretry_for=(Exception,), retry_kwargs={'max_retries': 5, 'countdown': 2})
 def index_local_snp_files(self, file_path, file_properties, es_hosts, es_port):
     es = Elasticsearch(port=es_port, hosts=es_hosts)
     id = uuid.uuid4()

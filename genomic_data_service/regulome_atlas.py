@@ -55,14 +55,10 @@ REGDB_NUM_SCORES = [
     100,
 ]
 
-FILE_IC_MATCHED_MAX_PATH_LOCAL = "./ml_models/bigwig_files/IC_matched_max.bw"
-FILE_IC_MAX_PATH_LOCAL = "./ml_models/bigwig_files/IC_max.bw"
-FILE_IC_MATCHED_MAX_PATH_REMOTE = (
-    "https://regulome-ml-models.s3.amazonaws.com/bigwig_files/IC_matched_max.bw"
-)
-FILE_IC_MAX_PATH_REMOTE = (
-    "https://regulome-ml-models.s3.amazonaws.com/bigwig_files/IC_max.bw"
-)
+FILE_IC_MATCHED_MAX_PATH_LOCAL = './ml_models/bigwig_files/IC_matched_max.bw'
+FILE_IC_MAX_PATH_LOCAL = './ml_models/bigwig_files/IC_max.bw'
+FILE_IC_MATCHED_MAX_PATH_REMOTE = "https://regulome-ml-models.s3.amazonaws.com/bigwig_files/IC_matched_max.bw"
+FILE_IC_MAX_PATH_REMOTE = "https://regulome-ml-models.s3.amazonaws.com/bigwig_files/IC_max.bw"
 
 try:
     TRAINED_REG_MODEL = pickle.load(open("./ml_models/rf_model1.0.1.sav", "rb"))
@@ -81,8 +77,8 @@ except RuntimeError:
 
 try:
     if file_IC_max_exists:
-        IC_MAX_BW = pyBigWig.open(FILE_IC_MAX_PATH_LOCAL)
-    else:
+       IC_MAX_BW = pyBigWig.open(FILE_IC_MAX_PATH_LOCAL)
+    else: 
         IC_MAX_BW = pyBigWig.open(FILE_IC_MAX_PATH_REMOTE)
 except RuntimeError:
     IC_MAX_BW = None

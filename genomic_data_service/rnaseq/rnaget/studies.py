@@ -9,7 +9,14 @@ from snosearch.parsers import QueryString
 
 def get_studies(filters=None):
     filters = filters or []
-    qs = QueryString(make_search_request())
-    qs.extend(DATASET_FILTERS + filters)
-    url = f"{BASE_SEARCH_URL}" f"?{qs.get_query_string()}"
+    qs = QueryString(
+        make_search_request()
+    )
+    qs.extend(
+        DATASET_FILTERS + filters
+    )
+    url = (
+        f'{BASE_SEARCH_URL}'
+        f'?{qs.get_query_string()}'
+    )
     return get_json(url)
