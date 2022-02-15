@@ -7,11 +7,15 @@ from genomic_data_service.rnaseq.repository.elasticsearch import Elasticsearch
 from genomic_data_service.rnaseq.remote.portal import Portal
 
 
-HOST = "127.0.0.1:9202"
+HOST = '127.0.0.1:9202'
 
 
 @click.command()
-@click.option("--host", default=HOST, help="Location of Elasticsearch instance.")
+@click.option(
+    '--host',
+    default=HOST,
+    help='Location of Elasticsearch instance.'
+)
 def index_rna_seq_data(host):
     client = Client(host)
     portal = Portal()
@@ -20,5 +24,5 @@ def index_rna_seq_data(host):
     expressions.index()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     index_rna_seq_data()

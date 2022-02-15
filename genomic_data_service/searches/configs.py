@@ -9,8 +9,8 @@ from snosearch.interfaces import SEARCH_CONFIG
 
 configs = [
     {
-        "name": type_["name"],
-        **type_.get("schema", {}),
+        'name': type_['name'],
+        **type_.get('schema', {}),
     }
     for type_ in types
 ]

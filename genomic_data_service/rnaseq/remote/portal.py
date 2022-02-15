@@ -31,8 +31,13 @@ class Portal:
 
     def load_genes(self):
         url = self._get_gene_url()
-        genes = (Gene(props) for props in get_json(url)[AT_GRAPH])
-        self.repositories[GENES] = get_genes_by_ensembl_id(genes)
+        genes = (
+            Gene(props)
+            for props in get_json(url)[AT_GRAPH]
+        )
+        self.repositories[GENES] = get_genes_by_ensembl_id(
+            genes
+        )
 
     def _get_dataset_url(self):
         return self.BASE_URL + SEARCH_PATH + DATASET_PARAMS
@@ -40,7 +45,8 @@ class Portal:
     def load_datasets(self):
         url = self._get_dataset_url()
         self.repositories[DATASETS] = {
-            dataset["@id"]: dataset for dataset in get_json(url)[AT_GRAPH]
+            dataset['@id']: dataset
+            for dataset in get_json(url)[AT_GRAPH]
         }
 
     def _get_file_url(self):
@@ -51,5 +57,6 @@ class Portal:
         self.load_datasets()
         url = self._get_file_url()
         return (
-            RnaSeqFile(props, self.repositories) for props in get_json(url)[AT_GRAPH]
+            RnaSeqFile(props, self.repositories)
+            for props in get_json(url)[AT_GRAPH]
         )

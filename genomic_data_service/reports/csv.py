@@ -2,9 +2,12 @@ import csv
 
 
 class CSVGenerator:
-    def __init__(self, delimiter="\t", lineterminator="\n"):
+
+    def __init__(self, delimiter='\t', lineterminator='\n'):
         self.writer = csv.writer(
-            self, delimiter=delimiter, lineterminator=lineterminator
+            self,
+            delimiter=delimiter,
+            lineterminator=lineterminator
         )
 
     def writerow(self, row):
@@ -12,4 +15,4 @@ class CSVGenerator:
         return self.row
 
     def write(self, row):
-        self.row = row.encode("utf-8")
+        self.row = row.encode('utf-8')
