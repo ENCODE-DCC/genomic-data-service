@@ -30,54 +30,42 @@ from genomic_data_service.searches.constants import RESERVED_KEYS
 
 
 def rnaget_search_quick(search_request):
-    rna_client = search_request.registry['RNA_CLIENT']
+    rna_client = search_request.registry["RNA_CLIENT"]
     fr = FieldedResponse(
-        _meta={
-            'params_parser': ParamsParser(
-                search_request
-            )
-        },
+        _meta={"params_parser": ParamsParser(search_request)},
         response_fields=[
             BasicSearchResponseField(
                 client=rna_client,
                 default_item_types=[
-                    'RNAExpression',
+                    "RNAExpression",
                 ],
                 reserved_keys=RESERVED_KEYS,
             ),
             DebugQueryResponseField(),
-        ]
+        ],
     )
     return fr.render()
 
 
 def rnaget_search(search_request):
-    rna_client = search_request.registry['RNA_CLIENT']
+    rna_client = search_request.registry["RNA_CLIENT"]
     fr = FieldedResponse(
-        _meta={
-            'params_parser': ParamsParser(
-                search_request
-            )
-        },
+        _meta={"params_parser": ParamsParser(search_request)},
         response_fields=[
-            TitleResponseField(
-                title='RNA expression search'
-            ),
-            TypeResponseField(
-                at_type=['RNAExpressionSearch']
-            ),
+            TitleResponseField(title="RNA expression search"),
+            TypeResponseField(at_type=["RNAExpressionSearch"]),
             IDResponseField(),
             CachedFacetsResponseField(
                 client=rna_client,
                 default_item_types=[
-                    'RNAExpression',
+                    "RNAExpression",
                 ],
                 reserved_keys=RESERVED_KEYS,
             ),
             BasicSearchWithoutFacetsResponseField(
                 client=rna_client,
                 default_item_types=[
-                    'RNAExpression',
+                    "RNAExpression",
                 ],
                 default_sort=DEFAULT_RNA_EXPRESSION_SORT,
                 reserved_keys=RESERVED_KEYS,
@@ -88,40 +76,30 @@ def rnaget_search(search_request):
             ClearFiltersResponseField(),
             ColumnsResponseField(),
             SortResponseField(),
-            DebugQueryResponseField()
-        ]
+            DebugQueryResponseField(),
+        ],
     )
     return fr.render()
 
 
 def rnaget_report(search_request):
-    rna_client = search_request.registry['RNA_CLIENT']
+    rna_client = search_request.registry["RNA_CLIENT"]
     fr = FieldedResponse(
-        _meta={
-            'params_parser': ParamsParser(
-                search_request
-            )
-        },
+        _meta={"params_parser": ParamsParser(search_request)},
         response_fields=[
-            TitleResponseField(
-                title='RNA expression report'
-            ),
-            TypeResponseField(
-                at_type=['RNAExpressionReport']
-            ),
+            TitleResponseField(title="RNA expression report"),
+            TypeResponseField(at_type=["RNAExpressionReport"]),
             IDResponseField(),
             CachedFacetsResponseField(
                 client=rna_client,
                 default_item_types=[
-                    'RNAExpression',
+                    "RNAExpression",
                 ],
                 reserved_keys=RESERVED_KEYS,
             ),
             BasicReportWithoutFacetsResponseField(
                 client=rna_client,
-                default_item_types=[
-                    'RNAExpression'
-                ],
+                default_item_types=["RNAExpression"],
                 default_sort=DEFAULT_RNA_EXPRESSION_SORT,
                 reserved_keys=RESERVED_KEYS,
             ),
@@ -131,42 +109,38 @@ def rnaget_report(search_request):
             TypeOnlyClearFiltersResponseField(),
             ColumnsResponseField(),
             SortResponseField(),
-            DebugQueryResponseField()
-        ]
+            DebugQueryResponseField(),
+        ],
     )
     return fr.render()
 
 
 def rna_expression_search_generator(search_request):
-    '''
+    """
     For internal use (no view). Like search_quick but returns raw generator
     of search hits in @graph field.
-    '''
-    rna_client = search_request.registry['RNA_CLIENT']
+    """
+    rna_client = search_request.registry["RNA_CLIENT"]
     fgr = FieldedGeneratorResponse(
-        _meta={
-            'params_parser': ParamsParser(
-                search_request
-            )
-        },
+        _meta={"params_parser": ParamsParser(search_request)},
         response_fields=[
             BasicSearchResponseField(
                 client=rna_client,
                 default_item_types=[
-                    'RNAExpression',
+                    "RNAExpression",
                 ],
                 reserved_keys=RESERVED_KEYS,
                 max_result_window=100000,
                 scan_size=100000,
             )
-        ]
+        ],
     )
     return fgr.render()
 
 
 def rnaget_expression_search(search_request):
     search_request = make_rna_expression_search_request(search_request)
-    return rna_expression_search_generator(search_request)['@graph']
+    return rna_expression_search_generator(search_request)["@graph"]
 
 
 def load_matrix(search_request, matrix_class):

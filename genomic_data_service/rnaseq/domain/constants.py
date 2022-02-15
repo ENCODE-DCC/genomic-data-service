@@ -1,62 +1,60 @@
-AT_ID = '@id'
+AT_ID = "@id"
 
-AT_TYPE = '@type'
+AT_TYPE = "@type"
 
-BASE_PATH = '/tmp/'
+BASE_PATH = "/tmp/"
 
-DATASET = 'dataset'
+DATASET = "dataset"
 
-DATASETS = 'datasets'
+DATASETS = "datasets"
 
 DATASET_FIELDS = [
-    '@id',
-    'biosample_summary',
-    'replicates',
+    "@id",
+    "biosample_summary",
+    "replicates",
 ]
 
-DOMAIN = 'https://www.encodeproject.org'
+DOMAIN = "https://www.encodeproject.org"
 
-DOCUMENT_PREFIX = 'embedded'
+DOCUMENT_PREFIX = "embedded"
 
-ENSEMBL_PREFIX = 'ENSEMBL:'
+ENSEMBL_PREFIX = "ENSEMBL:"
 
-EXPRESSION_AT_TYPE = ['RNAExpression', 'Item']
+EXPRESSION_AT_TYPE = ["RNAExpression", "Item"]
 
-EXPRESSION_ID = 'expression_id'
+EXPRESSION_ID = "expression_id"
 
-FILE = 'file'
+FILE = "file"
 
-FILES = 'files'
+FILES = "files"
 
 FILE_FIELDS = [
-     '@id',
-    'assay_title',
-    'assembly',
-    'biosample_ontology',
-    'dataset',
-    'donors',
-    'genome_annotation',
+    "@id",
+    "assay_title",
+    "assembly",
+    "biosample_ontology",
+    "dataset",
+    "donors",
+    "genome_annotation",
 ]
 
-GENES = 'genes'
+GENES = "genes"
 
 GENE_FIELDS = [
-    '@id',
-    'geneid',
-    'name',
-    'symbol',
-    'synonyms',
-    'title',
+    "@id",
+    "geneid",
+    "name",
+    "symbol",
+    "synonyms",
+    "title",
 ]
 
-EXPRESSION_INDEX = 'rna-expression'
+EXPRESSION_INDEX = "rna-expression"
 
-EXPRESSION_DOC_TYPE = 'rna-expression'
+EXPRESSION_DOC_TYPE = "rna-expression"
 
 INDEXING_FIELDS = {
-    '_index': EXPRESSION_INDEX,
-    '_type': EXPRESSION_DOC_TYPE,
-    'principals_allowed': {
-        'view': ['system.Everyone']
-    }
+    "_index": EXPRESSION_INDEX,
+    "_type": EXPRESSION_DOC_TYPE,
+    "principals_allowed": {"view": ["system.Everyone"]},
 }
