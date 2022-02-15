@@ -101,8 +101,6 @@ $ mssh ubuntu@i-foobarbaz123 --profile regulome --region us-west-2
     On the main machine:
     ```
     $ sudo systemctl daemon-reload
-    $ sudo service celery start
-    $ sudo service flower start
     $ sudo service genomic start
     $ chmod 777 /home/ubuntu/genomic-data-service/genomic.sock
     $ sudo service nginx restart
