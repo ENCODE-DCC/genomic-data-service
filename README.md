@@ -71,6 +71,13 @@ A production grade data services deployment consists of three machines:
 * Regulome search ES
 * ENCODED region-search ES
 
+### Connecting to the instances
+
+The instances have EC2 Instance Connect installed. You need to [install](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-connect-set-up.html) it to connect to the instances. Assume the instance-id of the instance you want to connect to is `i-foobarbaz123`. You would connect this instance with command:
+```
+$ mssh ubuntu@i-foobarbaz123 --profile regulome --region us-west-2
+```
+
 1. Deploy the machines. Make sure you have activated the virtual environment created above.:
     ```
     $ python deploy/deploy.py -b <branch> -n <data-service-name>  --profile-name regulome --instance-type r5.2xlarge --volume-size 500
