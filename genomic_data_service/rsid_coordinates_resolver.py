@@ -35,7 +35,7 @@ def ensembl_assembly_mapper(location, species, input_assembly, output_assembly):
 
 
 def get_ensemblid_coordinates(id, assembly):
-    species = GENOME_TO_ALIAS[assembly]
+    species = GENOME_TO_SPECIES.get(assembly, "homo_sapiens")
     url = '{ensembl}lookup/id/{id}?content-type=application/json'.format(
         ensembl=ENSEMBL_URL,
         id=id
@@ -58,8 +58,10 @@ def get_ensemblid_coordinates(id, assembly):
             return('chr' + chromosome, start, end)
         elif assembly == 'GRCh37':
             return ensembl_assembly_mapper(location, species, 'GRCh38', assembly)
-        elif assembly == 'GRCm37':
-            return ensembl_assembly_mapper(location, species, 'GRCm38', 'NCBIM37')
+        elif assembly == "GRCm38":
+            return ensembl_assembly_mapper(location, species, "GRCm39", assembly)
+        elif assembly == "GRCm37":
+            return ensembl_assembly_mapper(location, species, "GRCm39", "NCBIM37")
         else:
             return ('', '', '')
 
@@ -100,9 +102,6 @@ def get_rsid_coordinates_from_ensembl(assembly, rsid):
                 return('chr' + chromosome, int(start) - 1, int(end))
             elif assembly == 'GRCh37':
                 return ensembl_assembly_mapper(mapping['location'], species, 'GRCh38', assembly)
-            elif assembly == 'GRCm37':
-                return ensembl_assembly_mapper(mapping['location'], species, 'GRCm38', 'NCBIM37')
-
     return ('', '', '',)
     
 
@@ -351,50 +350,3 @@ def resolve_relative_hrefs(obj, obj_type=''):
     if obj_type == 'biosample_ontology':
         obj['@id'] = path + obj['@id']
         return obj
-
-
-def score_regions(variants, es, atlas, assembly):
-    if result['format'] in ['tsv', 'bed']:
-        table = []
-
-    timings = []
-        
-    for variant in result['variants']:
-        begin = time.time()
-        chrom = variant['chrom']
-        start = variant['start']
-        end = variant['end']
-        # parse_region_query makes sure variants returned are all scorable
-
-        try:
-            all_hits = region_get_hits(atlas, assembly, chrom, start, end)
-            evidence = atlas.regulome_evidence(all_hits['datasets'], chrom, int(start), int(end))
-            regulome_score = atlas.regulome_score(all_hits['datasets'], evidence)
-            features = evidence_to_features(evidence)
-        except Exception as e:
-            features = {}
-            regulome_score = {}
-            raise e # testing
-
-        if result['format'] in ['tsv', 'bed']:
-            if not table:
-                columns = ['chrom', 'start', 'end', 'rsids']
-                columns.extend(sorted(regulome_score.keys()))
-                columns.extend(sorted(features.keys()))
-                if result['format'] == 'tsv':
-                    table.append('\t'.join(columns).encode())
-            row = [chrom, start, end, ', '.join(variant['rsids'])]
-            row.extend([
-                str(features.get(col, '')) or str(regulome_score.get(col, ''))
-                for col in columns
-                if col in regulome_score or col in features
-            ])
-            table.append('\t'.join(row).encode())
-            continue
-        else:
-            variant['features'] = features
-            variant['regulome_score'] = regulome_score
-        timings.append(
-            {'{}:{}-{}'.format(chrom, start, end): (time.time() - begin)}
-        )
-

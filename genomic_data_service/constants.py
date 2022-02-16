@@ -9,6 +9,10 @@ GENOME_TO_ALIAS = {
 GENOME_TO_SPECIES = {
     "GRCh37": "homo_sapiens",
     "GRCh38": "homo_sapiens",
+    "GRCm39": "mouse",
+    "GRCm38": "mouse",
+    "GRCm37": "mouse",
+    "NCBIM37": "mouse",
 }
 
 ENSEMBL_URL = "http://rest.ensembl.org/"
