@@ -663,3 +663,257 @@ def test_regulome_summary_tsv(test_client):
     )
     assert response.status_code == 200
     assert response.headers["Content-Type"] == "text/tsv"
+
+
+def test_regulome_search_total_1(test_client):
+    response = test_client.get("search/?regions=rs10823321&genome=GRCh37")
+    assert response.status_code == 200
+    res = response.json
+    assert res["query_coordinates"] == ["chr10:70989269-70989270"]
+    assert res["assembly"] == "GRCh37"
+    assert res["total"] == 1
+
+
+def test_regulome_search_total_0(test_client):
+    response = test_client.get("search/?regions=rs56116432&genome=GRCh37")
+    assert response.status_code == 200
+    res = response.json
+    assert res["query_coordinates"] == []
+    assert res["assembly"] == "GRCh37"
+    assert res["total"] == 0
+
+
+res = {
+    "@context": "/terms/",
+    "@id": "/search/?regions=rs56116432&genome=GRCh37",
+    "@type": ["search"],
+    "assembly": "GRCh37",
+    "format": "json",
+    "from": 0,
+    "notifications": {
+        "Failed": "Received 0 region queries. Exact one region or one variant can be processed by regulome-search"
+    },
+    "query_coordinates": [],
+    "timing": [{"parse_region_query": 0.0012068748474121094}],
+    "title": "Genomic Region Search",
+    "total": 0,
+    "variants": [],
+}
+res = {
+    "@context": "/terms/",
+    "@graph": [
+        {
+            "biosample_ontology": {
+                "@id": "https://www.encodeproject.org/biosample-types/cell_line_CLO_0016536/",
+                "@type": ["BiosampleType", "Item"],
+                "aliases": [],
+                "cell_slims": ["fibroblast"],
+                "classification": "cell line",
+                "dbxrefs": ["Cellosaurus:CVCL_7382"],
+                "developmental_slims": ["ectoderm"],
+                "name": "cell_line_CLO_0016536",
+                "organ_slims": ["connective tissue", "skin of body"],
+                "references": [],
+                "schema_version": "1",
+                "status": "released",
+                "synonyms": ["GM03348"],
+                "system_slims": ["integumental system"],
+                "term_id": "CLO:0016536",
+                "term_name": "GM03348",
+                "uuid": "d7a0d846-9744-423b-a6a3-1d1c9b82361e",
+            },
+            "chrom": "chr10",
+            "dataset": "https://www.encodeproject.org/experiments/ENCSR000EIT/",
+            "dataset_rel": "/experiments/ENCSR000EIT/",
+            "documents": [],
+            "end": 70989345,
+            "file": "ENCFF760LBY",
+            "method": "DNase-seq",
+            "start": 70989195,
+            "strand": ".",
+            "targets": [],
+            "value": "72",
+        }
+    ],
+    "@id": "/search/?regions=rs10823321&genome=GRCh37",
+    "@type": ["search"],
+    "assembly": "GRCh37",
+    "features": {
+        "ChIP": False,
+        "DNase": True,
+        "Footprint": False,
+        "Footprint_matched": False,
+        "IC_matched_max": 1.7799999713897705,
+        "IC_max": 1.7799999713897705,
+        "PWM": False,
+        "PWM_matched": False,
+        "QTL": False,
+    },
+    "format": "json",
+    "from": 0,
+    "nearby_snps": [
+        {
+            "alt_allele_freq": {"A": {"TOPMED": 7.964e-06}},
+            "chrom": "chr10",
+            "coordinates": {"gte": 70989245, "lt": 70989246},
+            "maf": 7.964e-06,
+            "ref_allele_freq": {"G": {"TOPMED": 1.0}},
+            "rsid": "rs1187109723",
+        },
+        {
+            "alt_allele_freq": {
+                "A": {
+                    "1000Genomes": 0.0007987,
+                    "GnomAD": 3.187e-05,
+                    "TOPMED": 3.982e-05,
+                }
+            },
+            "chrom": "chr10",
+            "coordinates": {"gte": 70989254, "lt": 70989255},
+            "maf": 0.0007987,
+            "ref_allele_freq": {
+                "G": {"1000Genomes": 0.9992, "GnomAD": 1.0, "TOPMED": 1.0}
+            },
+            "rsid": "rs539492586",
+        },
+        {
+            "alt_allele_freq": {"T": {"TOPMED": 7.964e-06}},
+            "chrom": "chr10",
+            "coordinates": {"gte": 70989262, "lt": 70989263},
+            "maf": 7.964e-06,
+            "ref_allele_freq": {"C": {"TOPMED": 1.0}},
+            "rsid": "rs1203619109",
+        },
+        {
+            "alt_allele_freq": {
+                "C": {
+                    "1000Genomes": 0.01118,
+                    "ALSPAC": 0.0005189,
+                    "GnomAD": 0.007363,
+                    "TOPMED": 0.008362,
+                    "TWINSUK": 0.0,
+                }
+            },
+            "chrom": "chr10",
+            "coordinates": {"gte": 70989273, "lt": 70989274},
+            "maf": 0.01118,
+            "ref_allele_freq": {
+                "T": {
+                    "1000Genomes": 0.9888,
+                    "ALSPAC": 0.9995,
+                    "GnomAD": 0.9926,
+                    "TOPMED": 0.9916,
+                    "TWINSUK": 1.0,
+                }
+            },
+            "rsid": "rs115400561",
+        },
+        {
+            "alt_allele_freq": {"G": {"TOPMED": 7.964e-06}, "T": {"TOPMED": 1.593e-05}},
+            "chrom": "chr10",
+            "coordinates": {"gte": 70989283, "lt": 70989284},
+            "maf": 1.593e-05,
+            "ref_allele_freq": {"A": {"TOPMED": 1.0}},
+            "rsid": "rs1014437528",
+        },
+        {
+            "alt_allele_freq": {
+                "T": {
+                    "1000Genomes": 0.0001997,
+                    "ALSPAC": 0.0002595,
+                    "GnomAD": 3.185e-05,
+                    "TOPMED": 0.0001195,
+                    "TWINSUK": 0.0,
+                }
+            },
+            "chrom": "chr10",
+            "coordinates": {"gte": 70989234, "lt": 70989235},
+            "maf": 0.0002595,
+            "ref_allele_freq": {
+                "C": {
+                    "1000Genomes": 0.9998,
+                    "ALSPAC": 0.9997,
+                    "GnomAD": 1.0,
+                    "TOPMED": 0.9999,
+                    "TWINSUK": 1.0,
+                }
+            },
+            "rsid": "rs185797602",
+        },
+        {
+            "alt_allele_freq": {"G": {"TOPMED": 7.964e-06}},
+            "chrom": "chr10",
+            "coordinates": {"gte": 70989255, "lt": 70989256},
+            "maf": 7.964e-06,
+            "ref_allele_freq": {"GA": {"TOPMED": 1.0}},
+            "rsid": "rs1258348810",
+        },
+        {
+            "alt_allele_freq": {"C": {"GnomAD": 3.185e-05}},
+            "chrom": "chr10",
+            "coordinates": {"gte": 70989264, "lt": 70989265},
+            "maf": 3.185e-05,
+            "ref_allele_freq": {"G": {"GnomAD": 1.0}},
+            "rsid": "rs1436649807",
+        },
+        {
+            "alt_allele_freq": {
+                "A": {
+                    "1000Genomes": 0.1743,
+                    "ALSPAC": 0.1116,
+                    "Estonian": 0.1049,
+                    "GnomAD": 0.1655,
+                    "NorthernSweden": 0.1233,
+                    "TOPMED": 0.1717,
+                    "TWINSUK": 0.09763,
+                    "Vietnamese": 0.1215,
+                }
+            },
+            "chrom": "chr10",
+            "coordinates": {"gte": 70989269, "lt": 70989270},
+            "maf": 0.1743,
+            "ref_allele_freq": {
+                "G": {
+                    "1000Genomes": 0.8257,
+                    "ALSPAC": 0.8884,
+                    "Estonian": 0.8951,
+                    "GnomAD": 0.8345,
+                    "NorthernSweden": 0.8767,
+                    "TOPMED": 0.8283,
+                    "TWINSUK": 0.9024,
+                    "Vietnamese": 0.8785,
+                }
+            },
+            "rsid": "rs10823321",
+        },
+        {
+            "alt_allele_freq": {"A": {"GnomAD": 3.186e-05}},
+            "chrom": "chr10",
+            "coordinates": {"gte": 70989279, "lt": 70989280},
+            "maf": 3.186e-05,
+            "ref_allele_freq": {"G": {"GnomAD": 1.0}},
+            "rsid": "rs1056321941",
+        },
+        {
+            "alt_allele_freq": {"A": {"TOPMED": 2.389e-05}, "T": {"TOPMED": 3.186e-05}},
+            "chrom": "chr10",
+            "coordinates": {"gte": 70989281, "lt": 70989282},
+            "maf": 3.186e-05,
+            "ref_allele_freq": {"G": {"TOPMED": 0.9999}},
+            "rsid": "rs894637399",
+        },
+    ],
+    "notifications": {},
+    "query_coordinates": ["chr10:70989269-70989270"],
+    "regulome_score": {"probability": "0.31478", "ranking": "5"},
+    "timing": [
+        {"parse_region_query": 0.0023512840270996094},
+        {"regulome_search_scoring": 0.007071018218994141},
+        {"nearby_snps": 0.0013339519500732422},
+    ],
+    "title": "Genomic Region Search",
+    "total": 1,
+    "variants": [
+        {"chrom": "chr10", "end": 70989270, "rsids": ["rs10823321"], "start": 70989269}
+    ],
+}
