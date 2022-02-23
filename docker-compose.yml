@@ -19,5 +19,5 @@ services:
       - "./config/log4j2.properties:/usr/share/elasticsearch/config/log4j2.properties"
       - "./config/jvm.options:/usr/share/elasticsearch/config/jvm.options"
     ports:
-      - 9200:9200
+      - 9201:9200
       - 9300:9300
