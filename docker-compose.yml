@@ -21,3 +21,11 @@ services:
     ports:
       - 9201:9200
       - 9300:9300
+
+  genomic_data_service:
+    build:
+      context: .
+      dockerfile: ./docker_compose/data-service/Dockerfile
+    depends_on:
+      - elasticsearch
+    command: sleep 600
