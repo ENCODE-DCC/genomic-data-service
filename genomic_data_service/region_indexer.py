@@ -258,7 +258,7 @@ def fetch_datasets(files, datasets):
 
     for f in files:
         accession = dataset_accession(f)
-        if accession in datasets:
+        if accession in fetch:
             continue
 
         fetch.append(accession)
