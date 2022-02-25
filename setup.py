@@ -21,7 +21,7 @@ setup(
         'redis',
         'celery==4.4.6',
         'flower==0.9.4',
-        'snovault-search==1.0.2',
+        'snovault-search==1.0.5',
         'sqlalchemy==1.3.22',
         'psycopg2',
     ],
