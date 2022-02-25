@@ -5,6 +5,7 @@ setup(
     packages=["genomic_data_service"],
     include_package_data=True,
     install_requires=[
+        'itsdangerous==2.0.1',
         'click==8.0.1',
         'Werkzeug==2.0.1',
         'Flask==2.0.1',

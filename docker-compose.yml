@@ -28,4 +28,8 @@ services:
       dockerfile: ./docker_compose/data-service/Dockerfile
     depends_on:
       - elasticsearch
-    command: sleep 600
+    environment:
+      - GENOMIC_DATA_SERVICE_SETTINGS=/opt/genomic_data_service/config/docker.cfg
+    ports:
+      - 5000:5000
+    command: make run
