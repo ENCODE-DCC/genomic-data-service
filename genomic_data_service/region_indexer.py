@@ -36,8 +36,7 @@ SUPPORTED_CHROMOSOMES = [
 ]
 
 ENCODE_DOMAIN = "https://www.encodeproject.org"
-REGULOME_ENCODE_ACCESSIONS_MAPPING_PATH = "regulome_encode_accessions_mapping.pickle"
-REGULOME_ACCESSIONS_PATH = "regulome_accessions.pickle"
+ENCODE_ACCESSIONS_HG19_PATH = "file_accessions_hg19.pickle"
 ENCODE_SNP = ["ENCFF904UCL", "ENCFF578KDT"]
 SUPPORTED_ASSEMBLIES = ["hg19", "GRCh38"]
 REGULOME_ALLOWED_STATUSES = ["released", "archived"]
@@ -274,9 +273,7 @@ def fetch_datasets(files, datasets):
         fetch_documents(dataset)
         datasets[dataset["accession"]] = dataset
 
-
 def index_regulome_db(encode_accessions, local_files, filter_files=False):
-
     datasets = {}
     per_request = 350
     chunks = [
@@ -331,11 +328,24 @@ if __name__ == "__main__":
     encode_accessions = None
     local_files = []
     if not is_local_install:
-        regulome_encode_accessions = pickle.load(
-            open(REGULOME_ENCODE_ACCESSIONS_MAPPING_PATH, "rb")
-        )
-        regulome_accessions = list(pickle.load(open(REGULOME_ACCESSIONS_PATH, "rb")))
-        encode_accessions = [regulome_encode_accessions[reg] for reg in regulome_accessions]
+        # get file accessions for all the files using hg19 and two reference SNPs files from pickle
+        encode_accessions = list(pickle.load(open(ENCODE_ACCESSIONS_HG19_PATH, "rb")))
+
+        # get files in experiment TF ChIP-seq and DNase-seq using assembly GRCh38
+        endpoint = "https://www.encodeproject.org/search/?type=Experiment&control_type!=*&status=released&assay_title=TF+ChIP-seq&assay_title=DNase-seq&replicates.library.biosample.donor.organism.scientific_name=Homo+sapiens&assembly=GRCh38&field=files&field=default_analysis&format=json&limit=all"
+        experiments = requests.get(endpoint).json()["@graph"]
+        
+        for experiment in experiments:   
+            files = experiment.get("files", [])
+            default_analysis_id = experiment["default_analysis"]
+            for file in files:
+                if (
+                    "preferred_default" in file
+                    and file["preferred_default"] == True
+                    and file["file_format"] == "bed"
+                    and file["analyses"][0]["@id"] == default_analysis_id
+                ):
+                    encode_accessions.append(file["accession"])
     else:
         encode_accessions = list(pickle.load(open(TEST_ENCODE_ACCESSIONS_PATH, "rb")))
         local_file = {
