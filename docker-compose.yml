@@ -33,3 +33,12 @@ services:
     ports:
       - 5000:5000
     command: make run
+
+  nginx:
+    image: nginx:1.21.4 
+    depends_on:
+      - genomic_data_service
+    volumes:
+      - "./config/nginx-docker.conf:/etc/nginx/nginx.conf"
+    ports:
+      - 80:80

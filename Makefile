@@ -8,7 +8,7 @@ build:
 	python3 ./utils/download_ml_models.py
 
 run:
-	FLASK_APP=$(APP_NAME) FLASK_ENV=development flask run --host=0.0.0.0 -p 5000
+	FLASK_APP=$(APP_NAME) FLASK_ENV=development gunicorn --bind 0.0.0.0:5000 wsgi:app
 
 clean:
 	rm -rf genomic_data_service.egg-info/
