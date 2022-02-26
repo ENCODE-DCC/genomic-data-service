@@ -17,3 +17,5 @@ RUN pip install -r requirements.txt
 WORKDIR /opt/genomic_data_service
 
 COPY . .
+
+EXPOSE 5000
