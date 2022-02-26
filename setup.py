@@ -7,7 +7,7 @@ setup(
     install_requires=[
         'click==8.0.1',
         'Werkzeug==2.0.1',
-        'Flask==1.1.2',
+        'Flask==2.0.1',
         'Flask-SQLAlchemy',
         'Flask-Migrate',
         'Flask-Script',
@@ -21,7 +21,7 @@ setup(
         'redis',
         'celery==4.4.6',
         'flower==0.9.4',
-        'snovault-search==1.0.2',
+        'snovault-search==1.0.5',
         'sqlalchemy==1.3.22',
         'psycopg2',
     ],
