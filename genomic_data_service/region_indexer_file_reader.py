@@ -117,7 +117,7 @@ class SnpFileReader(FileReader):
                 snp_doc['maf'] = max(alt_allele_freqs)
         return (chrom, snp_doc)
 
-class BedFileReader(FileReader):
+class RegionFileReader(FileReader):
     def parse(self):
         value_col  = self.strand_values.get('value_col')
         strand_col = self.strand_values.get('strand_col')

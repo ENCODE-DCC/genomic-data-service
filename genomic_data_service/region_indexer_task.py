@@ -3,7 +3,7 @@ from elasticsearch import Elasticsearch
 from elasticsearch.exceptions import NotFoundError
 from elasticsearch.helpers import bulk
 
-from genomic_data_service.region_indexer_file_reader import SnpFileReader, BedFileReader
+from genomic_data_service.region_indexer_file_reader import SnpFileReader, RegionFileReader
 from genomic_data_service.constants import DATASET
 import uuid
 
@@ -138,7 +138,7 @@ def index_regions_from_file(es, uuid, file_properties, dataset, snp=False):
     file_data = {}
     chroms = []
     if not is_snp_reference:
-        readable_file = BedFileReader(file_path, regulome_strand, file_size)
+        readable_file = RegionFileReader(file_path, regulome_strand, file_size)
     else:
         readable_file = SnpFileReader(file_path, regulome_strand, file_size)
 

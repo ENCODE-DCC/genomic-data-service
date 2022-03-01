@@ -1,5 +1,5 @@
 import pytest
-from genomic_data_service.region_indexer_file_reader import FileReader, BedFileReader, SnpFileReader
+from genomic_data_service.region_indexer_file_reader import FileReader, RegionFileReader, SnpFileReader
 
 
 def test_file_reader(bed_file):
@@ -50,7 +50,7 @@ def test_close(bed_file):
 def test_parse(bed_file):
     file_size = bed_file.get('file_size', 0)
     file_path = bed_file['s3_uri']
-    reader = BedFileReader(file_path, {}, file_size)
+    reader = RegionFileReader(file_path, {}, file_size)
     doc_dict = list(reader.parse())
     assert len(doc_dict) == 300000
 
@@ -76,7 +76,7 @@ def test_snp_local():
 def test_region(bed_file, value_strand_col_chip_seq):
     file_size = bed_file.get('file_size', 0)
     file_path = bed_file['s3_uri']
-    reader = BedFileReader(file_path, value_strand_col_chip_seq, file_size)
+    reader = RegionFileReader(file_path, value_strand_col_chip_seq, file_size)
     docs = list(reader.parse())
     (chrom, doc) = docs[0]
     assert chrom == "chr12"
