@@ -10,13 +10,17 @@ from urllib.parse import urlparse
 MAX_IN_MEMORY_FILE_SIZE = (25 * 1024 * 1024)
 
 
-class S3BedFileRemoteReader():
-    def __init__(self, file_properties, strand_col_values, snp_set=False):
-        self.file_properties = file_properties
+class FileReader():
+    def __init__(self, file_path, strand_col_values={}, file_size=0, source="s3"):
+        self.file_size = file_size
+        self.file_path = file_path
         self.temp_file = tempfile.NamedTemporaryFile()
-        self.snp_set = snp_set
         self.strand_values = strand_col_values
-        self.data = self.download_file_from_s3()
+        self.data = None
+        if source == "s3":
+            self.data = self.download_file_from_s3()
+        elif source == "local":
+            self.data = gzip.open(self.file_path, mode='rt')
 
 
     def close(self):
@@ -25,16 +29,16 @@ class S3BedFileRemoteReader():
 
 
     def should_load_file_in_memory(self):
-        if self.file_properties.get('file_size', 0) == 0:
+        if self.file_size == 0:
             return False
 
-        return self.file_properties.get('file_size', 0) <= MAX_IN_MEMORY_FILE_SIZE
+        return self.file_size <= MAX_IN_MEMORY_FILE_SIZE
 
 
     def download_file_from_s3(self):
         config = Config(region_name='us-west-2', retries={'max_attempts': 2})
         s3 = boto3.client('s3', config=config)
-        href = self.file_properties['s3_uri']
+        href = self.file_path
 
         parsed_href = urlparse(href, allow_fragments=False)
         s3_bucket = parsed_href.netloc
@@ -54,52 +58,19 @@ class S3BedFileRemoteReader():
             return gzip.open(self.temp_file, mode='rt')
 
 
+class SnpFileReader(FileReader):
     def parse(self):
-        value_col  = self.strand_values.get('value_col')
-        strand_col = self.strand_values.get('strand_col')
-
         reader = csv.reader(self.data, delimiter='\t')
         for row in reader:
             if row[0].startswith('#'):
                 continue
-
-            try:
-                if self.snp_set:
-                    (chrom, doc) = self.snp(row)
-                else:
-                    (chrom, doc) = self.region(row, value_col=value_col, strand_col=strand_col)
+            try:               
+                (chrom, doc) = self.snp(row)               
             except Exception:
                 logger.error('%s - failure to parse row %s:%s:%s, skipping row',
-                          self.file_properties['s3_uri'], row[0], row[1], row[2])
+                        self.file_path, row[0], row[1], row[2])
                 continue
-
             yield (chrom, doc)
-
-
-    def region(self, row, value_col=None, strand_col=None):
-        chrom, start, end = row[0], int(row[1]), int(row[2])
-        doc = {
-            'coordinates': {
-                'gte': start,
-                'lt': end
-            },
-        }  # Stored as BED 0-based half open
-        if value_col and value_col < len(row):
-            doc['value'] = row[value_col]
-        if strand_col:
-            # Some PWMs annotation doesn't have strand info
-            if strand_col < len(row) and row[strand_col] in ['.', '+', '-']:
-                doc['strand'] = row[strand_col]
-            # Temporary hack for Footprint data
-            elif (
-                strand_col - 1 < len(row)
-                and row[strand_col - 1] in ['.', '+', '-']
-            ):
-                doc['strand'] = row[strand_col - 1]
-            else:
-                doc['strand'] = '.'
-        return (chrom, doc)
-
 
     def snp(self, row):
         chrom, start, end, rsid = row[0], int(row[1]), int(row[2]), row[3]
@@ -145,3 +116,49 @@ class S3BedFileRemoteReader():
             if alt_allele_freqs:
                 snp_doc['maf'] = max(alt_allele_freqs)
         return (chrom, snp_doc)
+
+class BedFileReader(FileReader):
+    def parse(self):
+        value_col  = self.strand_values.get('value_col')
+        strand_col = self.strand_values.get('strand_col')
+
+        reader = csv.reader(self.data, delimiter='\t')
+        for row in reader:
+            if row[0].startswith('#'):
+                continue
+
+            try:
+                (chrom, doc) = self.region(row, value_col=value_col, strand_col=strand_col)
+            except Exception:
+                logger.error('%s - failure to parse row %s:%s:%s, skipping row',
+                          self.file_path, row[0], row[1], row[2])
+                continue
+
+            yield (chrom, doc)
+
+
+    def region(self, row, value_col=None, strand_col=None):
+        chrom, start, end = row[0], int(row[1]), int(row[2])
+        doc = {
+            'coordinates': {
+                'gte': start,
+                'lt': end
+            },
+        }  # Stored as BED 0-based half open
+        if value_col and value_col < len(row):
+            doc['value'] = row[value_col]
+        if strand_col:
+            # Some PWMs annotation doesn't have strand info
+            if strand_col < len(row) and row[strand_col] in ['.', '+', '-']:
+                doc['strand'] = row[strand_col]
+            # Temporary hack for Footprint data
+            elif (
+                strand_col - 1 < len(row)
+                and row[strand_col - 1] in ['.', '+', '-']
+            ):
+                doc['strand'] = row[strand_col - 1]
+            else:
+                doc['strand'] = '.'
+        return (chrom, doc)
+
+
