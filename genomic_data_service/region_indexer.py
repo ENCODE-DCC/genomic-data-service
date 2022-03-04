@@ -47,14 +47,14 @@ SUPPORTED_CHROMOSOMES = [
 
 ENCODE_DOMAIN = "https://www.encodeproject.org"
 REGULOME_ENCODE_ACCESSIONS_MAPPING_PATH = "regulome_encode_accessions_mapping.pickle"
-REGULOME_ACCESSIONS_PATH = "regulome_accessions_subsampled100.pickle"
+REGULOME_ACCESSIONS_PATH = "regulome_accessions.pickle"
 ENCODE_SNP = ["ENCFF904UCL", "ENCFF578KDT"]
 SUPPORTED_ASSEMBLIES = ["hg19", "GRCh38"]
 REGULOME_ALLOWED_STATUSES = ["released", "archived"]
 REGULOME_COLLECTION_TYPES = ["assay_term_name", "annotation_type", "reference_type"]
 REGULOME_DATASET_TYPES = ["Experiment", "Annotation", "Reference"]
-TEST_SNP_FILE = "snp.bed.gz"
-TEST_ENCODE_ACCESSIONS_PATH = "encode_accessions.pickle"
+TEST_SNP_FILE = "snp_for_local_install.bed.gz"
+TEST_ENCODE_ACCESSIONS_PATH = "encode_accessions_for_local_install.pickle"
 
 REGULOME_REGION_REQUIREMENTS = {
     "chip-seq": {
