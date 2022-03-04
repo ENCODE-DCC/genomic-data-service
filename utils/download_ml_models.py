@@ -1,37 +1,48 @@
 import os
 import boto3
+from pathlib import Path
 
 BUCKET_NAME = 'regulome-ml-models'
 OBJECT_NAMES = ['rf_model1.0.1.sav', 'bigwig_files/IC_matched_max.bw', 'bigwig_files/IC_max.bw']
-LOCAL_PATH = './ml_models/'
+LOCAL_DIR = Path('./ml_models/')
+BIGWIG_DIR = LOCAL_DIR.joinpath('bigwig_files')
+OBJECT_PATHS = [LOCAL_DIR.joinpath(path) for path in OBJECT_NAMES]
+PATH_TO_S3_KEY = {Path('./ml_models/rf_model1.0.1.sav'): 'rf_model1.0.1.sav',
+                  Path('./ml_models/bigwig_files/IC_matched_max.bw'): 'bigwig_files/IC_matched_max.bw',
+                  Path('./ml_models/bigwig_files/IC_max.bw'): 'bigwig_files/IC_max.bw'}
 
 
-def create_ml_directory():
-    os.mkdir(LOCAL_PATH)
-    os.mkdir(LOCAL_PATH + 'bigwig_files')
+def create_directories(dirs):
+    '''
+    Create directories if they don't already exist.
+    dirs: iterable of Path objects
+    '''
+    for directory in dirs:
+        if not directory.exists():
+            directory.mkdir()
 
-def models_to_download():
-    if not os.path.isdir(LOCAL_PATH):
-        create_ml_directory()
-        return OBJECT_NAMES
-
+def models_to_download(paths_to_check):
+    '''
+    Check paths and return ones that do not exist.
+    paths_to_check: iterable of Path objects
+    returns: list of Path objects
+    '''
     needs_downloading = []
-    for filename in OBJECT_NAMES:
-        if not os.path.isfile(LOCAL_PATH + filename):
-            needs_downloading.append(filename)
-
+    for path in paths_to_check:
+        if not path.exists():
+            needs_downloading.append(path)
     return needs_downloading
 
 def download_models(needs_downloading):
     s3 = boto3.client('s3')
-
-    for filename in needs_downloading:
-        with open(LOCAL_PATH + filename, 'wb+') as f:
-            print("Downloading " + filename + " ...")
-            s3.download_fileobj(BUCKET_NAME, filename, f)
+    for file_ in needs_downloading:
+        with open(file_, 'wb+') as f:
+            print("Downloading " + str(file_) + " ...")
+            s3.download_fileobj(BUCKET_NAME, PATH_TO_S3_KEY[file_], f)
 
 def main():
-    needs_downloading = models_to_download()
+    create_directories([LOCAL_DIR, BIGWIG_DIR])
+    needs_downloading = models_to_download(OBJECT_PATHS)
 
     if len(needs_downloading) == 0:
         print("ML models already downloaded.")
