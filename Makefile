@@ -31,3 +31,6 @@ flower:
 index:
 	python3 genomic_data_service/region_indexer.py
 
+index_local:
+	python3 genomic_data_service/region_indexer.py --local
+

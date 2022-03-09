@@ -2,13 +2,11 @@ from genomic_data_service.region_indexer_task import index_file, index_local_snp
 from genomic_data_service.region_indexer_elastic_search import (
     RegionIndexerElasticSearch,
 )
-
 import requests
 import pickle
-
 from os import environ
-
-from genomic_data_service.constants import FILE_CH38, FILE_HG19
+from genomic_data_service.constants import FILE_HG19
+import argparse
 
 
 if "ES" in environ:
@@ -114,7 +112,13 @@ DATASET_REQUIRED_FIELDS = [
     "documents",
     "status",
 ]
+parser = argparse.ArgumentParser(
+    description = "indexing files for genomic data service."
+)
 
+parser.add_argument(
+    "--local", action='store_true',
+    help = "Index a small number of files for local install")
 
 def clean_up(obj, fields):
     clean_obj = {}
@@ -270,23 +274,14 @@ def fetch_datasets(files, datasets):
         datasets[dataset["accession"]] = dataset
 
 
-def index_regulome_db(filter_files=False):
-
-    regulome_encode_accessions = pickle.load(
-        open(REGULOME_ENCODE_ACCESSIONS_MAPPING_PATH, "rb")
-    )
-    regulome_accessions = list(pickle.load(open(REGULOME_ACCESSIONS_PATH, "rb")))
-
-    encode_accessions = [regulome_encode_accessions[reg] for reg in regulome_accessions]
+def index_regulome_db(encode_accessions, local_files, filter_files=False):
 
     datasets = {}
-
     per_request = 350
     chunks = [
         encode_accessions[i : i + per_request]
         for i in range(0, len(encode_accessions), per_request)
     ]
-
     i = 0
     print_progress_bar(i, len(chunks))
     for chunk in chunks:
@@ -314,45 +309,9 @@ def index_regulome_db(filter_files=False):
                 es_uri,
                 es_port,
             )
-
-
-def index_regulome_db_dev(filter_files=False):
-
-    encode_accessions = list(pickle.load(open(TEST_ENCODE_ACCESSIONS_PATH, "rb")))
-
-    datasets = {}
-
-    per_request = 350
-    chunks = [
-        encode_accessions[i : i + per_request]
-        for i in range(0, len(encode_accessions), per_request)
-    ]
-
-    for chunk in chunks:
-
-        files = encode_graph([f"accession={c}" for c in chunk])
-
-        files_to_index = filter_files(files) if filter_files else files
-
-        fetch_datasets(files_to_index, datasets)
-
-        for f in files_to_index:
-            dataset = datasets.get(dataset_accession(f))
-
-            if dataset is None:
-                print(
-                    f"========= No dataset {dataset_accession(f)} found for file {f['accession']}"
-                )
-                continue
-
-            index_file.delay(
-                clean_up(f, FILE_REQUIRED_FIELDS),
-                clean_up(dataset, DATASET_REQUIRED_FIELDS),
-                es_uri,
-                es_port,
-            )
-
-    index_local_snp_files.delay(TEST_SNP_FILE, FILE_HG19, es_uri, es_port)
+    if len(local_files) >= 1:
+        for file in local_files:
+            index_local_snp_files.delay(file['file_path'], file['file_metadata'], es_uri, es_port)
 
 
 if __name__ == "__main__":
@@ -360,8 +319,23 @@ if __name__ == "__main__":
     RegionIndexerElasticSearch(
         es_uri, es_port, SUPPORTED_CHROMOSOMES, SUPPORTED_ASSEMBLIES
     ).setup_indices()
-
-    if "ES" in environ:
-        index_regulome_db()
+    isLocalInstall = parser.parse_args().local
+    encode_accessions = None
+    local_files = []
+    if not isLocalInstall:
+        regulome_encode_accessions = pickle.load(
+            open(REGULOME_ENCODE_ACCESSIONS_MAPPING_PATH, "rb")
+        )
+        regulome_accessions = list(pickle.load(open(REGULOME_ACCESSIONS_PATH, "rb")))
+        encode_accessions = [regulome_encode_accessions[reg] for reg in regulome_accessions]
     else:
-        index_regulome_db_dev()
+        encode_accessions = list(pickle.load(open(TEST_ENCODE_ACCESSIONS_PATH, "rb")))
+        local_file = {
+            "file_path": TEST_SNP_FILE,
+            "file_metadata": FILE_HG19
+        }
+        local_files.append(local_file)
+        
+
+    index_regulome_db(encode_accessions, local_files)
+    

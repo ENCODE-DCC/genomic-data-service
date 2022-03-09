@@ -44,6 +44,8 @@ Installation Requirements:
     $ make flower
     $ make index
     ```
+
+    if you just want to index a small amount of file for local install, run `make index_local` instead of `make index`.
     Monitoring via flower will be available on port 5555 (localhost unless otherwise set).
 
 ## Testing
