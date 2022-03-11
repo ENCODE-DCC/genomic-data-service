@@ -2,8 +2,8 @@ from celery import Celery
 from elasticsearch import Elasticsearch
 from elasticsearch.exceptions import NotFoundError
 from elasticsearch.helpers import bulk
-
-from genomic_data_service.region_indexer_file_reader import SnpFileReader, RegionFileReader
+from genomic_data_service.file_opener import LocalFileOpener,S3FileOpener
+from genomic_data_service.parser import SnfParser, RegionParser
 from genomic_data_service.constants import DATASET
 import uuid
 
@@ -129,7 +129,7 @@ def index_regions_from_file(es, uuid, file_properties, dataset, snp=False):
 
     is_snp_reference = dataset['@type'][0].lower() == 'reference'
     dataset_type = metadata['dataset']['collection_type'].lower()
-    regulome_strand = VALUE_STRAND_COL.get(dataset_type, {})
+    value_strand_col = VALUE_STRAND_COL.get(dataset_type, {})
     file_size = file_properties.get('file_size', 0)
     file_path = file_properties['s3_uri']
 
@@ -137,13 +137,18 @@ def index_regions_from_file(es, uuid, file_properties, dataset, snp=False):
 
     file_data = {}
     chroms = []
-    if not is_snp_reference:
-        readable_file = RegionFileReader(file_path, regulome_strand, file_size)
+    file_opener = S3FileOpener(file_path, file_size)
+    reader = file_opener.open()
+    docs = None
+    if is_snp_reference:
+        docs = SnfParser(reader).parse()
     else:
-        readable_file = SnpFileReader(file_path, regulome_strand, file_size)
+        value_col = value_strand_col.get('value_col')
+        strand_col = value_strand_col.get('value_col')
+        docs = RegionParser(reader, value_col, strand_col).parse()
 
     if file_properties['file_format'] == 'bed':
-        for (chrom, doc) in readable_file.parse():
+        for (chrom, doc) in docs:
             if chrom.lower() not in SUPPORTED_CHROMOSOMES:
                 continue
 
@@ -159,7 +164,7 @@ def index_regions_from_file(es, uuid, file_properties, dataset, snp=False):
             if (chrom not in file_data) or (len(file_data[chrom]) > MAX_SNP_BULK):
                 # we are done with current chromosome and move on
                 # 1 chrom at a time saves memory (but assumes the files are in chrom order!)
-                if not readable_file.should_load_file_in_memory() and file_data and len(chroms) > 0:
+                if not file_opener.should_load_file_in_memory() and file_data and len(chroms) > 0:
                     if is_snp_reference:
                         index_snps(es, file_data, metadata, list(file_data.keys()))
                     else:
@@ -173,7 +178,7 @@ def index_regions_from_file(es, uuid, file_properties, dataset, snp=False):
 
             file_data[chrom].append(doc)
 
-        readable_file.close()
+        file_opener.close()
 
     if len(chroms) == 0 or not file_data:
         raise IOError('Error parsing file %s' % file_properties['href'])
@@ -183,10 +188,10 @@ def index_regions_from_file(es, uuid, file_properties, dataset, snp=False):
     else:
         index_regions(es, file_data, metadata, list(file_data.keys()))
 
-    if not readable_file.should_load_file_in_memory() and metadata['chroms'] != chroms:
+    if not file_opener.should_load_file_in_memory() and metadata['chroms'] != chroms:
         print(metadata['file']['@id'] + ' chromosomes ' + ('SNPs' if is_snp_reference else 'regions')  +' indexed out of order!')
 
-    readable_file.close()
+    file_opener.close()
 
     add_to_residence(es, metadata)
     
@@ -199,10 +204,12 @@ def index_regions_from_test_snp_file(es, uuid, file_path, file_properties):
     file_data = {}
     chroms = []
 
-    reader = SnpFileReader(file_path, source="local")
+    file_opener = LocalFileOpener(file_path)
+    reader = file_opener.open()
+    docs = SnfParser(reader).parse()
 
     
-    for (chrom, doc) in reader.parse():
+    for (chrom, doc) in docs:
         if chrom.lower() not in SUPPORTED_CHROMOSOMES:
             continue
 
@@ -235,8 +242,6 @@ def index_regions_from_test_snp_file(es, uuid, file_path, file_properties):
         raise IOError('Error parsing file %s' % file_path)
 
     index_snps(es, file_data, metadata, list(file_data.keys()))
-
-    reader.data.close()
 
     add_to_residence(es, metadata)
 
