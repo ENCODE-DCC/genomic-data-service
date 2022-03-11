@@ -144,7 +144,7 @@ def index_regions_from_file(es, uuid, file_properties, dataset, snp=False):
         docs = SnfParser(reader).parse()
     else:
         value_col = value_strand_col.get('value_col')
-        strand_col = value_strand_col.get('value_col')
+        strand_col = value_strand_col.get('strand_col')
         docs = RegionParser(reader, value_col, strand_col).parse()
 
     if file_properties['file_format'] == 'bed':
