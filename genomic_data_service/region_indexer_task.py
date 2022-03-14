@@ -2,9 +2,8 @@ from celery import Celery
 from elasticsearch import Elasticsearch
 from elasticsearch.exceptions import NotFoundError
 from elasticsearch.helpers import bulk
-
-from genomic_data_service.region_indexer_file_reader import S3BedFileRemoteReader
-from genomic_data_service.region_indexer_local_file_reader import LocalSnpReader
+from genomic_data_service.file_opener import LocalFileOpener,S3FileOpener
+from genomic_data_service.parser import SnfParser, RegionParser
 from genomic_data_service.constants import DATASET
 import uuid
 
@@ -128,27 +127,36 @@ def index_regions(es, regions, metadata, chroms):
 def index_regions_from_file(es, uuid, file_properties, dataset, snp=False):
     metadata = metadata_doc(uuid, file_properties, dataset)
 
-    snp_set      = dataset['@type'][0].lower() == 'reference'
+    is_snp_reference = dataset['@type'][0].lower() == 'reference'
     dataset_type = metadata['dataset']['collection_type'].lower()
-    regulome_strand = VALUE_STRAND_COL.get(dataset_type, {})
+    value_strand_col = VALUE_STRAND_COL.get(dataset_type, {})
+    file_size = file_properties.get('file_size', 0)
+    file_path = file_properties['s3_uri']
 
     metadata['chroms'] = []
 
     file_data = {}
     chroms = []
-
-    readable_file = S3BedFileRemoteReader(file_properties, regulome_strand, snp_set=snp_set)
+    file_opener = S3FileOpener(file_path, file_size)
+    reader = file_opener.open()
+    docs = None
+    if is_snp_reference:
+        docs = SnfParser(reader).parse()
+    else:
+        value_col = value_strand_col.get('value_col')
+        strand_col = value_strand_col.get('strand_col')
+        docs = RegionParser(reader, value_col, strand_col).parse()
 
     if file_properties['file_format'] == 'bed':
-        for (chrom, doc) in readable_file.parse():
+        for (chrom, doc) in docs:
             if chrom.lower() not in SUPPORTED_CHROMOSOMES:
                 continue
 
             if doc['coordinates']['gte'] == doc['coordinates']['lt']:
                 print(
-                    file_properties['s3_uri'] + ' - on chromosome ' + row[0] +
-                    ', a start coordinate ' + row[1] + ' is ' +
-                    'larger than or equal to the end coordinate ' + row[2] +', ' +
+                    file_properties['s3_uri'] + ' - on chromosome ' + doc[0] +
+                    ', a start coordinate ' + doc[1] + ' is ' +
+                    'larger than or equal to the end coordinate ' + doc[2] +', ' +
                     'skipping row'
                 )
                 continue  # Skip for 63 invalid peak in a non-ENCODE ChIP-seq result, exo_HelaS3.CTCF.bed.gz
@@ -156,8 +164,8 @@ def index_regions_from_file(es, uuid, file_properties, dataset, snp=False):
             if (chrom not in file_data) or (len(file_data[chrom]) > MAX_SNP_BULK):
                 # we are done with current chromosome and move on
                 # 1 chrom at a time saves memory (but assumes the files are in chrom order!)
-                if not readable_file.should_load_file_in_memory() and file_data and len(chroms) > 0:
-                    if snp_set:
+                if not file_opener.should_load_file_in_memory() and file_data and len(chroms) > 0:
+                    if is_snp_reference:
                         index_snps(es, file_data, metadata, list(file_data.keys()))
                     else:
                         index_regions(es, file_data, metadata, list(file_data.keys()))
@@ -170,20 +178,20 @@ def index_regions_from_file(es, uuid, file_properties, dataset, snp=False):
 
             file_data[chrom].append(doc)
 
-        readable_file.close()
+        file_opener.close()
 
     if len(chroms) == 0 or not file_data:
         raise IOError('Error parsing file %s' % file_properties['href'])
 
-    if snp_set:
+    if is_snp_reference:
         index_snps(es, file_data, metadata, list(file_data.keys()))
     else:
         index_regions(es, file_data, metadata, list(file_data.keys()))
 
-    if not readable_file.should_load_file_in_memory() and metadata['chroms'] != chroms:
-        print(metadata['file']['@id'] + ' chromosomes ' + ('SNPs' if snp_set else 'regions')  +' indexed out of order!')
+    if not file_opener.should_load_file_in_memory() and metadata['chroms'] != chroms:
+        print(metadata['file']['@id'] + ' chromosomes ' + ('SNPs' if is_snp_reference else 'regions')  +' indexed out of order!')
 
-    readable_file.close()
+    file_opener.close()
 
     add_to_residence(es, metadata)
     
@@ -196,10 +204,12 @@ def index_regions_from_test_snp_file(es, uuid, file_path, file_properties):
     file_data = {}
     chroms = []
 
-    reader = LocalSnpReader(file_path)
+    file_opener = LocalFileOpener(file_path)
+    reader = file_opener.open()
+    docs = SnfParser(reader).parse()
 
     
-    for (chrom, doc) in reader.parse():
+    for (chrom, doc) in docs:
         if chrom.lower() not in SUPPORTED_CHROMOSOMES:
             continue
 
@@ -232,8 +242,6 @@ def index_regions_from_test_snp_file(es, uuid, file_path, file_properties):
         raise IOError('Error parsing file %s' % file_path)
 
     index_snps(es, file_data, metadata, list(file_data.keys()))
-
-    reader.file.close()
 
     add_to_residence(es, metadata)
 

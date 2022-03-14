@@ -1,4 +1,6 @@
 import pytest
+import csv
+import gzip
 
 from genomic_data_service import app
 
@@ -233,6 +235,21 @@ def bed_file():
         "status": "archived",
     }
 
+@pytest.fixture
+def s3_uri():
+    return "s3://encode-public/2017/07/02/a55e8a04-d40d-4715-8bee-7b23dc4f1050/ENCFF603JQT.bed.gz"
+
+@pytest.fixture
+def reader_chip_seq():    
+    file = gzip.open("./tests/data/ENCFF141SAU.bed.gz", mode='rt')
+    file_reader = csv.reader(file, delimiter='\t')
+    return file_reader
+
+@pytest.fixture
+def reader_snp():    
+    file = gzip.open("./tests/data/test_snp_file.bed.gz", mode='rt')
+    file_reader = csv.reader(file, delimiter='\t')
+    return file_reader
 
 @pytest.fixture
 def dataset_target():
@@ -363,11 +380,6 @@ def dataset_targets():
             "status": "released",
         }
     ]
-
-
-@pytest.fixture
-def value_strand_col_chip_seq():
-    return {"strand_col": 5, "value_col": 6}
 
 
 from contextlib import contextmanager
