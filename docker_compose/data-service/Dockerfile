@@ -16,6 +16,8 @@ RUN pip install -r requirements.txt
 
 WORKDIR /opt/genomic_data_service
 
-COPY . .
+COPY . /opt/genomic_data_service
+
+RUN adduser -u 5678 --disabled-password --gecos "" gdsuser && chown -R gdsuser /opt/genomic_data_service
 
 EXPOSE 5000

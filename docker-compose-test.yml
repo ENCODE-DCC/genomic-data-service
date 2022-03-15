@@ -23,6 +23,7 @@ services:
       - 9300:9300
 
   genomic_data_service:
+    user: gdsuser
     build:
       context: .
       dockerfile: ./docker_compose/data-service/Dockerfile
@@ -32,7 +33,7 @@ services:
       - GENOMIC_DATA_SERVICE_SETTINGS=/opt/genomic_data_service/config/docker.cfg
     volumes:
       - "$HOME/.aws/credentials:/home/gdsuser/.aws/credentials"
-    command: make run
+    command: make unit_test
 
   nginx:
     image: nginx:1.21.4 

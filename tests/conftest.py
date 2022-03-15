@@ -430,7 +430,7 @@ def start_elasticsearch(host="localhost", port=9201):
 
 
 @pytest.fixture(scope="session")
-def regulome_elasticsearch_client(host="127.0.0.1", port=9201):
+def regulome_elasticsearch_client(host="elasticsearch", port=9200):
     from genomic_data_service.region_indexer_elastic_search import (
         RegionIndexerElasticSearch,
     )
@@ -439,7 +439,6 @@ def regulome_elasticsearch_client(host="127.0.0.1", port=9201):
         SUPPORTED_ASSEMBLIES,
     )
 
-    with start_elasticsearch(host=host, port=port) as process:
-        yield RegionIndexerElasticSearch(
-            host, port, SUPPORTED_CHROMOSOMES, SUPPORTED_ASSEMBLIES
-        )
+    yield RegionIndexerElasticSearch(
+        host, port, SUPPORTED_CHROMOSOMES, SUPPORTED_ASSEMBLIES
+    )
