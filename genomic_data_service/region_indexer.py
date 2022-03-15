@@ -309,7 +309,7 @@ def index_regulome_db(encode_accessions, local_files, filter_files=False):
                 es_uri,
                 es_port,
             )
-    if len(local_files) >= 1:
+    if local_files:
         for file in local_files:
             index_local_snp_files.delay(file['file_path'], file['file_metadata'], es_uri, es_port)
 
@@ -319,10 +319,10 @@ if __name__ == "__main__":
     RegionIndexerElasticSearch(
         es_uri, es_port, SUPPORTED_CHROMOSOMES, SUPPORTED_ASSEMBLIES
     ).setup_indices()
-    isLocalInstall = parser.parse_args().local
+    is_local_install = parser.parse_args().local
     encode_accessions = None
     local_files = []
-    if not isLocalInstall:
+    if not is_local_install:
         regulome_encode_accessions = pickle.load(
             open(REGULOME_ENCODE_ACCESSIONS_MAPPING_PATH, "rb")
         )
