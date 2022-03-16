@@ -2,6 +2,7 @@ import csv
 import gzip
 import boto3
 import tempfile
+from botocore import UNSIGNED
 from botocore.config import Config
 from urllib.parse import urlparse
 import abc
@@ -12,12 +13,12 @@ class FileOpener:
     def __init__(self, file_path, file_size=0):
         self.file_size = file_size
         self.file_path = file_path
-        self.temp_file = None   
+        self.temp_file = None
 
     def close(self):
         if self.temp_file:
-            self.temp_file.close() 
-    
+            self.temp_file.close()
+
     @abc.abstractmethod
     def open(self):
         """
@@ -30,10 +31,10 @@ class S3FileOpener(FileOpener):
         # if file size is 0, we treat it as a big file, then we shouldn't load file in memory.
         if self.file_size == 0:
             return False
-        return self.file_size <= MAX_IN_MEMORY_FILE_SIZE   
+        return self.file_size <= MAX_IN_MEMORY_FILE_SIZE
 
     def open(self):
-        config = Config(region_name='us-west-2', retries={'max_attempts': 2})
+        config = Config(region_name='us-west-2', retries={'max_attempts': 2}, signature_version=UNSIGNED)
         s3 = boto3.client('s3', config=config)
         href = self.file_path
 
