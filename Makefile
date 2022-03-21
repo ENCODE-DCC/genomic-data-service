@@ -32,5 +32,6 @@ index:
 	python3 genomic_data_service/region_indexer.py
 
 index_local:
+	sleep 10
 	python3 genomic_data_service/region_indexer.py --local
 

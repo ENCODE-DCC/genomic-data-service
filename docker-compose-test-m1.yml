@@ -32,8 +32,8 @@ services:
     depends_on:
       - elasticsearch
     environment:
-      - GENOMIC_DATA_SERVICE_SETTINGS=/opt/genomic_data_service/config/docker.cfg
-    command: make unit_test
+      - GENOMIC_DATA_SERVICE_SETTINGS=/opt/genomic_data_service/config/development.cfg
+    command: bash -c "make worker && make index_local"
 
   nginx:
     image: nginx:1.21.4 

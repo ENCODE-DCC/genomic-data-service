@@ -5,7 +5,7 @@ services:
   elasticsearch:
     build:
       context: ./docker_compose/elasticsearch/
-    image: gds-es-m1
+    image: gds-elasticsearch-m1
     ulimits:
       memlock:
         soft: -1
@@ -24,17 +24,17 @@ services:
       - 9300:9300
 
   genomic_data_service:
+    user: gdsuser
     build:
       context: .
       dockerfile: ./docker_compose/data-service/Dockerfile
     image: gds-app
     depends_on:
       - elasticsearch
+      - redis
     environment:
       - GENOMIC_DATA_SERVICE_SETTINGS=/opt/genomic_data_service/config/development.cfg
-    volumes:
-      - "$HOME/.aws/credentials:/home/gdsuser/.aws/credentials"
-    command: make run
+    command: bash -c "make worker & make index_local"
 
   nginx:
     image: nginx:1.21.4 
@@ -44,3 +44,8 @@ services:
       - "./config/nginx-docker.conf:/etc/nginx/nginx.conf"
     ports:
       - 80:80
+
+  redis:
+    image: redis:alpine
+    expose:
+      - "6379"

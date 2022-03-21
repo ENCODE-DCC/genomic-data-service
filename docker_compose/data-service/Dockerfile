@@ -12,11 +12,13 @@ ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
 COPY requirements-docker.txt requirements.txt
 
-RUN pip install -r requirements.txt
+# RUN pip install -r requirements.txt
 
 WORKDIR /opt/genomic_data_service
 
 COPY . /opt/genomic_data_service
+
+RUN pip install -e .
 
 RUN adduser -u 5678 --disabled-password --gecos "" gdsuser && chown -R gdsuser /opt/genomic_data_service
 
