@@ -20,4 +20,4 @@ jobs:
       - run:
           name: Unit tests
           command: |
-            docker-compose -f docker-compose-test-intel.yml up
+            docker-compose -f docker-compose-test-intel.yml up --exit-code-from genomic_data_service
