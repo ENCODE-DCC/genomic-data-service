@@ -330,10 +330,13 @@ if __name__ == "__main__":
     if not is_local_install:
         # get file accessions for all the files using hg19 and two reference SNPs files from pickle
         encode_accessions = list(pickle.load(open(ENCODE_ACCESSIONS_HG19_PATH, "rb")))
-
-        # get files in experiment TF ChIP-seq and DNase-seq using assembly GRCh38
-        endpoint = "https://www.encodeproject.org/search/?type=Experiment&control_type!=*&status=released&assay_title=TF+ChIP-seq&assay_title=DNase-seq&replicates.library.biosample.donor.organism.scientific_name=Homo+sapiens&assembly=GRCh38&field=files&field=default_analysis&format=json&limit=all"
+        
+        # get files in experiment TF ChIP-seq using assembly GRCh38
+        endpoint = "https://www.encodeproject.org/search/?type=Experiment&control_type!=*&status=released&assay_title=TF+ChIP-seq&assembly=GRCh38&field=files.accession&field=files.preferred_default&field=files.file_format&field=files.analyses.@id&field=default_analysis&format=json&limit=all"
         experiments = requests.get(endpoint).json()["@graph"]
+        # get files in experiment DNase-seq using assembly GRCh38
+        endpoint = "https://www.encodeproject.org/search/?type=Experiment&control_type!=*&status=released&assay_title=DNase-seq&&assembly=GRCh38&field=files.accession&field=files.preferred_default&field=files.file_format&field=files.analyses.@id&field=default_analysis&format=json&limit=all"
+        experiments = experiments + requests.get(endpoint).json()["@graph"]
         
         for experiment in experiments:   
             files = experiment.get("files", [])
