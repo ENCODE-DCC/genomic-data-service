@@ -338,6 +338,18 @@ if __name__ == "__main__":
         endpoint = "https://www.encodeproject.org/search/?type=Experiment&control_type!=*&status=released&assay_title=DNase-seq&&assembly=GRCh38&field=files.accession&field=files.preferred_default&field=files.file_format&field=files.analyses.@id&field=default_analysis&format=json&limit=all"
         experiments = experiments + requests.get(endpoint).json()["@graph"]
         
+        # get files in footprints
+        endpoint = "https://www.encodeproject.org/search/?type=Annotation&annotation_type=footprints&assembly=GRCh38&field=files.accession&format=json&limit=all"
+        annotations = requests.get(endpoint).json()["@graph"]
+        # get files in PWMs
+        endpoint = "https://www.encodeproject.org/search/?type=Annotation&annotation_type=PWMs&assembly=GRCh38&field=files.accession&format=json&limit=all"
+        annotations = annotations + requests.get(endpoint).json()["@graph"]
+
+        for annotation in annotations:
+            files = annotation.get("files", [])
+            for file in files:
+                encode_accessions.append(file["accession"])
+        
         for experiment in experiments:   
             files = experiment.get("files", [])
             default_analysis_id = experiment["default_analysis"]
