@@ -7,6 +7,7 @@ import pickle
 from os import environ
 from genomic_data_service.constants import FILE_HG19
 import argparse
+import time
 
 
 if "ES" in environ:

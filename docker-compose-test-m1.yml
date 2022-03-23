@@ -33,13 +33,4 @@ services:
       - elasticsearch
     environment:
       - GENOMIC_DATA_SERVICE_SETTINGS=/opt/genomic_data_service/config/development.cfg
-    command: bash -c "make worker && make index_local"
-
-  nginx:
-    image: nginx:1.21.4 
-    depends_on:
-      - genomic_data_service
-    volumes:
-      - "./config/nginx-docker.conf:/etc/nginx/nginx.conf"
-    ports:
-      - 80:80
+    command: make unit_test 

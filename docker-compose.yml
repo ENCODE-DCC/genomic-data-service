@@ -1,11 +1,31 @@
 version: "3.8"
 
 services:
+  genomic_data_service:
+    user: gdsuser
+    build:
+      context: .
+      dockerfile: ./docker_compose/data-service/Dockerfile
+    image: gds-app
+    depends_on:
+      - elasticsearch
+    environment:
+      - GENOMIC_DATA_SERVICE_SETTINGS=/opt/genomic_data_service/config/development.cfg
+    command: make run
+
+  nginx:
+    image: nginx:1.21.4 
+    depends_on:
+      - genomic_data_service
+    volumes:
+      - "./config/nginx-docker.conf:/etc/nginx/nginx.conf"
+    ports:
+      - 80:80
 
   elasticsearch:
     build:
       context: ./docker_compose/elasticsearch/
-    image: gds-es-m1
+    image: gds-elasticsearch-m1
     ulimits:
       memlock:
         soft: -1
@@ -19,28 +39,7 @@ services:
       - "./config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml"
       - "./config/log4j2.properties:/usr/share/elasticsearch/config/log4j2.properties"
       - "./config/jvm.options:/usr/share/elasticsearch/config/jvm.options"
+      - ./esdata:/usr/share/elasticsearch/data
     ports:
       - 9201:9200
       - 9300:9300
-
-  genomic_data_service:
-    build:
-      context: .
-      dockerfile: ./docker_compose/data-service/Dockerfile
-    image: gds-app
-    depends_on:
-      - elasticsearch
-    environment:
-      - GENOMIC_DATA_SERVICE_SETTINGS=/opt/genomic_data_service/config/development.cfg
-    volumes:
-      - "$HOME/.aws/credentials:/home/gdsuser/.aws/credentials"
-    command: make run
-
-  nginx:
-    image: nginx:1.21.4 
-    depends_on:
-      - genomic_data_service
-    volumes:
-      - "./config/nginx-docker.conf:/etc/nginx/nginx.conf"
-    ports:
-      - 80:80

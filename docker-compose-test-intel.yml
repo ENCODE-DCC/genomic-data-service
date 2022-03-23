@@ -26,17 +26,9 @@ services:
     build:
       context: .
       dockerfile: ./docker_compose/data-service/Dockerfile
+    image: gds-app
     depends_on:
       - elasticsearch
     environment:
-      - GENOMIC_DATA_SERVICE_SETTINGS=/opt/genomic_data_service/config/docker.cfg
+      - GENOMIC_DATA_SERVICE_SETTINGS=/opt/genomic_data_service/config/test.cfg
     command: make unit_test
-
-  nginx:
-    image: nginx:1.21.4 
-    depends_on:
-      - genomic_data_service
-    volumes:
-      - "./config/nginx-docker.conf:/etc/nginx/nginx.conf"
-    ports:
-      - 80:80
