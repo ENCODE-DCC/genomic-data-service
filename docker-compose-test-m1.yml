@@ -33,4 +33,4 @@ services:
       - elasticsearch
     environment:
       - GENOMIC_DATA_SERVICE_SETTINGS=/opt/genomic_data_service/config/development.cfg
-    command: make unit_test 
+    command: ${TEST_RUN_COMMAND}
