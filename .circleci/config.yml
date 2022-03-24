@@ -25,3 +25,7 @@ jobs:
           name: Integration tests
           command: |
             docker-compose -f docker-compose-test-intel.yml --env-file ./docker_compose/integration_test.env up --exit-code-from genomic_data_service
+      - run:
+          name: Upload coverage
+          command: |
+              docker-compose run --no-deps -e COVERALLS_REPO_TOKEN=$COVERALLS_REPO_TOKEN genomic_data_service coveralls
