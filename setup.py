@@ -31,6 +31,7 @@ setup(
             "pytest==6.2.4",
             "pytest-mock==3.6.1",
             "pytest-cov==2.12.1",
+            "coveralls==3.3.1",
         ]
     },
 )
