@@ -4,7 +4,7 @@ ENV PYTHONBUFFERED 1
 
 ENV VIRTUAL_ENV=/opt/venv
 
-RUN apt-get update && apt-get install -y curl
+RUN apt-get update && apt-get install -y curl git
 
 RUN python -m venv $VIRTUAL_ENV
 
