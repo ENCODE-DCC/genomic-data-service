@@ -18,13 +18,9 @@ jobs:
           name: Build docker images
           command: docker-compose -f docker-compose-test-intel.yml build 
       - run:
-          name: Unit tests
+          name: Tests
           command: |
-            docker-compose -f docker-compose-test-intel.yml --env-file ./docker_compose/unit_test.env up --exit-code-from genomic_data_service
-      - run:
-          name: Integration tests
-          command: |
-            docker-compose -f docker-compose-test-intel.yml --env-file ./docker_compose/integration_test.env up --exit-code-from genomic_data_service
+            docker-compose -f docker-compose-test-intel.yml --env-file ./docker_compose/test.env up --exit-code-from genomic_data_service
       - run:
           name: Upload coverage
           command: |
