@@ -12,12 +12,12 @@ ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
 RUN python -m pip install --upgrade pip
 
-WORKDIR /opt/genomic_data_service
+WORKDIR /genomic_data_service
 
-COPY . /opt/genomic_data_service
+COPY . /genomic_data_service
 
 RUN pip install -e .[test]
 
-RUN adduser -u 5678 --disabled-password --gecos "" gdsuser && chown -R gdsuser /opt/genomic_data_service
+RUN adduser -u 5678 --disabled-password --gecos "" gdsuser && chown -R gdsuser /genomic_data_service
 
 EXPOSE 5000
