@@ -24,13 +24,14 @@ services:
       - 9300:9300
 
   genomic_data_service:
-    user: gdsuser
     build:
       context: .
       dockerfile: ./docker_compose/data-service/Dockerfile
     image: gds-app
+    volumes:
+      - ".:/genomic_data_service"
     depends_on:
       - elasticsearch
     environment:
-      - GENOMIC_DATA_SERVICE_SETTINGS=/genomic_data_service/config/development.cfg
+      - GENOMIC_DATA_SERVICE_SETTINGS=/genomic_data_service/config/test.cfg
     command: ${TEST_RUN_COMMAND}
