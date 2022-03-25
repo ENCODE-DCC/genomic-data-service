@@ -33,7 +33,7 @@ services:
       - elasticsearch
       - redis
     environment:
-      - GENOMIC_DATA_SERVICE_SETTINGS=/opt/genomic_data_service/config/development.cfg
+      - GENOMIC_DATA_SERVICE_SETTINGS=/genomic_data_service/config/development.cfg
     command: bash -c "make worker & make index_local"
   redis:
     image: redis:alpine
