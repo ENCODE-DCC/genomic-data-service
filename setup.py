@@ -30,7 +30,7 @@ setup(
         "test": [
             "pytest==5.3.2",
             "pytest-mock==2.0.0",
-            "pytest-cov==2.8.1",
+            "pytest-cov==3.0.0",
             "coveralls==3.3.1",
         ]
     },
