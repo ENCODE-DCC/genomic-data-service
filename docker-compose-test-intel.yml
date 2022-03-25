@@ -22,7 +22,6 @@ services:
       - 9300:9300
 
   genomic_data_service:
-    user: gdsuser
     build:
       context: .
       dockerfile: ./docker_compose/data-service/Dockerfile
