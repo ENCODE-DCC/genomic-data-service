@@ -2,7 +2,6 @@ version: "3.8"
 
 services:
   genomic_data_service:
-    user: gdsuser
     build:
       context: .
       dockerfile: ./docker_compose/data-service/Dockerfile
