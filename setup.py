@@ -28,9 +28,9 @@ setup(
     ],
     extras_require={
         "test": [
-            "pytest==6.2.4",
-            "pytest-mock==3.6.1",
-            "pytest-cov==2.12.1",
+            "pytest==5.3.2",
+            "pytest-mock==2.0.0",
+            "pytest-cov==2.8.1",
             "coveralls==3.3.1",
         ]
     },
