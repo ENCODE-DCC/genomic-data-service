@@ -1,6 +1,5 @@
 import pytest
 from genomic_data_service.gene_name_lookup import gene_name_lookup
-from unittest.mock import patch
 
 
 def test_gene_name_lookup():
