@@ -11,7 +11,7 @@ services:
     depends_on:
       - elasticsearch
     environment:
-      - GENOMIC_DATA_SERVICE_SETTINGS=/opt/genomic_data_service/config/development.cfg
+      - GENOMIC_DATA_SERVICE_SETTINGS=/genomic_data_service/config/development.cfg
     command: make run
 
   nginx:
