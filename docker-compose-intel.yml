@@ -1,0 +1,44 @@
+version: "3.8"
+
+services:
+  genomic_data_service:
+    build:
+      context: .
+      dockerfile: ./docker_compose/data-service/Dockerfile
+    image: gds-app
+    volumes:
+      - ".:/genomic_data_service"
+    depends_on:
+      - elasticsearch
+    environment:
+      - GENOMIC_DATA_SERVICE_SETTINGS=/genomic_data_service/config/development.cfg
+    command: make run
+
+  nginx:
+    image: nginx:1.21.4 
+    depends_on:
+      - genomic_data_service
+    volumes:
+      - "./config/nginx-docker.conf:/etc/nginx/nginx.conf"
+    ports:
+      - 80:80
+
+  elasticsearch:
+    image: elasticsearch:5.6.16 
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    cap_add:
+      - IPC_LOCK
+    volumes:
+      - "./config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml"
+      - "./config/log4j2.properties:/usr/share/elasticsearch/config/log4j2.properties"
+      - "./config/jvm.options:/usr/share/elasticsearch/config/jvm.options"
+      - ./esdata:/usr/share/elasticsearch/data
+    ports:
+      - 9201:9200
+      - 9300:9300
