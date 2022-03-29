@@ -82,6 +82,6 @@ def test_get_encode_accessions():
     assert len(encode_accessions) > 42000
     assert "ENCFF797GRA" in encode_accessions
     assert "ENCFF518SJY" in encode_accessions
-    assert "ENCFF150MSM" in encode_accessions
+    assert "ENCFF361SFG" in encode_accessions
 
 
