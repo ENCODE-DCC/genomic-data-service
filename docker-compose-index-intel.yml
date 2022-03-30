@@ -4,6 +4,9 @@ services:
 
   elasticsearch:
     image: elasticsearch:5.6.16
+    expose: 
+      - "9200"
+      - "9300"
     ulimits:
       memlock:
         soft: -1
@@ -18,9 +21,7 @@ services:
       - "./config/log4j2.properties:/usr/share/elasticsearch/config/log4j2.properties"
       - "./config/jvm.options:/usr/share/elasticsearch/config/jvm.options"
       - ./esdata:/usr/share/elasticsearch/data
-    ports:
-      - 9201:9200
-      - 9300:9300
+
   indexer:
     build:
       context: .
@@ -32,6 +33,7 @@ services:
     environment:
       - GENOMIC_DATA_SERVICE_SETTINGS=/genomic_data_service/config/development.cfg
     command: make index_local
+
   worker:
     build:
       context: .
@@ -42,6 +44,7 @@ services:
     environment:
       - GENOMIC_DATA_SERVICE_SETTINGS=/genomic_data_service/config/development.cfg
     command: make worker
+
   redis:
     image: redis:alpine
     expose:

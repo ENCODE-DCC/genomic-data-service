@@ -27,6 +27,9 @@ services:
     build:
       context: ./docker_compose/elasticsearch/
     image: gds-elasticsearch-m1
+    expose:
+      - "9200"
+      - "9300"
     ulimits:
       memlock:
         soft: -1
@@ -41,6 +44,3 @@ services:
       - "./config/log4j2.properties:/usr/share/elasticsearch/config/log4j2.properties"
       - "./config/jvm.options:/usr/share/elasticsearch/config/jvm.options"
       - ./esdata:/usr/share/elasticsearch/data
-    ports:
-      - 9201:9200
-      - 9300:9300
