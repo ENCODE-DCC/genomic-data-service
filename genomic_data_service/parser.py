@@ -2,10 +2,9 @@ from asyncio.log import logger
 import abc
 
 class Parser:
-    def __init__(self, reader, value_col=None, strand_col=None):
+    def __init__(self, reader, cols_for_index={}):
         self.reader = reader
-        self.value_col = value_col
-        self.strand_col = strand_col
+        self.cols_for_index = cols_for_index
     def parse(self):
         for line in self.reader:
             if line[0].startswith('#'):
@@ -72,7 +71,7 @@ class SnfParser(Parser):
         return (chrom, snp_doc)
 
 class RegionParser(Parser):
-    def document_generator(self, line, value_col=None, strand_col=None):
+    def document_generator(self, line):
         chrom, start, end = line[0], int(line[1]), int(line[2])
         doc = {
             'coordinates': {
@@ -80,18 +79,18 @@ class RegionParser(Parser):
                 'lt': end
             },
         }  # Stored as BED 0-based half open
-        if self.value_col and self.value_col < len(line):
-            doc['value'] = line[self.value_col]
-        if self.strand_col:
+        if self.cols_for_index['value_col'] and self.cols_for_index['value_col'] < len(line):
+            doc['value'] = line[self.cols_for_index['value_col'] ]
+        if self.cols_for_index['strand_col']:
             # Some PWMs annotation doesn't have strand info
-            if self.strand_col < len(line) and line[self.strand_col] in ['.', '+', '-']:
-                doc['strand'] = line[self.strand_col]
+            if self.cols_for_index['strand_col'] < len(line) and line[self.cols_for_index['strand_col']] in ['.', '+', '-']:
+                doc['strand'] = line[self.cols_for_index['strand_col']]
             # Temporary hack for Footprint data
             elif (
-                self.strand_col - 1 < len(line)
-                and line[self.strand_col - 1] in ['.', '+', '-']
+                self.cols_for_index['strand_col'] - 1 < len(line)
+                and line[self.cols_for_index['strand_col'] - 1] in ['.', '+', '-']
             ):
-                doc['strand'] = line[self.strand_col - 1]
+                doc['strand'] = line[self.cols_for_index['strand_col'] - 1]
             else:
                 doc['strand'] = '.'
         return (chrom, doc)
