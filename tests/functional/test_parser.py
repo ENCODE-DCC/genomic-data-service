@@ -2,8 +2,11 @@ import pytest
 from genomic_data_service.parser import SnfParser, RegionParser
 
 def test_RegionParser(reader_chip_seq):
-
-    docs = list(RegionParser(reader_chip_seq, value_col=6, strand_col=5).parse())
+    cols_for_index_chip_seq = {
+        'strand_col': 5,
+        'value_col': 6
+    }
+    docs = list(RegionParser(reader_chip_seq, cols_for_index_chip_seq).parse())
     (chrom, doc) = docs[0]
     assert chrom == "chr5"
     assert doc == {
