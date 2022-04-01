@@ -246,6 +246,12 @@ def reader_chip_seq():
     return file_reader
 
 @pytest.fixture
+def reader_eqtls_grch38():   
+    file = gzip.open("./tests/data/ENCFF776SWB_eqtls_grch38.bed.gz", mode='rt')
+    file_reader = csv.reader(file, delimiter='\t')
+    return file_reader
+
+@pytest.fixture
 def reader_snp():    
     file = gzip.open("./tests/data/test_snp_file.bed.gz", mode='rt')
     file_reader = csv.reader(file, delimiter='\t')

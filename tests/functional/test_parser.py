@@ -1,12 +1,12 @@
 import pytest
 from genomic_data_service.parser import SnfParser, RegionParser
 
-def test_RegionParser(reader_chip_seq):
-    cols_for_index_chip_seq = {
+def test_RegionParser_chip_seq(reader_chip_seq):
+    cols_for_index= {
         'strand_col': 5,
         'value_col': 6
     }
-    docs = list(RegionParser(reader_chip_seq, cols_for_index_chip_seq).parse())
+    docs = list(RegionParser(reader_chip_seq, cols_for_index).parse())
     (chrom, doc) = docs[0]
     assert chrom == "chr5"
     assert doc == {
@@ -14,6 +14,27 @@ def test_RegionParser(reader_chip_seq):
         'strand': '.',
         'value': '5.41785'
     }
+
+def test_RegionParser_eqtls_grch38(reader_eqtls_grch38):
+    cols_for_index = {
+        'name_col': 3,
+        'ensg_id_col': 8,
+        'p_value_col': 14,
+        'effect_size_col': 15
+    }
+    docs = list(RegionParser(reader_eqtls_grch38, cols_for_index).parse())
+    (chrom, doc) = docs[0]
+    assert chrom == "chr1"
+    assert doc == {
+        'coordinates': {'gte': 597732, 'lt': 597733},
+        'name': 'chr1_597733_A_G_b38',
+        'value': 'WASH7P',
+        'p_value': '6.69151e-05',
+        'effect_size': '-2.27865',
+        'ensg_id': 'ENSG00000227232'
+    }
+
+
 
 def test_SnpParser(reader_snp):
     

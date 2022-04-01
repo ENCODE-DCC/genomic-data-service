@@ -38,7 +38,7 @@ REGION_INDEXER_SHARDS = 2
 SEARCH_MAX = 200
 
 # Columns (0-based) for value and strand to be indexed - based on RegulomeDB
-VALUE_STRAND_COL = {
+INDEX_COLS = {
     'chip-seq': {
         'strand_col': 5,
         'value_col': 6
@@ -54,15 +54,14 @@ VALUE_STRAND_COL = {
     'chromatin state': {
         'value_col': 3
     },
-    'eqtls': {
-        'hg19' : {'value_col': 5},
-        'grch38': {
+    'eqtls_hg19': {
+        'value_col': 5,   
+    },
+    'eqtls_grch38': {
             'name_col': 3,
             'ensg_id_col': 8,
             'p_value_col': 14,
             'effect_size_col': 15
-        }
-        
     },
     'footprints': {
         'strand_col': 5,
@@ -75,10 +74,10 @@ VALUE_STRAND_COL = {
 def get_cols_for_index(metadata):
     dataset_type = metadata['dataset']['collection_type'].lower()
     if dataset_type != 'eqtls':
-        return VALUE_STRAND_COL.get(dataset_type, {})
+        return INDEX_COLS.get(dataset_type, {})
     else:
         assembly = metadata['file']['assembly'].lower()
-        return VALUE_STRAND_COL['eqtls'].get(assembly, {})
+        return INDEX_COLS['eqtls'].get(assembly, {})
 
 def add_to_residence(es, metadata):
     metadata['chroms'] = list(set(metadata['chroms']))

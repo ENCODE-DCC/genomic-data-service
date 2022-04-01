@@ -1,5 +1,6 @@
 from asyncio.log import logger
 import abc
+from genomic_data_service.gene_name_lookup import gene_name_lookup
 
 class Parser:
     def __init__(self, reader, cols_for_index={}):
@@ -79,9 +80,9 @@ class RegionParser(Parser):
                 'lt': end
             },
         }  # Stored as BED 0-based half open
-        if self.cols_for_index['value_col'] and self.cols_for_index['value_col'] < len(line):
+        if 'value_col' in self.cols_for_index and self.cols_for_index['value_col'] < len(line):
             doc['value'] = line[self.cols_for_index['value_col'] ]
-        if self.cols_for_index['strand_col']:
+        if 'strand_col' in self.cols_for_index:
             # Some PWMs annotation doesn't have strand info
             if self.cols_for_index['strand_col'] < len(line) and line[self.cols_for_index['strand_col']] in ['.', '+', '-']:
                 doc['strand'] = line[self.cols_for_index['strand_col']]
@@ -93,4 +94,16 @@ class RegionParser(Parser):
                 doc['strand'] = line[self.cols_for_index['strand_col'] - 1]
             else:
                 doc['strand'] = '.'
+        if 'ensg_id_col' in self.cols_for_index:
+            ensg_id = line[self.cols_for_index['ensg_id_col']].split('.')[0]
+            doc['ensg_id'] = ensg_id
+            gene_name = gene_name_lookup(ensg_id)
+            if gene_name:
+                doc['value'] = gene_name
+        if 'name_col' in self.cols_for_index and self.cols_for_index['name_col'] < len(line):
+            doc['name'] = line[self.cols_for_index['name_col']]
+        if 'p_value_col' in self.cols_for_index and self.cols_for_index['p_value_col'] < len(line):
+            doc['p_value'] = line[self.cols_for_index['p_value_col']]
+        if 'effect_size_col' in self.cols_for_index and self.cols_for_index['effect_size_col'] < len(line):
+            doc['effect_size'] = line[self.cols_for_index['effect_size_col']]
         return (chrom, doc)
