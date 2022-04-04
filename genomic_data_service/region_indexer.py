@@ -290,6 +290,9 @@ def get_encode_accessions():
     # get files in PWMs
     endpoint = "https://www.encodeproject.org/search/?type=Annotation&annotation_type=PWMs&assembly=GRCh38&field=files.accession&format=json&limit=all"
     annotations = annotations + requests.get(endpoint).json()["@graph"]
+    # get files in eQTLs
+    endpoint = "https://www.encodeproject.org/search/?type=Annotation&annotation_type=eQTLs&assembly=GRCh38&field=files.accession&format=json&limit=all"
+    annotations = annotations + requests.get(endpoint).json()["@graph"]
 
     for annotation in annotations:
         files = annotation.get("files", [])
