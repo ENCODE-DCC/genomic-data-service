@@ -38,7 +38,7 @@ REGION_INDEXER_SHARDS = 2
 SEARCH_MAX = 200
 
 # Columns (0-based) for value and strand to be indexed - based on RegulomeDB
-VALUE_STRAND_COL = {
+INDEX_COLS = {
     'chip-seq': {
         'strand_col': 5,
         'value_col': 6
@@ -54,8 +54,14 @@ VALUE_STRAND_COL = {
     'chromatin state': {
         'value_col': 3
     },
-    'eqtls': {
-        'value_col': 5
+    'eqtls_hg19': {
+        'value_col': 5,   
+    },
+    'eqtls_grch38': {
+            'name_col': 3,
+            'ensg_id_col': 8,
+            'p_value_col': 14,
+            'effect_size_col': 15
     },
     'footprints': {
         'strand_col': 5,
@@ -65,11 +71,18 @@ VALUE_STRAND_COL = {
     },
 }
 
+def get_cols_for_index(metadata):
+    dataset_type = metadata['dataset']['collection_type'].lower()
+    if dataset_type != 'eqtls':
+        return INDEX_COLS.get(dataset_type, {})
+    else:
+        assembly = metadata['file']['assembly'].lower()
+        return INDEX_COLS['eqtls'].get(assembly, {})
 
-def add_to_residence(es, file_doc):
-    file_doc['chroms'] = list(set(file_doc['chroms']))
+def add_to_residence(es, metadata):
+    metadata['chroms'] = list(set(metadata['chroms']))
 
-    es.index(index=RESIDENTS_INDEX, doc_type=FOR_REGULOME_DB, body=file_doc, id=str(file_doc['uuid']))
+    es.index(index=RESIDENTS_INDEX, doc_type=FOR_REGULOME_DB, body=metadata, id=str(metadata['uuid']))
 
 
 def snps_bulk_iterator(snp_index, chrom, snps_for_chrom):
@@ -124,14 +137,14 @@ def index_regions(es, regions, metadata, chroms):
     return True
 
 
-def index_regions_from_file(es, uuid, file_properties, dataset, snp=False):
-    metadata = metadata_doc(uuid, file_properties, dataset)
+def index_regions_from_file(es, file_uuid, file_metadata, dataset_metadata, snp=False):
+    metadata = metadata_doc(file_uuid, file_metadata, dataset_metadata)
 
-    is_snp_reference = dataset['@type'][0].lower() == 'reference'
-    dataset_type = metadata['dataset']['collection_type'].lower()
-    value_strand_col = VALUE_STRAND_COL.get(dataset_type, {})
-    file_size = file_properties.get('file_size', 0)
-    file_path = file_properties['s3_uri']
+    is_snp_reference = dataset_metadata['@type'][0].lower() == 'reference'
+    cols_for_index = get_cols_for_index(metadata)
+    
+    file_size = file_metadata.get('file_size', 0)
+    file_path = file_metadata['s3_uri']
 
     metadata['chroms'] = []
 
@@ -143,18 +156,16 @@ def index_regions_from_file(es, uuid, file_properties, dataset, snp=False):
     if is_snp_reference:
         docs = SnfParser(reader).parse()
     else:
-        value_col = value_strand_col.get('value_col')
-        strand_col = value_strand_col.get('strand_col')
-        docs = RegionParser(reader, value_col, strand_col).parse()
+        docs = RegionParser(reader, cols_for_index).parse()
 
-    if file_properties['file_format'] == 'bed':
+    if file_metadata['file_format'] == 'bed':
         for (chrom, doc) in docs:
             if chrom.lower() not in SUPPORTED_CHROMOSOMES:
                 continue
 
             if doc['coordinates']['gte'] == doc['coordinates']['lt']:
                 print(
-                    file_properties['s3_uri'] + ' - on chromosome ' + doc[0] +
+                    file_metadata['s3_uri'] + ' - on chromosome ' + doc[0] +
                     ', a start coordinate ' + doc[1] + ' is ' +
                     'larger than or equal to the end coordinate ' + doc[2] +', ' +
                     'skipping row'
@@ -181,7 +192,7 @@ def index_regions_from_file(es, uuid, file_properties, dataset, snp=False):
         file_opener.close()
 
     if len(chroms) == 0 or not file_data:
-        raise IOError('Error parsing file %s' % file_properties['href'])
+        raise IOError('Error parsing file %s' % file_metadata['href'])
 
     if is_snp_reference:
         index_snps(es, file_data, metadata, list(file_data.keys()))
@@ -196,9 +207,9 @@ def index_regions_from_file(es, uuid, file_properties, dataset, snp=False):
     add_to_residence(es, metadata)
     
 
-def index_regions_from_test_snp_file(es, uuid, file_path, file_properties):
-    dataset = DATASET
-    metadata = metadata_doc(uuid, file_properties, dataset)
+def index_regions_from_test_snp_file(es, file_uuid, file_path, file_metadata):
+    dateset_metadata = DATASET
+    metadata = metadata_doc(file_uuid, file_metadata, dateset_metadata)
     metadata['chroms'] = []
 
     file_data = {}
@@ -263,56 +274,56 @@ def list_targets(dataset):
     return target_labels
 
 
-def metadata_doc(uuid, file_properties, dataset):
+def metadata_doc(file_uuid, file_metadata, dataset_metadata):
     meta_doc = {
-        'uuid': uuid,
+        'uuid': file_uuid,
         'uses': FOR_REGULOME_DB,
         'file': {
-            'uuid': uuid,
-            '@id': file_properties['@id'],
-            'assembly': file_properties.get('assembly', 'unknown')
+            'uuid': file_uuid,
+            '@id': file_metadata['@id'],
+            'assembly': file_metadata.get('assembly', 'unknown')
         },
         'dataset': {
-            'uuid': dataset['uuid'],
-            '@id': dataset['@id'],
-            'target': list_targets(dataset),
-            'biosample_ontology': dataset.get('biosample_ontology', {}),
-            'biosample_term_name': dataset.get('biosample_ontology', {}).get('term_name'),
+            'uuid': dataset_metadata['uuid'],
+            '@id': dataset_metadata['@id'],
+            'target': list_targets(dataset_metadata),
+            'biosample_ontology': dataset_metadata.get('biosample_ontology', {}),
+            'biosample_term_name': dataset_metadata.get('biosample_ontology', {}).get('term_name'),
             'documents': []
         },
-        'dataset_type': dataset['@type'][0]
+        'dataset_type': dataset_metadata['@type'][0]
     }
 
     for prop in REGULOME_COLLECTION_TYPES:
-        prop_value = dataset.get(prop)
+        prop_value = dataset_metadata.get(prop)
         if prop_value:
             meta_doc['dataset']['collection_type'] = prop_value
 
     if meta_doc['dataset']['collection_type'].lower() in ['footprints', 'pwms']:
-        meta_doc['dataset']['documents'] = dataset.get('documents', [])
+        meta_doc['dataset']['documents'] = dataset_metadata.get('documents', [])
 
     return meta_doc
 
 
-def remove_from_es(indexed_file, uuid, es):
+def remove_from_es(indexed_file, file_uuid, es):
     if not indexed_file:
-        print("Trying to drop file: %s  NOT FOUND", uuid)
+        print("Trying to drop file: %s  NOT FOUND", file_uuid)
         return
     
     if 'index' in indexed_file:
         es.delete(index=indexed_file['index'])
     else:
         for chrom in indexed_file['chroms']:
-            es.delete(index=chrom.lower(), doc_type=indexed_file['assembly'], id=str(uuid))
+            es.delete(index=chrom.lower(), doc_type=indexed_file['assembly'], id=str(file_uuid))
 
-        es.delete(index=RESIDENTS_INDEX, doc_type=use_type, id=str(uuid))
+        es.delete(index=RESIDENTS_INDEX, doc_type=use_type, id=str(file_uuid))
         
         return True
 
 
-def file_in_es(uuid, es):
+def file_in_es(file_uuid, es):
     try:
-        return es.get(index=RESIDENTS_INDEX, id=str(uuid), doc_type=FOR_REGULOME_DB).get('_source', {})
+        return es.get(index=RESIDENTS_INDEX, id=str(file_uuid), doc_type=FOR_REGULOME_DB).get('_source', {})
     except NotFoundError:
         return None
     except Exception:
@@ -322,10 +333,10 @@ def file_in_es(uuid, es):
 
 
 @celery_app.task(bind=True, autoretry_for=(Exception,), retry_kwargs={'max_retries': 5, 'countdown': 2})
-def index_file(self, file_, dataset, es_hosts, es_port, force_reindex=False):
+def index_file(self, file_metadata, dataset_metadata, es_hosts, es_port, force_reindex=False):
     es = Elasticsearch(port=es_port, hosts=es_hosts)
 
-    file_uuid = file_['uuid']
+    file_uuid = file_metadata['uuid']
 
     indexed_file = file_in_es(file_uuid, es)
 
@@ -335,9 +346,9 @@ def index_file(self, file_, dataset, es_hosts, es_port, force_reindex=False):
         else:
             return f"File {file_uuid} is already indexed"
 
-    index_regions_from_file(es, file_uuid, file_, dataset)
+    index_regions_from_file(es, file_uuid, file_metadata, dataset_metadata)
 
-    return f"File {file_uuid} was indexed via {file_['href']}"
+    return f"File {file_uuid} was indexed via {file_metadata['href']}"
 
 @celery_app.task(bind=True, autoretry_for=(Exception,), retry_kwargs={'max_retries': 5, 'countdown': 2})
 def index_local_snp_files(self, file_path, file_properties, es_hosts, es_port):

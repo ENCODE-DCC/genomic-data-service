@@ -105,6 +105,18 @@ class RegionIndexerElasticSearch():
                     'value': {
                         'type': 'string'
                     },
+                    'name': {
+                        'type': 'string'
+                    },
+                    'ensg_id': {
+                        'type': 'string'
+                    },
+                    'p_value': {
+                        'type': 'string'
+                    },
+                    'effect_size': {
+                        'type': 'string'
+                    },
                 }
             }
         }
