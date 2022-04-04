@@ -307,9 +307,16 @@ def get_encode_accessions():
                 and file["analyses"][0]["@id"] == default_analysis_id
             ):
                 encode_accessions.append(file["accession"])
+    with open('experiments_grch38.pickle', 'wb') as handle:
+        pickle.dump(experiments, handle)
+    with open('annotations_grch38.pickle', 'wb') as handle:
+        pickle.dump(annotations, handle)
+    with open('encode_accessions_grch38.pickle', 'wb') as handle:
+        pickle.dump(encode_accessions, handle)
     return encode_accessions
 
 def index_regulome_db(encode_accessions, local_files, filter_files=False):
+    print("Number of files for indexing in encode database using assembly GRCh38:", len(encode_accessions))
     datasets = {}
     per_request = 350
     chunks = [
