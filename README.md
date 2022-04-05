@@ -62,7 +62,7 @@ docker-compose --file docker-compose-m1/intel.yml down --remove-orphans
 Run tests using compose file suitable for your machine:
 
 ```bash
-docker-compose --file docker-compose-test-m1/intel.yml up --build
+docker-compose --file docker-compose-test-m1/intel.yml --env-file ./docker_compose/test.env up --build
 ```
 
 Tear down:
