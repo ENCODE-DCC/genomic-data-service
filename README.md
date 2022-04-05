@@ -35,7 +35,7 @@ docker-compose --file docker-compose-index-m1/intel.yml up
 After indexing has finished (takes about 5 minutes) tear down:
 
 ```bash
-docker-compose down --remove-orphans
+docker-compose --file dockeri-compose-index-m1/intel.yml down --remove-orphans
 ```
 
 This command will index ES database, creating a directory `esdata` where it stores the indexes. This is reusable by the app (see instructions for running below).
@@ -49,13 +49,13 @@ docker-compose --file docker-compose-m1/intel.yml build
 docker-compose --file docker-compose-m1/intel.yml up
 ```
 
+The application is available in `localhost:80`.
+
 Tear down:
 
 ```bash
-docker-compose down --remove-orphans
+docker-compose --file docker-compose-m1/intel.yml down --remove-orphans
 ```
-
-The application is available in `localhost:80`.
 
 ## Testing
 
@@ -68,7 +68,7 @@ docker-compose --file docker-compose-test-m1/intel.yml up --build
 Tear down:
 
 ```bash
-docker-compose down -v --remove-orphans
+docker-compose --file docker-compose-test-m1/intel.yml down -v --remove-orphans
 ```
 
 ## AWS Deployment
