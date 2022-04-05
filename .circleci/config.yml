@@ -3,29 +3,25 @@ version: 2.1
 workflows:
   gds-tests:
     jobs:
-      - install-and-test
+      - build-and-test
 
 jobs:
-  install-and-test:
-    docker:
-      - image: encodedcc/gds_test
+  build-and-test:
+    machine:
+      image: ubuntu-2004:202111-02
+      docker_layer_caching: true
+    resource_class: medium
+    working_directory: ~/genomic_data_service
     steps:
       - checkout
       - run:
-          name: Install
-          command: |
-            pip install --upgrade pip
-            pip install coveralls
-            pip install -e .[test]
+          name: Build docker images
+          command: docker-compose -f docker-compose-test-intel.yml build 
       - run:
-          name: Unit tests
+          name: Tests
           command: |
-            pytest -s -v --cov=genomic_data_service -m 'not integration'
+            docker-compose -f docker-compose-test-intel.yml --env-file ./docker_compose/test.env up --exit-code-from genomic_data_service
       - run:
-          name: Integration tests
+          name: Upload coverage
           command: |
-            pytest -s -v --cov=genomic_data_service --cov-append -m 'integration'
-      - run:
-          name: Upload coverage report
-          command:
-            coveralls
+              docker-compose -f docker-compose-test-intel.yml run --no-deps -e COVERALLS_REPO_TOKEN=$COVERALLS_REPO_TOKEN genomic_data_service coveralls

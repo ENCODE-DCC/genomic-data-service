@@ -8,10 +8,13 @@ build:
 	python3 ./utils/download_ml_models.py
 
 run:
-	FLASK_APP=$(APP_NAME) FLASK_ENV=development flask run -p 5000
+	FLASK_APP=$(APP_NAME) FLASK_ENV=development gunicorn --bind 0.0.0.0:5000 wsgi:app
 
 clean:
 	rm -rf genomic_data_service.egg-info/
+
+test:
+	FLASK_APP=$(APP_NAME) FLASK_ENV=test GENOMIC_DATA_SERVICE_SETTINGS=../config/test.cfg pytest -s -v --cov=genomic_data_service
 
 unit_test:
 	FLASK_APP=$(APP_NAME) FLASK_ENV=test GENOMIC_DATA_SERVICE_SETTINGS=../config/test.cfg pytest -s -v --cov=genomic_data_service -m 'not integration'
@@ -32,5 +35,6 @@ index:
 	python3 genomic_data_service/region_indexer.py
 
 index_local:
+	sleep 10
 	python3 genomic_data_service/region_indexer.py --local
 

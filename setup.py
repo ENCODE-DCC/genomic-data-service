@@ -5,6 +5,7 @@ setup(
     packages=["genomic_data_service"],
     include_package_data=True,
     install_requires=[
+        'itsdangerous==2.0.1',
         'click==8.0.1',
         'Werkzeug==2.0.1',
         'Flask==2.0.1',
@@ -27,9 +28,10 @@ setup(
     ],
     extras_require={
         "test": [
-            "pytest==6.2.4",
-            "pytest-mock==3.6.1",
-            "pytest-cov==2.12.1",
+            "pytest==5.3.2",
+            "pytest-mock==2.0.0",
+            "pytest-cov==3.0.0",
+            "coveralls==3.3.1",
         ]
     },
 )

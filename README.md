@@ -6,60 +6,70 @@ Flask based web service providing genomic region search, based on regulomedb.org
 
 Installation Requirements:
 
-* python 3.8 (locally 3.9 and 3.10 work as well)
-* postgres (only for RNAGet?)
-* elasticsearch (5.6 currently)
-
+To run this application locally you will need to install Docker. To download the machine learning models you need python3.
 
 ## Application Installation
 
-1. Create a virtual env in your work directory.
-    This example uses the python module venv. Other options would also work, like conda or pyenv
-    ```
-    $ cd your-work-dir
-    $ python3 -m venv genomic-venv
-    $ source genomic-venv/bin/activate
-    ```
+### Download machine learning models
+This is required for running indexing. Tests can be run without.
 
-2. Clone the repo and install requirements
-    ```
-    # Make sure you are in the genomic-venv
-    $ cd genomic-data-service
-    $ pip3 install -e .
-    ```
+In python3 virtual env, install boto3:
+```bash
+pip install boto3
+```
 
-3. Run the application:
-    ```
-    $ make run
-    ```
-    It will be available on port 5000.
+Download machine learning models:
+```bash
+python utils/download_ml_models
+```
 
-4. (Optional) Run the indexer (independent of flask application):
-    ```
-    $ brew services start redis (if redis not running)
+### Indexing
 
-    in separate windows, with virtualenv
-    $ python3 ./utils/dev_server/dev_server.py (start local ES)
-    $ make worker
-    $ make flower
-    $ make index
-    ```
+Using the compose file suitable for your machine:
 
-    if you just want to index a small number of files for local install, run `make index_local` instead of `make index`.
-    Monitoring via flower will be available on port 5555 (localhost unless otherwise set).
+```bash
+docker-compose --file docker-compose-index-m1/intel.yml build
+docker-compose --file docker-compose-index-m1/intel.yml up
+```
+
+After indexing has finished (takes about 5 minutes) tear down:
+
+```bash
+docker-compose --file dockeri-compose-index-m1/intel.yml down --remove-orphans
+```
+
+This command will index ES database, creating a directory `esdata` where it stores the indexes. This is reusable by the app (see instructions for running below).
+
+### Running the app:
+
+Using the compose file suitable for your machine:
+
+```bash
+docker-compose --file docker-compose-m1/intel.yml build
+docker-compose --file docker-compose-m1/intel.yml up
+```
+
+The application is available in `localhost:80`.
+
+Tear down:
+
+```bash
+docker-compose --file docker-compose-m1/intel.yml down --remove-orphans
+```
 
 ## Testing
 
-1. Install test requirment:
-    ```
-    $ pip install -e '.[test]'
-    ```
+Run tests using compose file suitable for your machine:
 
-2. Run tests:
-    ```
-    $ make unit_test
-    $ make integration_test
-    ```
+```bash
+docker-compose --file docker-compose-test-m1/intel.yml --env-file ./docker_compose/test.env up --build
+```
+
+Tear down:
+
+```bash
+docker-compose --file docker-compose-test-m1/intel.yml down -v --remove-orphans
+```
 
 ## AWS Deployment
 

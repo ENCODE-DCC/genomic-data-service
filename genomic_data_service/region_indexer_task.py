@@ -103,7 +103,7 @@ def index_snps(es, snps, metadata, chroms=None):
         if len(snps[chrom]) == 0:
             continue
 
-        bulk(es, snps_bulk_iterator(snp_index, chrom, snps[chrom]), chunk_size=100000, request_timeout=1000)
+        bulk(es, snps_bulk_iterator(snp_index, chrom, snps[chrom]), chunk_size=100000, request_timeout=2000)
 
         metadata['chroms'].append(chrom)
 
@@ -131,7 +131,7 @@ def index_regions(es, regions, metadata, chroms):
         if len(regions[chrom]) == 0:
             continue
 
-        bulk(es, region_bulk_iterator(chrom_lc, assembly, uuid, regions[chrom]), chunk_size=5000, request_timeout=1000)
+        bulk(es, region_bulk_iterator(chrom_lc, assembly, uuid, regions[chrom]), chunk_size=5000, request_timeout=2000)
         metadata['chroms'].append(chrom)
 
     return True

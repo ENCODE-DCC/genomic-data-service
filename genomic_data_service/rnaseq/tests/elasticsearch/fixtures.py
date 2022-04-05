@@ -44,9 +44,8 @@ def start_elasticsearch(host='127.0.0.1', port=9202):
 
 
 @pytest.fixture(scope='session')
-def elasticsearch_client(host='127.0.0.1', port=9202):
+def elasticsearch_client(host='elasticsearch', port=9200):
     from elasticsearch import Elasticsearch
-    with start_elasticsearch(host=host, port=port) as process:
-        yield Elasticsearch(
-            [f'{host}:{port}']
-        )
+    yield Elasticsearch(
+        [f'{host}:{port}']
+    )

@@ -1,10 +1,12 @@
 import re
+import time
 import pytest
 
 from genomic_data_service.region_indexer import dataset_accession
 
 
 def test_indices(regulome_elasticsearch_client):
+    time.sleep(10)
     regulome_elasticsearch_client.setup_indices()
     indices = list(regulome_elasticsearch_client.es.indices.get_alias().keys())
     indices.sort()

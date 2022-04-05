@@ -1,4 +1,5 @@
 import pytest
+import time
 
 def test_rnaseq_repository_memory_init():
     from genomic_data_service.rnaseq.repository.memory import Memory
@@ -139,6 +140,7 @@ def test_rnaseq_repository_elasticsearch_init():
 @pytest.mark.integration
 def test_rnaseq_repository_elasticsearch_load(mocker, mock_portal, raw_expressions, elasticsearch_client):
     from genomic_data_service.rnaseq.repository.elasticsearch import Elasticsearch
+    time.sleep(5)
     es = Elasticsearch(
         elasticsearch_client
     )
