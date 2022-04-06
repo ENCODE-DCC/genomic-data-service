@@ -140,19 +140,11 @@ def index_regions(es, regions, metadata, chroms):
 
 
 def index_regions_from_file(es, file_uuid, file_metadata, dataset_metadata, snp=False):
-    print("indexing file:", file_uuid)
-
     metadata = metadata_doc(file_uuid, file_metadata, dataset_metadata)
-
     is_snp_reference = dataset_metadata['@type'][0].lower() == 'reference'
-    print("is snp reference:", is_snp_reference)
     cols_for_index = get_cols_for_index(metadata)
-    print("cols_for_index:", cols_for_index)
-    
     file_size = file_metadata.get('file_size', 0)
-    print("file size:", file_size)
     file_path = file_metadata['s3_uri']
-    print("file path:", file_path)
     metadata['chroms'] = []
 
     file_data = {}
@@ -163,9 +155,7 @@ def index_regions_from_file(es, file_uuid, file_metadata, dataset_metadata, snp=
     if is_snp_reference:
         docs = SnfParser(reader).parse()
     else:
-        print("get docs......")
         docs = RegionParser(reader, cols_for_index, file_path).parse()
-        print("get docs:", len(list(docs)))
 
     if file_metadata['file_format'] == 'bed':
         for (chrom, doc) in docs:
