@@ -3,9 +3,10 @@ import abc
 from genomic_data_service.gene_name_lookup import gene_name_lookup
 
 class Parser:
-    def __init__(self, reader, cols_for_index={}):
+    def __init__(self, reader, cols_for_index={}, file_path=None):
         self.reader = reader
         self.cols_for_index = cols_for_index
+        self.file_path = file_path 
     def parse(self):
         for line in self.reader:
             if line[0].startswith('#'):
