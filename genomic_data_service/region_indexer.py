@@ -310,17 +310,19 @@ def get_encode_accessions():
                 and file["analyses"][0]["@id"] == default_analysis_id
             ):
                 encode_accessions.append(file["accession"])
+
     # get files for chromatin state for grch38
     endpoint = "https://www.encodeproject.org/search/?type=File&output_type=semi-automated+genome+annotation&status=released&assembly=GRCh38&lab.title=Manolis+Kellis%2C+Broad&file_format=bed&format=json&limit=all"
     files = requests.get(endpoint).json()["@graph"]
     for file in files:
         encode_accessions.append(file["accession"])
+        
     with open('encode_accessions_all.pickle', 'wb') as handle:
         pickle.dump(encode_accessions, handle)
     return encode_accessions
 
 def index_regulome_db(encode_accessions, local_files, filter_files=False):
-    print("Number of files for indexing in encode database using assembly GRCh38:", len(encode_accessions))
+    print("Number of files for indexing:", len(encode_accessions))
     datasets = {}
     per_request = 350
     chunks = [
