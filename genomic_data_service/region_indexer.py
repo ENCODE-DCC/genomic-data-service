@@ -111,6 +111,7 @@ DATASET_REQUIRED_FIELDS = [
     "reference_type",
     "biosample_ontology",
     "documents",
+    "description"
     "status",
 ]
 parser = argparse.ArgumentParser(
