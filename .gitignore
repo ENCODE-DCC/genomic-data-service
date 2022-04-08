@@ -144,6 +144,4 @@ ml_models/bigwig_files
 .DS_Store
 
 # query results
-annotations_grch38.pickle
-encode_accessions_grch38.pickle
-experiments_grch38.pickle
+encode_accessions_all.pickle
