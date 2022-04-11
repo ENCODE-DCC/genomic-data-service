@@ -54,14 +54,16 @@ INDEX_COLS = {
     'chromatin state': {
         'value_col': 3
     },
-    'eqtls_hg19': {
-        'value_col': 5,   
-    },
-    'eqtls_grch38': {
+    'eqtls': {
+        'hg19': {
+            'value_col': 5,   
+        },
+        'grch38': {
             'name_col': 3,
             'ensg_id_col': 8,
             'p_value_col': 14,
             'effect_size_col': 15
+        }
     },
     'footprints': {
         'strand_col': 5,
@@ -139,13 +141,10 @@ def index_regions(es, regions, metadata, chroms):
 
 def index_regions_from_file(es, file_uuid, file_metadata, dataset_metadata, snp=False):
     metadata = metadata_doc(file_uuid, file_metadata, dataset_metadata)
-
     is_snp_reference = dataset_metadata['@type'][0].lower() == 'reference'
     cols_for_index = get_cols_for_index(metadata)
-    
     file_size = file_metadata.get('file_size', 0)
     file_path = file_metadata['s3_uri']
-
     metadata['chroms'] = []
 
     file_data = {}
@@ -156,7 +155,7 @@ def index_regions_from_file(es, file_uuid, file_metadata, dataset_metadata, snp=
     if is_snp_reference:
         docs = SnfParser(reader).parse()
     else:
-        docs = RegionParser(reader, cols_for_index).parse()
+        docs = RegionParser(reader, cols_for_index, file_path).parse()
 
     if file_metadata['file_format'] == 'bed':
         for (chrom, doc) in docs:
