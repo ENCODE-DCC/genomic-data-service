@@ -5,6 +5,7 @@ setup(
     packages=["genomic_data_service"],
     include_package_data=True,
     install_requires=[
+        'antlr4-python3-runtime==4.9.3',
         'itsdangerous==2.0.1',
         'click==8.0.1',
         'Werkzeug==2.0.1',
