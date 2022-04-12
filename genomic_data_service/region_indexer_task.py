@@ -289,7 +289,7 @@ def metadata_doc(file_uuid, file_metadata, dataset_metadata):
             'biosample_ontology': dataset_metadata.get('biosample_ontology', {}),
             'biosample_term_name': dataset_metadata.get('biosample_ontology', {}).get('term_name'),
             'documents': [],
-            'description':dataset_metadata.get('description'),
+            'description': dataset_metadata.get('description'),
         },
         'dataset_type': dataset_metadata['@type'][0]
     }
