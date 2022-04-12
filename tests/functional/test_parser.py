@@ -22,7 +22,7 @@ def test_RegionParser_eqtls_grch38(reader_eqtls_grch38):
         'p_value_col': 14,
         'effect_size_col': 15
     }
-    docs = list(RegionParser(reader_eqtls_grch38, cols_for_index).parse())
+    docs = list(RegionParser(reader_eqtls_grch38, cols_for_index, gene_lookup=True).parse())
     (chrom, doc) = docs[0]
     assert chrom == "chr1"
     assert doc == {
