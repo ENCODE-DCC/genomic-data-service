@@ -9,7 +9,7 @@ class Parser:
         self.file_path = file_path
         if gene_lookup:
             with open("gene_lookup.pickle", "rb") as file:
-                self.gene_dict = pickle.load(file)
+                self.gene_symbol_dict = pickle.load(file)
 
     def parse(self):
         for line in self.reader:
@@ -102,7 +102,7 @@ class RegionParser(Parser):
         if 'ensg_id_col' in self.cols_for_index:
             ensg_id = line[self.cols_for_index['ensg_id_col']].split('.')[0]
             doc['ensg_id'] = ensg_id
-            gene_name = self.gene_dict.get(ensg_id)
+            gene_name = self.gene_symbol_dict.get(ensg_id)
             if gene_name:
                 doc['value'] = gene_name
         if 'name_col' in self.cols_for_index and self.cols_for_index['name_col'] < len(line):
