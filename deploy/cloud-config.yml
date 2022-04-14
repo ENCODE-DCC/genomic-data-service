@@ -21,6 +21,9 @@ runcmd:
 - set -ex
 - update-rc.d elasticsearch defaults
 - service elasticsearch restart
+- sudo -u ubuntu python3 -m venv cloudwatchmon-venv
+- sudo -u ubuntu /home/ubuntu/cloudwatchmon-venv/bin/pip --no-cache-dir install --upgrade pip setuptools
+- sudo -u ubuntu /home/ubuntu/cloudwatchmon-venv/bin/pip --no-cache-dir install cloudwatchmon 
 - sudo -u ubuntu git clone --no-checkout %(GIT_REPO)s /home/ubuntu/genomic-data-service/
 - cd /home/ubuntu/genomic-data-service
 - sudo -u ubuntu git checkout %(COMMIT)s
@@ -82,3 +85,14 @@ write_files:
     /usr/bin/find /var/log/elasticsearch -name elasticsearch-2*.log -mtime +1 -exec /bin/gzip --best {} \;
   owner: root:root
   permissions: '0755'
+- path: /etc/cron.d/cloudwatchmon
+  content: |
+    */5 * * * * nobody /home/ubuntu/cloudwatchmon-venv/bin/mon-put-instance-stats.py --mem-util --swap-util --disk-space-util --disk-path=/ --from-cron
+  owner: root:root
+  permissions: '644'
+- path: /etc/default/sysstat
+  content: |
+    ENABLED="true"
+  owner: root:root
+  permissions: '644'
+  content: |
