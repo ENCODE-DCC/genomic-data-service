@@ -87,7 +87,7 @@ write_files:
   permissions: '0755'
 - path: /etc/cron.d/cloudwatchmon
   content: |
-    */5 * * * * nobody /home/ubuntu/genomic-data-servicecloudwatchmon-venv/bin/mon-put-instance-stats.py --mem-util --swap-util --disk-space-util --disk-path=/ --from-cron
+    */5 * * * * nobody /home/ubuntu/genomic-data-service/cloudwatchmon-venv/bin/mon-put-instance-stats.py --mem-util --swap-util --disk-space-util --disk-path=/ --from-cron
   owner: root:root
   permissions: '644'
 - path: /etc/default/sysstat
