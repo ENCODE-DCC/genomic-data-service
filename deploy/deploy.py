@@ -269,7 +269,7 @@ def parse_args():
     )
     parser.add_argument(
         "--image-id",
-        default="ami-0787b9e5747b9e78c",
+        default="ami-0f02ec44da36ff919",
         help=("Ubuntu 20.04 AMI with require dependencies"),
     )
     parser.add_argument(
