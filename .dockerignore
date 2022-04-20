@@ -1,3 +1,4 @@
 .git
 .coverage
 .coveragerc
+ml_models/bigwig_files

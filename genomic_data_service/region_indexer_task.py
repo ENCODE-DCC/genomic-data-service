@@ -6,10 +6,14 @@ from genomic_data_service.file_opener import LocalFileOpener,S3FileOpener
 from genomic_data_service.parser import SnfParser, RegionParser
 from genomic_data_service.constants import DATASET
 import uuid
+from os import environ
 
 
 celery_app = Celery('regulome_indexer')
-celery_app.config_from_object('config.celeryconfig')
+if "DOCKER" in environ:
+    celery_app.config_from_object('config.celeryconfig_docker')
+else:
+    celery_app.config_from_object('config.celeryconfig')
 
 
 RESIDENTS_INDEX = 'resident_regionsets'

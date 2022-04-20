@@ -10,11 +10,12 @@ import argparse
 import time
 
 
-if "ES" in environ:
-    es_uri = [environ["ES"]]
-else:
+if "DOCKER" in environ:
     es_uri = ["elasticsearch"]
-es_port = 9200
+    es_port = 9200
+else:
+    es_uri = ["localhost"]
+    es_port = 9201
 
 
 SUPPORTED_CHROMOSOMES = [
