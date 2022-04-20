@@ -154,6 +154,8 @@ def index_regions_from_file(es, file_uuid, file_metadata, dataset_metadata, snp=
     docs = None
     if is_snp_reference:
         docs = SnfParser(reader).parse()
+    elif "ensg_id_col" in cols_for_index:
+        docs = RegionParser(reader, cols_for_index, file_path, gene_lookup=True).parse()
     else:
         docs = RegionParser(reader, cols_for_index, file_path).parse()
 

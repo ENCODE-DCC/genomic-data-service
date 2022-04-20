@@ -1,12 +1,16 @@
 from asyncio.log import logger
 import abc
-from genomic_data_service.gene_name_lookup import gene_name_lookup
+import pickle
 
 class Parser:
-    def __init__(self, reader, cols_for_index={}, file_path=None):
+    def __init__(self, reader, cols_for_index={}, file_path=None, gene_lookup=False):
         self.reader = reader
         self.cols_for_index = cols_for_index
-        self.file_path = file_path 
+        self.file_path = file_path
+        if gene_lookup:
+            with open("gene_lookup.pickle", "rb") as file:
+                self.gene_symbol_dict = pickle.load(file)
+
     def parse(self):
         for line in self.reader:
             if line[0].startswith('#'):
@@ -98,7 +102,7 @@ class RegionParser(Parser):
         if 'ensg_id_col' in self.cols_for_index:
             ensg_id = line[self.cols_for_index['ensg_id_col']].split('.')[0]
             doc['ensg_id'] = ensg_id
-            gene_name = gene_name_lookup(ensg_id)
+            gene_name = self.gene_symbol_dict.get(ensg_id)
             if gene_name:
                 doc['value'] = gene_name
         if 'name_col' in self.cols_for_index and self.cols_for_index['name_col'] < len(line):
