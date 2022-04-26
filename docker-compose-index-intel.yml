@@ -31,8 +31,8 @@ services:
       - redis
       - worker
     environment:
-      - GENOMIC_DATA_SERVICE_SETTINGS=/genomic_data_service/config/development.cfg
-    command: make index_local
+      - GENOMIC_DATA_SERVICE_SETTINGS=/genomic_data_service/config/development_docker.cfg
+    command: make index_docker
 
   worker:
     build:
@@ -42,8 +42,8 @@ services:
       - elasticsearch
       - redis
     environment:
-      - GENOMIC_DATA_SERVICE_SETTINGS=/genomic_data_service/config/development.cfg
-    command: make worker
+      - GENOMIC_DATA_SERVICE_SETTINGS=/genomic_data_service/config/development_docker.cfg
+    command: make worker_docker
 
   redis:
     image: redis:alpine
