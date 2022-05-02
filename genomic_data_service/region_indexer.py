@@ -4,18 +4,8 @@ from genomic_data_service.region_indexer_elastic_search import (
 )
 import requests
 import pickle
-from os import environ
 from genomic_data_service.constants import FILE_HG19
 import argparse
-import time
-
-
-# if "DOCKER" in environ:
-#     es_uri = ["elasticsearch"]
-#     es_port = 9200
-# else:
-#     es_uri = ["localhost"]
-#     es_port = 9201
 
 
 SUPPORTED_CHROMOSOMES = [

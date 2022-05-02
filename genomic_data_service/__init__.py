@@ -16,9 +16,6 @@ app.register_blueprint(rnaget_api)
 
 if "GENOMIC_DATA_SERVICE_SETTINGS" in environ:
     app.config.from_envvar("GENOMIC_DATA_SERVICE_SETTINGS")
-elif "DOCKER" in environ:
-    print("[CONFIG] Defaulting to development_docker config")
-    app.config.from_pyfile("../config/development_docker.cfg")
 else:
     print("[CONFIG] Defaulting to development config")
     app.config.from_pyfile("../config/development.cfg")
