@@ -10,12 +10,12 @@ import argparse
 import time
 
 
-if "DOCKER" in environ:
-    es_uri = ["elasticsearch"]
-    es_port = 9200
-else:
-    es_uri = ["localhost"]
-    es_port = 9201
+# if "DOCKER" in environ:
+#     es_uri = ["elasticsearch"]
+#     es_port = 9200
+# else:
+#     es_uri = ["localhost"]
+#     es_port = 9201
 
 
 SUPPORTED_CHROMOSOMES = [
@@ -121,6 +121,14 @@ parser = argparse.ArgumentParser(
 
 parser.add_argument(
     "--local", action='store_true',
+    help = "Index a small number of files for local install")
+
+parser.add_argument(
+    "--port", default=9201,
+    help = "Index a small number of files for local install")
+
+parser.add_argument(
+    "--uri", default=['localhost'], nargs='*',
     help = "Index a small number of files for local install")
 
 def clean_up(obj, fields):
@@ -318,6 +326,13 @@ def index_regulome_db(encode_accessions, local_files, filter_files=False):
 
 
 if __name__ == "__main__":
+
+    args = parser.parse_args()
+    es_uri = args.uri
+    es_port = args.port
+    is_local_install = args.local
+    print("es uri:", es_uri)
+    print("es port:", es_port)
 
     RegionIndexerElasticSearch(
         es_uri, es_port, SUPPORTED_CHROMOSOMES, SUPPORTED_ASSEMBLIES
