@@ -7,9 +7,9 @@ Type=forking
 User=ubuntu
 Group=ubuntu
 WorkingDirectory=/home/ubuntu/genomic-data-service
-ExecStart=/home/ubuntu/genomic-data-service/genomic-venv/bin/celery multi start worker -A genomic_data_service.region_indexer_task --loglevel=INFO --pidfile="/home/ubuntu/run/celery/%n.pid" --logfile="/home/ubuntu/log/celery_%n.log"
+ExecStart=/home/ubuntu/genomic-data-service/genomic-venv/bin/celery multi start worker -A genomic_data_service.region_indexer_task.celery_app --loglevel=INFO --pidfile="/home/ubuntu/run/celery/%n.pid" --logfile="/home/ubuntu/log/celery_%n.log"
 ExecStop=/home/ubuntu/genomic-data-service/genomic-venv/bin/celery multi stopwait worker --pidfile="/home/ubuntu/run/celery/%n.pid" --logfile="/home/ubuntu/log/celery_%n.log"
-ExecReload=/home/ubuntu/genomic-data-service/genomic-venv/bin/celery multi restart worker -A genomic_data_service.region_indexer_task --pidfile="/home/ubuntu/run/celery/%n.pid" --loglevel=INFO --logfile="/home/ubuntu/log/celery_%n%I.log"
+ExecReload=/home/ubuntu/genomic-data-service/genomic-venv/bin/celery multi restart worker -A genomic_data_service.region_indexer_task.celery_app --pidfile="/home/ubuntu/run/celery/%n.pid" --loglevel=INFO --logfile="/home/ubuntu/log/celery_%n%I.log"
 Restart=always
 
 [Install]

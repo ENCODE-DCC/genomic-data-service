@@ -1,3 +1,4 @@
+from genomic_data_service import app
 from celery import Celery
 from elasticsearch import Elasticsearch
 from elasticsearch.exceptions import NotFoundError
@@ -6,14 +7,27 @@ from genomic_data_service.file_opener import LocalFileOpener,S3FileOpener
 from genomic_data_service.parser import SnfParser, RegionParser
 from genomic_data_service.constants import DATASET
 import uuid
-from os import environ
 
 
-celery_app = Celery('regulome_indexer')
-if "DOCKER" in environ:
-    celery_app.config_from_object('config.celeryconfig_docker')
-else:
-    celery_app.config_from_object('config.celeryconfig')
+def make_celery(app):
+    celery_app = Celery(
+        app.import_name
+    )
+    celery_app.conf.update(
+        broker_url = app.config['CELERY_BROKER_URL'],
+        task_serializer = app.config['CELERY_TASK_SERIALIZER'],
+        result_serializer = app.config['CELERY_RESULT_SERIALIZER'],
+        enable_utc = app.config['CELERY_ENABLE_UTC'], )
+
+    class ContextTask(celery_app.Task):
+        def __call__(self, *args, **kwargs):
+            with app.app_context():
+                return self.run(*args, **kwargs)
+
+    celery_app.Task = ContextTask
+    return celery_app
+
+celery_app = make_celery(app)
 
 
 RESIDENTS_INDEX = 'resident_regionsets'

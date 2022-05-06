@@ -11,7 +11,7 @@ run:
 	FLASK_APP=$(APP_NAME) FLASK_ENV=development gunicorn --bind 0.0.0.0:5000 wsgi:app
 
 run_docker:
-	DOCKER=flask_docker FLASK_APP=$(APP_NAME) FLASK_ENV=development gunicorn --bind 0.0.0.0:5000 wsgi:app
+	FLASK_APP=$(APP_NAME) FLASK_ENV=development GENOMIC_DATA_SERVICE_SETTINGS=../config/development_docker.cfg gunicorn --bind 0.0.0.0:5000 wsgi:app
 
 clean:
 	rm -rf genomic_data_service.egg-info/
@@ -29,21 +29,21 @@ prod:
 	FLASK_APP=$(APP_NAME) GENOMIC_DATA_SERVICE_SETTINGS=../config/production.cfg gunicorn -w 4 -b 127.0.0.1:4000 wsgi:app
 
 worker:
-	celery -A genomic_data_service.region_indexer_task worker --loglevel=INFO
+	celery -A genomic_data_service.region_indexer_task.celery_app worker --loglevel=INFO
 
 worker_docker:
-	DOCKER=worker_docker celery -A genomic_data_service.region_indexer_task worker --loglevel=INFO
+	GENOMIC_DATA_SERVICE_SETTINGS=../config/development_docker.cfg celery -A genomic_data_service.region_indexer_task.celery_app worker --loglevel=INFO
 
 flower:
-	flower -A genomic_data_service.region_indexer_task --address=127.0.0.1 --port=5555 --persistent=True --db=indexer_logs --max_tasks=1000000
+	flower -A genomic_data_service.region_indexer_task.celery_app --address=127.0.0.1 --port=5555 --persistent=True --db=indexer_logs --max_tasks=1000000
 
 index:
 	python3 genomic_data_service/region_indexer.py
 
 index_local:
-	sleep 10
 	python3 genomic_data_service/region_indexer.py --local
+	
 index_docker:
 	sleep 10
-	DOCKER=index_docker python3 genomic_data_service/region_indexer.py --local
+	GENOMIC_DATA_SERVICE_SETTINGS=../config/development_docker.cfg python3 genomic_data_service/region_indexer.py --local --uri elasticsearch --port 9200 
 
