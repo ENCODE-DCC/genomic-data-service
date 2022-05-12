@@ -1,12 +1,23 @@
 from asyncio.log import logger
 import abc
 import pickle
+import py2bit
 
 class Parser:
-    def __init__(self, reader, cols_for_index={}, file_path=None, gene_lookup=False):
+    def __init__(self, reader, cols_for_index={}, file_path=None, pwm=None,gene_lookup=False):
         self.reader = reader
         self.cols_for_index = cols_for_index
         self.file_path = file_path
+        if pwm:
+            self.pwm = pwm
+            self.seq_reader = py2bit.open("hg38.2bit")
+            self.base_paris = {
+                'A': 'T',
+                'T': 'A',
+                'G': 'C',
+                'C': 'G'
+                }
+            self.chars_index = {'A':0,'C':1,'G':2,'T':3}
         if gene_lookup:
             with open("gene_lookup.pickle", "rb") as file:
                 self.gene_symbol_dict = pickle.load(file)
@@ -111,4 +122,30 @@ class RegionParser(Parser):
             doc['p_value'] = line[self.cols_for_index['p_value_col']]
         if 'effect_size_col' in self.cols_for_index and self.cols_for_index['effect_size_col'] < len(line):
             doc['effect_size'] = line[self.cols_for_index['effect_size_col']]
+        return (chrom, doc)
+
+class FootPrintParser(Parser):
+    def document_generator(self, line):
+        chrom, start, end = line[0], int(line[1]), int(line[2])
+        doc = {
+            'coordinates': {
+                'gte': start,
+                'lt': end
+            },
+        }
+        sequence_5_to_3 = self.seq_reader.sequence(chrom, start, end)
+        sequence_3_to_5 = ''
+        for base in sequence_5_to_3:
+            sequence_3_to_5 += self.base_paris[base]
+
+        score_5_to_3 = 0
+        score_3_to_5 = 0
+
+        for i in range(len(sequence_5_to_3)):
+            score_5_to_3 += self.pwm[i][self.chars_index[sequence_5_to_3[i]]]
+            score_3_to_5 += self.pwm[i][self.chars_index[sequence_3_to_5[i]]] #add up scores for given bases on each position
+        if score_5_to_3 >= score_3_to_5:
+            doc['strand'] = '+'
+        else:
+            doc['strand'] = '-'
         return (chrom, doc)
