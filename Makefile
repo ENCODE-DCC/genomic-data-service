@@ -5,7 +5,7 @@ build:
 	source venv/bin/activate
 	pip3 install -e .
 	deactivate & source venv/bin/activate
-	python3 ./utils/download_ml_models.py
+	python3 ./utils/download_files.py
 
 run:
 	FLASK_APP=$(APP_NAME) FLASK_ENV=development gunicorn --bind 0.0.0.0:5000 wsgi:app
