@@ -3,6 +3,9 @@ import abc
 import pickle
 import py2bit
 
+TWO_BIT_FILE_PATH = 'ml_models/two_bit_files/hg38.2bit'
+GENE_LOOKUP_FILE_PATH = 'gene_lookup.pickle'
+
 class Parser:
     def __init__(self, reader, cols_for_index={}, file_path=None, pwm=None,gene_lookup=False):
         self.reader = reader
@@ -10,7 +13,7 @@ class Parser:
         self.file_path = file_path
         if pwm:
             self.pwm = pwm
-            self.seq_reader = py2bit.open("hg38.2bit")
+            self.seq_reader = py2bit.open(TWO_BIT_FILE_PATH)
             self.base_paris = {
                 'A': 'T',
                 'T': 'A',
@@ -19,7 +22,7 @@ class Parser:
                 }
             self.chars_index = {'A':0,'C':1,'G':2,'T':3}
         if gene_lookup:
-            with open("gene_lookup.pickle", "rb") as file:
+            with open(GENE_LOOKUP_FILE_PATH, "rb") as file:
                 self.gene_symbol_dict = pickle.load(file)
 
     def parse(self):
