@@ -19,7 +19,6 @@ def get_matrix_file_download_url(footprint_file):
     href = data["attachment"]["href"]
     id = data["@id"]
     matrix_file_download_url = "https://www.encodeproject.org" + id + href
-    print(matrix_file_download_url)
     return matrix_file_download_url
 
 
