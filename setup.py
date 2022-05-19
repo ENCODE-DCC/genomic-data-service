@@ -28,6 +28,7 @@ setup(
         'psycopg2==2.9.3',
         'numpy==1.22.2',
         'py2bit==0.3.0',
+        'pytfmpval==0.2.1'
     ],
     extras_require={
         "test": [
