@@ -12,16 +12,15 @@ class Parser:
         self.reader = reader
         self.cols_for_index = cols_for_index
         self.file_path = file_path
-        if pwm:
-            self.pwm = pwm
-            self.seq_reader = py2bit.open(TWO_BIT_FILE_PATH)
-            self.base_pairs = {
-                'A': 'T',
-                'T': 'A',
-                'G': 'C',
-                'C': 'G'
-                }
-            self.chars_index = {'A':0,'C':1,'G':2,'T':3}
+        self.pwm = pwm
+        self.seq_reader = py2bit.open(TWO_BIT_FILE_PATH)
+        self.base_pairs = {
+            'A': 'T',
+            'T': 'A',
+            'G': 'C',
+            'C': 'G'
+            }
+        self.chars_index = {'A':0,'C':1,'G':2,'T':3}
         if gene_lookup:
             with open(GENE_LOOKUP_FILE_PATH, "rb") as file:
                 self.gene_symbol_dict = pickle.load(file)
@@ -154,6 +153,6 @@ class FootPrintParser(Parser):
             doc['pwm_pvalue'] = str(get_p_value(self.pwm, score_5_to_3))
         else:
             doc['strand'] = '-'
-            doc['pwm_score'] = score_3_to_5
+            doc['pwm_score'] = str(score_3_to_5)
             doc['pwm_pvalue'] = str(get_p_value(self.pwm, score_3_to_5))
         return (chrom, doc)

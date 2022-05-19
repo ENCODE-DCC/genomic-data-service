@@ -40,9 +40,7 @@ def get_matrix_array(matrix_file_download_url):
 #  calculate position weight matrix from position count matrix in log2 scale
 def get_pwm(pcm, pseudo=1):
     pwm = np.zeros_like(pcm)
-
     for i in range(pcm.shape[0]):  # for each position i
-        scores = []  # scores on each position i
         n = sum(pcm[i])  # total counts on position i
         for base in range(4):
             # assume uniform background, prob. of each base = 0.25;
