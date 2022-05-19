@@ -14,7 +14,7 @@ class Parser:
         if pwm:
             self.pwm = pwm
             self.seq_reader = py2bit.open(TWO_BIT_FILE_PATH)
-            self.base_paris = {
+            self.base_pairs = {
                 'A': 'T',
                 'T': 'A',
                 'G': 'C',
@@ -139,7 +139,7 @@ class FootPrintParser(Parser):
         sequence_5_to_3 = self.seq_reader.sequence(chrom, start, end)
         sequence_3_to_5 = ''
         for base in sequence_5_to_3:
-            sequence_3_to_5 += self.base_paris[base]
+            sequence_3_to_5 += self.base_pairs[base]
 
         score_5_to_3 = 0
         score_3_to_5 = 0
