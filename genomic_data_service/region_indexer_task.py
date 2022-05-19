@@ -179,7 +179,7 @@ def index_regions_from_file(es, file_uuid, file_metadata, dataset_metadata, snp=
         url = get_matrix_file_download_url(file_metadata['accession'])
         matrix = get_matrix_array(url)
         pwm = get_pwm(matrix)
-        docs = FootPrintParser(reader, cols_for_index, file_path, pwm).parse()
+        docs = FootPrintParser(reader, pwm, cols_for_index, file_path).parse()
     else:
         docs = RegionParser(reader, cols_for_index, file_path).parse()
 

@@ -8,19 +8,10 @@ TWO_BIT_FILE_PATH = 'ml_models/two_bit_files/hg38.2bit'
 GENE_LOOKUP_FILE_PATH = 'gene_lookup.pickle'
 
 class Parser:
-    def __init__(self, reader, cols_for_index={}, file_path=None, pwm=None,gene_lookup=False):
+    def __init__(self, reader, cols_for_index={}, file_path=None, gene_lookup=False):
         self.reader = reader
         self.cols_for_index = cols_for_index
         self.file_path = file_path
-        self.pwm = pwm
-        self.seq_reader = py2bit.open(TWO_BIT_FILE_PATH)
-        self.base_pairs = {
-            'A': 'T',
-            'T': 'A',
-            'G': 'C',
-            'C': 'G'
-            }
-        self.chars_index = {'A':0,'C':1,'G':2,'T':3}
         if gene_lookup:
             with open(GENE_LOOKUP_FILE_PATH, "rb") as file:
                 self.gene_symbol_dict = pickle.load(file)
@@ -128,6 +119,17 @@ class RegionParser(Parser):
         return (chrom, doc)
 
 class FootPrintParser(Parser):
+    def __init__(self, reader, pwm, cols_for_index={}, file_path=None):
+        super().__init__(reader, cols_for_index, file_path)
+        self.pwm = pwm
+        self.seq_reader = py2bit.open(TWO_BIT_FILE_PATH)
+        self.base_pairs = {
+            'A': 'T',
+            'T': 'A',
+            'G': 'C',
+            'C': 'G'
+            }
+        self.chars_index = {'A':0,'C':1,'G':2,'T':3}
     def document_generator(self, line):
         chrom, start, end = line[0], int(line[1]), int(line[2])
         doc = {
