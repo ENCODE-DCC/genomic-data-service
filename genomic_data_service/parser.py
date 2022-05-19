@@ -2,6 +2,7 @@ from asyncio.log import logger
 import abc
 import pickle
 import py2bit
+from genomic_data_service.strand import get_p_value
 
 TWO_BIT_FILE_PATH = 'ml_models/two_bit_files/hg38.2bit'
 GENE_LOOKUP_FILE_PATH = 'gene_lookup.pickle'
@@ -149,6 +150,10 @@ class FootPrintParser(Parser):
             score_3_to_5 += self.pwm[i][self.chars_index[sequence_3_to_5[i]]] #add up scores for given bases on each position
         if score_5_to_3 >= score_3_to_5:
             doc['strand'] = '+'
+            doc['pwm_score'] = str(score_5_to_3)
+            doc['pwm_pvalue'] = str(get_p_value(self.pwm, score_5_to_3))
         else:
             doc['strand'] = '-'
+            doc['pwm_score'] = score_3_to_5
+            doc['pwm_pvalue'] = str(get_p_value(self.pwm, score_3_to_5))
         return (chrom, doc)

@@ -1,5 +1,6 @@
 import requests
 import numpy as np
+from pytfmpval import tfmp
 
 
 def get_matrix_file_download_url(footprint_file):
@@ -38,7 +39,7 @@ def get_matrix_array(matrix_file_download_url):
 
 #  calculate position weight matrix from position count matrix in log2 scale
 def get_pwm(pcm, pseudo=1):
-    pwm = []
+    pwm = np.zeros_like(pcm)
 
     for i in range(pcm.shape[0]):  # for each position i
         scores = []  # scores on each position i
@@ -47,6 +48,14 @@ def get_pwm(pcm, pseudo=1):
             # assume uniform background, prob. of each base = 0.25;
             p = (pcm[i][base] + 0.25 * pseudo) / (n + pseudo)
             score = round(np.log2(p) - np.log2(0.25), 4)
-            scores.append(score)
-        pwm.append(scores)
+            pwm[i][base] = score
     return pwm
+
+def get_p_value(pwm, score):
+    pwm = np.transpose(pwm)
+    pwm = pwm.flatten().tolist()
+    pwm_str = [str(count) for count in pwm]
+    pwm_str = ' '.join(pwm_str)
+    matrix = tfmp.read_matrix(pwm_str, mat_type='pwm', log_type='log2')
+    p_value = tfmp.score2pval(matrix, 8.7737)
+    return p_value
