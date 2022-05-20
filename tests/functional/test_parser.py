@@ -29,7 +29,7 @@ def test_RegionParser_eqtls_grch38(reader_eqtls_grch38):
         'coordinates': {'gte': 597732, 'lt': 597733},
         'name': 'chr1_597733_A_G_b38',
         'value': 'WASH7P',
-        'p_value': '6.69151e-05',
+        'p_value': 6.69151e-05,
         'effect_size': '-2.27865',
         'ensg_id': 'ENSG00000227232'
     }
