@@ -55,5 +55,5 @@ def get_p_value(pwm, score):
     pwm_str = [str(count) for count in pwm]
     pwm_str = ' '.join(pwm_str)
     matrix = tfmp.read_matrix(pwm_str, mat_type='pwm', log_type='log2')
-    p_value = tfmp.score2pval(matrix, 8.7737)
+    p_value = tfmp.score2pval(matrix, score)
     return p_value

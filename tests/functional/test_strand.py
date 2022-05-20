@@ -95,5 +95,5 @@ def test_get_p_value():
             [-2.1155, 0.4425, -0.6415, 0.8231],
         ]
     )
-    p_value = get_p_value(pwm, 8.77)
+    p_value = get_p_value(pwm, 8.7737)
     assert p_value == pytest.approx(0.0003662109375)

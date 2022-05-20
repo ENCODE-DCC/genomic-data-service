@@ -127,7 +127,7 @@ class FootPrintParser(Parser):
         super().__init__(reader, cols_for_index, file_path)
         self.pwm = pwm
         self.seq_reader = py2bit.open(TWO_BIT_FILE_PATH)
-        self.base_pairs = {
+        self.complement = {
             'A': 'T',
             'T': 'A',
             'G': 'C',
@@ -142,23 +142,21 @@ class FootPrintParser(Parser):
                 'lt': end
             },
         }
-        sequence_5_to_3 = self.seq_reader.sequence(chrom, start, end)
-        sequence_3_to_5 = ''
-        for base in sequence_5_to_3:
-            sequence_3_to_5 += self.base_pairs[base]
+        sequence = self.seq_reader.sequence(chrom, start, end)
+        sequence_reverse_complement = "".join(self.complement.get(base, base) for base in reversed(sequence))
 
-        score_5_to_3 = 0
-        score_3_to_5 = 0
+        score = 0
+        score_reverse_complement = 0
 
-        for i in range(len(sequence_5_to_3)):
-            score_5_to_3 += self.pwm[i][self.chars_index[sequence_5_to_3[i]]]
-            score_3_to_5 += self.pwm[i][self.chars_index[sequence_3_to_5[i]]] #add up scores for given bases on each position
-        if score_5_to_3 >= score_3_to_5:
+        for i in range(len(sequence)):
+            score += self.pwm[i][self.chars_index[sequence[i]]]
+            score_reverse_complement += self.pwm[i][self.chars_index[sequence_reverse_complement[i]]] #add up scores for given bases on each position
+        if score >= score_reverse_complement:
             doc['strand'] = '+'
-            doc['value'] = str(score_5_to_3)
-            doc['p_value'] = get_p_value(self.pwm, score_5_to_3)
+            doc['value'] = str(score)
+            doc['p_value'] = get_p_value(self.pwm, score)
         else:
             doc['strand'] = '-'
-            doc['value'] = str(score_3_to_5)
-            doc['p_value'] = get_p_value(self.pwm, score_3_to_5)
+            doc['value'] = str(score_reverse_complement)
+            doc['p_value'] = get_p_value(self.pwm, score_reverse_complement)
         return (chrom, doc)
