@@ -113,7 +113,11 @@ class RegionParser(Parser):
         if 'name_col' in self.cols_for_index and self.cols_for_index['name_col'] < len(line):
             doc['name'] = line[self.cols_for_index['name_col']]
         if 'p_value_col' in self.cols_for_index and self.cols_for_index['p_value_col'] < len(line):
-            doc['p_value'] = line[self.cols_for_index['p_value_col']]
+            try:
+                doc['p_value'] = float(line[self.cols_for_index['p_value_col']])
+            except ValueError:
+                logger.error('%s - failure to parse p value in line %s:%s:%s.',
+                        self.file_path, line[0], line[1], line[2])
         if 'effect_size_col' in self.cols_for_index and self.cols_for_index['effect_size_col'] < len(line):
             doc['effect_size'] = line[self.cols_for_index['effect_size_col']]
         return (chrom, doc)
@@ -151,10 +155,10 @@ class FootPrintParser(Parser):
             score_3_to_5 += self.pwm[i][self.chars_index[sequence_3_to_5[i]]] #add up scores for given bases on each position
         if score_5_to_3 >= score_3_to_5:
             doc['strand'] = '+'
-            doc['pwm_score'] = str(score_5_to_3)
-            doc['pwm_pvalue'] = str(get_p_value(self.pwm, score_5_to_3))
+            doc['value'] = str(score_5_to_3)
+            doc['p_value'] = get_p_value(self.pwm, score_5_to_3)
         else:
             doc['strand'] = '-'
-            doc['pwm_score'] = str(score_3_to_5)
-            doc['pwm_pvalue'] = str(get_p_value(self.pwm, score_3_to_5))
+            doc['value'] = str(score_3_to_5)
+            doc['p_value'] = get_p_value(self.pwm, score_3_to_5)
         return (chrom, doc)
