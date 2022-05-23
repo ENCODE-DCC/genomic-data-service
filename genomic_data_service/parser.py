@@ -154,9 +154,7 @@ class FootPrintParser(Parser):
         if score >= score_reverse_complement:
             doc['strand'] = '+'
             doc['value'] = str(score)
-            doc['p_value'] = get_p_value(self.pwm, score)
         else:
             doc['strand'] = '-'
             doc['value'] = str(score_reverse_complement)
-            doc['p_value'] = get_p_value(self.pwm, score_reverse_complement)
         return (chrom, doc)
