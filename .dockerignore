@@ -2,3 +2,4 @@
 .coverage
 .coveragerc
 ml_models/bigwig_files
+ml_models/two_bit_files
