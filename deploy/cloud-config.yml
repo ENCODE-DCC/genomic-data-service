@@ -27,7 +27,7 @@ runcmd:
 - sudo -u ubuntu python3 -m venv genomic-venv 
 - sudo -u ubuntu /home/ubuntu/genomic-data-service/genomic-venv/bin/pip install wheel==0.37.1
 - sudo -u ubuntu /home/ubuntu/genomic-data-service/genomic-venv/bin/pip install -e .
-- sudo -u ubuntu /home/ubuntu/genomic-data-service/genomic-venv/bin/python /home/ubuntu/genomic-data-service/utils/download_ml_models.py
+- sudo -u ubuntu /home/ubuntu/genomic-data-service/genomic-venv/bin/python /home/ubuntu/genomic-data-service/utils/download_files.py
 - sudo -u ubuntu python3 -m venv cloudwatchmon-venv
 - sudo -u ubuntu /home/ubuntu/genomic-data-service/cloudwatchmon-venv/bin/pip --no-cache-dir install --upgrade pip setuptools
 - sudo -u ubuntu /home/ubuntu/genomic-data-service/cloudwatchmon-venv/bin/pip --no-cache-dir install cloudwatchmon 

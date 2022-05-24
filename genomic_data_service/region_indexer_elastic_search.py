@@ -112,11 +112,11 @@ class RegionIndexerElasticSearch():
                         'type': 'string'
                     },
                     'p_value': {
-                        'type': 'string'
+                        'type': 'float'
                     },
                     'effect_size': {
                         'type': 'string'
-                    },
+                    }
                 }
             }
         }

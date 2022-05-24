@@ -4,8 +4,9 @@ from elasticsearch import Elasticsearch
 from elasticsearch.exceptions import NotFoundError
 from elasticsearch.helpers import bulk
 from genomic_data_service.file_opener import LocalFileOpener,S3FileOpener
-from genomic_data_service.parser import SnfParser, RegionParser
+from genomic_data_service.parser import SnfParser, RegionParser, FootPrintParser
 from genomic_data_service.constants import DATASET
+from genomic_data_service.strand import get_matrix_file_download_url, get_matrix_array, get_pwm
 import uuid
 
 
@@ -174,6 +175,11 @@ def index_regions_from_file(es, file_uuid, file_metadata, dataset_metadata, snp=
         docs = SnfParser(reader).parse()
     elif "ensg_id_col" in cols_for_index:
         docs = RegionParser(reader, cols_for_index, file_path, gene_lookup=True).parse()
+    elif file_metadata.get('annotation_type') == 'footprints' and file_metadata.get('assembly') == 'GRCh38':
+        url = get_matrix_file_download_url(file_metadata['accession'])
+        matrix = get_matrix_array(url)
+        pwm = get_pwm(matrix)
+        docs = FootPrintParser(reader, pwm, cols_for_index, file_path).parse()
     else:
         docs = RegionParser(reader, cols_for_index, file_path).parse()
 

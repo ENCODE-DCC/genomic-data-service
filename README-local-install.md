@@ -25,10 +25,10 @@
     pip3 install -e .
     ```
 
-3. Download our machine learning models
+3. Download our machine learning models and other files needed
 
     ```
-    python3 ./utils/download_ml_models.py
+    python3 ./utils/download_files.py
     ```
 
 4. Run the application:
