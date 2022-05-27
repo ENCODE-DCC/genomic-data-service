@@ -6,11 +6,8 @@ from genomic_data_service.region_service import RegionService
 from genomic_data_service.regulome_atlas import RegulomeAtlas
 from genomic_data_service.rsid_coordinates_resolver import resolve_coordinates_and_variants, search_peaks
 from genomic_data_service.request_utils import validate_search_request, extract_search_params
+from genomic_data_service.constants import REGULOME_VALID_ASSEMBLY, TWO_BIT_HG19_FILE_PATH, TWO_BIT_HG38_FILE_PATH
 import py2bit
-
-
-TWO_BIT_HG38_FILE_PATH = 'ml_models/two_bit_files/hg38.2bit'
-TWO_BIT_HG19_FILE_PATH = 'ml_models/two_bit_files/hg19.2bit'
 
 def build_response(block):
     return {
@@ -43,6 +40,17 @@ def search():
     assembly, from_, size, format_, maf, region_queries = extract_search_params(
         request.args
     )
+    if assembly not in REGULOME_VALID_ASSEMBLY:
+        result = {
+            'assembly': assembly,
+            'format': format_,
+            'from': from_,
+            'notifications': {
+                'Failed': 'Invalid assembly {}'.format(assembly)
+            }
+        }
+        return jsonify(build_response(result))
+
 
     atlas = RegulomeAtlas(regulome_es)
     

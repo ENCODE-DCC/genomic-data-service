@@ -11,10 +11,7 @@ def validate_search_request(request):
     return (True, None)
 
 def extract_search_params(params):
-    assembly = params.get('genome', 'GRCh37')
-    if assembly not in GENOME_TO_ALIAS.keys():
-        assembly = 'GRCh37'
-
+    assembly = params.get('genome')
     from_   = params.get('from', type=int) or 0
     format  = params.get('format', 'json')
     maf     = params.get('maf', None)

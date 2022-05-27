@@ -2,6 +2,8 @@ GENOME_TO_ALIAS = {
     "GRCh37": "hg19",
     "GRCh38": "GRCh38",
     "hg19": "hg19",
+    "mm10": "mm10",
+    "hg19": "hg19",
 }
 
 GENOME_TO_SPECIES = {
@@ -30,3 +32,7 @@ DATASET = {
     "reference_type": "index",
     "@type": ["Reference", "FileSet", "Dataset", "Item"],
 }
+
+TWO_BIT_HG38_FILE_PATH = 'ml_models/two_bit_files/hg38.2bit'
+TWO_BIT_HG19_FILE_PATH = 'ml_models/two_bit_files/hg19.2bit'
+REGULOME_VALID_ASSEMBLY = ['GRCh37', 'GRCh38', 'hg19']
