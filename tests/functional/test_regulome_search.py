@@ -16,7 +16,8 @@ def test_invalid_params(test_client):
     assert b"Invalid parameters" in response.data
 
 
-def test_valid_params(test_client):
+def test_valid_params(test_client, mocker):
+    mocker.patch("genomic_data_service.search.get_sequence", return_value={})
     response = test_client.get("search/?regions=chr1:39492461-39492462&genome=GRCh37")
     assert response.status_code == 200
 
@@ -28,7 +29,8 @@ def test_list_regions(test_client):
     assert response.status_code == 200
 
 
-def test_params_size_all(test_client):
+def test_params_size_all(test_client, mocker):
+    mocker.patch("genomic_data_service.search.get_sequence", return_value={})
     response = test_client.get(
         "search/?regions=chr10:11741180-11741181&genome=GRCh37&limit=all"
     )

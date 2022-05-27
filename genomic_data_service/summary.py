@@ -5,6 +5,7 @@ from genomic_data_service import regulome_es, app
 from genomic_data_service.regulome_atlas import RegulomeAtlas
 from genomic_data_service.rsid_coordinates_resolver import resolve_coordinates_and_variants, region_get_hits, evidence_to_features
 from genomic_data_service.request_utils import validate_search_request, extract_search_params
+from genomic_data_service.constants import REGULOME_VALID_ASSEMBLY
 
 
 def build_response(block):
@@ -48,6 +49,18 @@ def summary():
     assembly, from_, size, format_, maf, region_queries = extract_search_params(
         request.args
     )
+
+    if assembly not in REGULOME_VALID_ASSEMBLY:
+        result = {
+            'assembly': assembly,
+            'format': format_,
+            'from': from_,
+            'notifications': {
+                'Failed': 'Invalid assembly {}'.format(assembly)
+            }
+        }
+        return jsonify(build_response(result))
+
 
     atlas = RegulomeAtlas(regulome_es)
     

@@ -667,7 +667,8 @@ def test_regulome_summary_tsv(test_client):
     assert response.headers["Content-Type"] == "text/tsv"
 
 
-def test_regulome_search_total_1(test_client):
+def test_regulome_search_total_1(test_client, mocker):
+    mocker.patch("genomic_data_service.search.get_sequence", return_value={})
     response = test_client.get("search/?regions=rs10823321&genome=GRCh37")
     assert response.status_code == 200
     res = response.json

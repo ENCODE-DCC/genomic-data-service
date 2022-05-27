@@ -4,9 +4,10 @@ from werkzeug.exceptions import BadRequest
 from genomic_data_service import regulome_es, app
 from genomic_data_service.region_service import RegionService
 from genomic_data_service.regulome_atlas import RegulomeAtlas
-from genomic_data_service.rsid_coordinates_resolver import get_coordinates, resolve_coordinates_and_variants, search_peaks
+from genomic_data_service.rsid_coordinates_resolver import resolve_coordinates_and_variants, search_peaks
 from genomic_data_service.request_utils import validate_search_request, extract_search_params
-
+from genomic_data_service.constants import REGULOME_VALID_ASSEMBLY, TWO_BIT_HG19_FILE_PATH, TWO_BIT_HG38_FILE_PATH
+import py2bit
 
 def build_response(block):
     return {
@@ -39,6 +40,17 @@ def search():
     assembly, from_, size, format_, maf, region_queries = extract_search_params(
         request.args
     )
+    if assembly not in REGULOME_VALID_ASSEMBLY:
+        result = {
+            'assembly': assembly,
+            'format': format_,
+            'from': from_,
+            'notifications': {
+                'Failed': 'Invalid assembly {}'.format(assembly)
+            }
+        }
+        return jsonify(build_response(result))
+
 
     atlas = RegulomeAtlas(regulome_es)
     
@@ -92,6 +104,7 @@ def search():
         assembly,
         len(result['variants'])
     )
+    sequence = get_sequence(assembly, query_coordinates[0])
 
     result['regulome_score'] = regulome_score
     result['features'] = features
@@ -99,6 +112,7 @@ def search():
     result['@graph'] = graph
     result['timing'] += timing
     result['nearby_snps'] = nearby_snps
+    result['sequence'] = sequence
 
     return jsonify(build_response(result))
 
@@ -136,3 +150,32 @@ def region_search():
         'regions': region_service.regions,
         'regions_per_file': region_service.regions_per_file
     })
+
+def get_sequence(assembly, coordinate, window=50):
+    if assembly == 'GRCh38':
+        seq_reader = py2bit.open(TWO_BIT_HG38_FILE_PATH)
+    else:
+        seq_reader = py2bit.open(TWO_BIT_HG19_FILE_PATH)
+    coordinate_list = coordinate.split(':')
+    chrom = coordinate_list[0]
+    mid = int(coordinate_list[-1].split('-')[0])
+    chrom_len = seq_reader.chroms(chrom)
+    start = mid - window//2
+    if start >= 0:
+        end = start + window
+    else:
+        start = 0
+        end = window
+    if end > chrom_len:
+        end = chrom_len
+        start = chrom_len - window
+    
+    sequence = {
+        'chrom': chrom,
+        'start': start,
+        'end': end,
+        'sequence': seq_reader.sequence(chrom, start, end)
+    }
+    seq_reader.close()
+    return sequence
+    
