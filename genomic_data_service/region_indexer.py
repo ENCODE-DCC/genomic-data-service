@@ -388,13 +388,10 @@ if __name__ == "__main__":
         index_regulome_db(encode_accessions)
     else:
         encode_accessions = list(pickle.load(open(TEST_ENCODE_ACCESSIONS_PATH, "rb")))
-        local_file = {
-            "file_path": TEST_SNP_FILE,
-            "file_metadata": FILE_HG19
-        }
-        local_files = [local_file]
+        local_files = [
+            {
+                "file_path": TEST_SNP_FILE,
+                "file_metadata": FILE_HG19
+            }
+        ]
         index_regulome_db(encode_accessions, local_files)
-        
-
-
-    
