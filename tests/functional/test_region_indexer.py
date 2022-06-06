@@ -1,5 +1,5 @@
 import pytest
-from genomic_data_service.region_indexer import encode_graph, clean_up, FILE_REQUIRED_FIELDS, need_to_fetch_documents, filter_files
+from genomic_data_service.region_indexer import encode_graph, clean_up, FILE_REQUIRED_FIELDS, need_to_fetch_documents, filter_files, SUPPORTED_ASSEMBLIES
 from genomic_data_service.region_indexer import dataset_accession, fetch_datasets, print_progress_bar, log, fetch_documents, get_encode_accessions
 
 def test_encode_graph(query):
@@ -78,7 +78,7 @@ def test_log(capsys):
     assert captured.out == "test\n"
 
 def test_get_encode_accessions():
-    encode_accessions = get_encode_accessions()
+    encode_accessions = get_encode_accessions(SUPPORTED_ASSEMBLIES)
     assert len(encode_accessions) > 42000
     assert "ENCFF797GRA" in encode_accessions
     assert "ENCFF518SJY" in encode_accessions
