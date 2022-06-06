@@ -104,6 +104,14 @@ DATASET_REQUIRED_FIELDS = [
     "description"
     "status",
 ]
+
+TF_CHIP_SEQ_EXPS_GRCH38_ENDPOINT = "https://www.encodeproject.org/search/?type=Experiment&control_type!=*&status=released&assay_title=TF+ChIP-seq&assembly=GRCh38&field=files.accession&field=files.preferred_default&field=files.file_format&field=files.analyses.@id&field=default_analysis&format=json&limit=all"
+DNASE_SEQ_EXPS_GRCH38_ENDPOINT = "https://www.encodeproject.org/search/?type=Experiment&control_type!=*&status=released&assay_title=DNase-seq&&assembly=GRCh38&field=files.accession&field=files.preferred_default&field=files.file_format&field=files.analyses.@id&field=default_analysis&format=json&limit=all"
+FOOTPRINT_ANNOTATIONS_GRCH38_ENDPOINT = "https://www.encodeproject.org/search/?type=Annotation&annotation_type=footprints&assembly=GRCh38&field=files.accession&format=json&limit=all"
+PWM_ANNOTATIONS_GRCH38_ENDPOINT = "https://www.encodeproject.org/search/?type=Annotation&annotation_type=PWMs&assembly=GRCh38&field=files.accession&format=json&limit=all"
+EQTL_ANNOTATIONS_GRCH38_ENDPOINT = "https://www.encodeproject.org/search/?type=Annotation&annotation_type=eQTLs&assembly=GRCh38&field=files.accession&format=json&limit=all"
+CHROMATIN_STATE_FILES_GRCH38_ENDPOINT = "https://www.encodeproject.org/search/?type=File&output_type=semi-automated+genome+annotation&status=released&assembly=GRCh38&lab.title=Manolis+Kellis%2C+Broad&file_format=bed&format=json&limit=all"
+
 parser = argparse.ArgumentParser(
     description = "indexing files for genomic data service."
 )
@@ -111,6 +119,10 @@ parser = argparse.ArgumentParser(
 parser.add_argument(
     "--local", action='store_true',
     help = "Index a small number of files for local install")
+
+parser.add_argument(
+    "--assembly", default=SUPPORTED_ASSEMBLIES, nargs='*',
+    help = "Index the files for the assemblies specified")
 
 parser.add_argument(
     "--port", default=9201,
@@ -273,56 +285,52 @@ def fetch_datasets(files, datasets):
         fetch_documents(dataset)
         datasets[dataset["accession"]] = dataset
 
-def get_encode_accessions():
-    # get file accessions for all the files using hg19 and two reference SNPs files from pickle
-    encode_accessions = list(pickle.load(open(ENCODE_ACCESSIONS_HG19_PATH, "rb")))
-    
-    # get files in experiment TF ChIP-seq using assembly GRCh38
-    endpoint = "https://www.encodeproject.org/search/?type=Experiment&control_type!=*&status=released&assay_title=TF+ChIP-seq&assembly=GRCh38&field=files.accession&field=files.preferred_default&field=files.file_format&field=files.analyses.@id&field=default_analysis&format=json&limit=all"
-    experiments = requests.get(endpoint).json()["@graph"]
-    # get files in experiment DNase-seq using assembly GRCh38
-    endpoint = "https://www.encodeproject.org/search/?type=Experiment&control_type!=*&status=released&assay_title=DNase-seq&&assembly=GRCh38&field=files.accession&field=files.preferred_default&field=files.file_format&field=files.analyses.@id&field=default_analysis&format=json&limit=all"
-    experiments = experiments + requests.get(endpoint).json()["@graph"]
-    
-    # get files in footprints
-    endpoint = "https://www.encodeproject.org/search/?type=Annotation&annotation_type=footprints&assembly=GRCh38&field=files.accession&format=json&limit=all"
-    annotations = requests.get(endpoint).json()["@graph"]
-    # get files in PWMs
-    endpoint = "https://www.encodeproject.org/search/?type=Annotation&annotation_type=PWMs&assembly=GRCh38&field=files.accession&format=json&limit=all"
-    annotations = annotations + requests.get(endpoint).json()["@graph"]
-    # get files in eQTLs
-    endpoint = "https://www.encodeproject.org/search/?type=Annotation&annotation_type=eQTLs&assembly=GRCh38&field=files.accession&format=json&limit=all"
-    annotations = annotations + requests.get(endpoint).json()["@graph"]
+def get_encode_accessions(assemblies):
+    encode_accessions = []
+    for assembly in assemblies:
+        if assembly == 'hg19' or assembly == 'GRCh37':
+            # get file accessions for all the files using hg19 and two reference SNPs files from pickle
+            encode_accessions.extend(list(pickle.load(open(ENCODE_ACCESSIONS_HG19_PATH, "rb"))))
+        if assembly == 'GRCh38':
+            # get files in experiment TF ChIP-seq using assembly GRCh38
+            experiments = requests.get(TF_CHIP_SEQ_EXPS_GRCH38_ENDPOINT).json()["@graph"]
+            # get files in experiment DNase-seq using assembly GRCh38
+            experiments.extend(requests.get(DNASE_SEQ_EXPS_GRCH38_ENDPOINT).json()["@graph"])
+            # get files in footprints
+            annotations = requests.get(FOOTPRINT_ANNOTATIONS_GRCH38_ENDPOINT).json()["@graph"]
+            # get files in PWMs
+            annotations.extend(requests.get(PWM_ANNOTATIONS_GRCH38_ENDPOINT).json()["@graph"])
+            # get files in eQTLs
+            annotations.extend(requests.get(EQTL_ANNOTATIONS_GRCH38_ENDPOINT).json()["@graph"])
 
-    for annotation in annotations:
-        files = annotation.get("files", [])
-        for file in files:
-            encode_accessions.append(file["accession"])
-    
-    for experiment in experiments:   
-        files = experiment.get("files", [])
-        default_analysis_id = experiment["default_analysis"]
-        for file in files:
-            if (
-                "preferred_default" in file
-                and file["preferred_default"] == True
-                and file["file_format"] == "bed"
-                and file["analyses"][0]["@id"] == default_analysis_id
-            ):
+            for annotation in annotations:
+                files = annotation.get("files", [])
+                for file in files:
+                    encode_accessions.append(file["accession"])
+            
+            for experiment in experiments:   
+                files = experiment.get("files", [])
+                default_analysis_id = experiment["default_analysis"]
+                for file in files:
+                    if (
+                        "preferred_default" in file
+                        and file["preferred_default"] == True
+                        and file["file_format"] == "bed"
+                        and file["analyses"][0]["@id"] == default_analysis_id
+                    ):
+                        encode_accessions.append(file["accession"])
+
+            # get files for chromatin state for grch38
+            chromatin_state_files = requests.get(CHROMATIN_STATE_FILES_GRCH38_ENDPOINT).json()["@graph"]
+            for file in chromatin_state_files:
                 encode_accessions.append(file["accession"])
-
-    # get files for chromatin state for grch38
-    endpoint = "https://www.encodeproject.org/search/?type=File&output_type=semi-automated+genome+annotation&status=released&assembly=GRCh38&lab.title=Manolis+Kellis%2C+Broad&file_format=bed&format=json&limit=all"
-    files = requests.get(endpoint).json()["@graph"]
-    for file in files:
-        encode_accessions.append(file["accession"])
         
     with open('encode_accessions_all.pickle', 'wb') as handle:
         pickle.dump(encode_accessions, handle)
     return encode_accessions
 
-def index_regulome_db(encode_accessions, local_files, filter_files=False):
-    print("Number of files for indexing:", len(encode_accessions))
+def index_regulome_db(encode_accessions, local_files=None, filter_files=False):
+    print("Number of files for indexing from ENCODE:", len(encode_accessions))
     datasets = {}
     per_request = 350
     chunks = [
@@ -367,25 +375,26 @@ if __name__ == "__main__":
     es_uri = args.uri
     es_port = args.port
     is_local_install = args.local
+    assemblies = args.assembly
     print("es uri:", es_uri)
     print("es port:", es_port)
 
     RegionIndexerElasticSearch(
         es_uri, es_port, SUPPORTED_CHROMOSOMES, SUPPORTED_ASSEMBLIES
     ).setup_indices()
-    is_local_install = parser.parse_args().local
-    encode_accessions = None
-    local_files = []
+    
     if not is_local_install:
-        encode_accessions = get_encode_accessions()
+        encode_accessions = get_encode_accessions(assemblies)
+        index_regulome_db(encode_accessions)
     else:
         encode_accessions = list(pickle.load(open(TEST_ENCODE_ACCESSIONS_PATH, "rb")))
         local_file = {
             "file_path": TEST_SNP_FILE,
             "file_metadata": FILE_HG19
         }
-        local_files.append(local_file)
+        local_files = [local_file]
+        index_regulome_db(encode_accessions, local_files)
         
 
-    index_regulome_db(encode_accessions, local_files)
+
     
