@@ -1,6 +1,6 @@
 GENOME_TO_ALIAS = {
     "GRCh37": "hg19",
-    "GRCh38": "GRCh38",
+    "GRCh38": "grch38",
     "hg19": "hg19",
     "mm10": "mm10",
     "hg19": "hg19",
