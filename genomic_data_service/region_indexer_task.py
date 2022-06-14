@@ -342,9 +342,20 @@ def remove_from_es(indexed_file, file_uuid, es):
         for chrom in indexed_file['chroms']:
             es.delete(index=chrom.lower(), doc_type=indexed_file['assembly'], id=str(file_uuid))
 
-        es.delete(index=RESIDENTS_INDEX, doc_type=use_type, id=str(file_uuid))
+        es.delete(index=RESIDENTS_INDEX, doc_type=FOR_REGULOME_DB, id=str(file_uuid))
         
         return True
+
+def remove_snp_from_es(snp_index, file_uuid, es):
+    es.delete(index=snp_index)
+    es.delete(index=RESIDENTS_INDEX, doc_type=FOR_REGULOME_DB, id=str(file_uuid))
+
+def remove_region_from_es(file_uuid, assembly, es):
+    for chrom in SUPPORTED_CHROMOSOMES:
+        es.delete(index=chrom.lower(), doc_type=assembly, id=str(file_uuid))
+
+    es.delete(index=RESIDENTS_INDEX, doc_type=FOR_REGULOME_DB, id=str(file_uuid))
+
 
 
 def file_in_es(file_uuid, es):

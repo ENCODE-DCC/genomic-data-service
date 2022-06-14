@@ -110,6 +110,7 @@ DNASE_SEQ_EXPS_GRCH38_ENDPOINT = "https://www.encodeproject.org/search/?type=Exp
 FOOTPRINT_ANNOTATIONS_GRCH38_ENDPOINT = "https://www.encodeproject.org/search/?type=Annotation&annotation_type=footprints&assembly=GRCh38&field=files.accession&format=json&limit=all"
 PWM_ANNOTATIONS_GRCH38_ENDPOINT = "https://www.encodeproject.org/search/?type=Annotation&annotation_type=PWMs&assembly=GRCh38&field=files.accession&format=json&limit=all"
 EQTL_ANNOTATIONS_GRCH38_ENDPOINT = "https://www.encodeproject.org/search/?type=Annotation&annotation_type=eQTLs&assembly=GRCh38&field=files.accession&format=json&limit=all"
+DSQTL_ANNOTATIONS_GRCH38_ENDPOINT = "https://www.encodeproject.org/search/?type=Annotation&annotation_type=dsQTLs&assembly=GRCh38&field=files.accession&format=json&limit=all"
 CHROMATIN_STATE_FILES_GRCH38_ENDPOINT = "https://www.encodeproject.org/search/?type=File&output_type=semi-automated+genome+annotation&status=released&assembly=GRCh38&lab.title=Manolis+Kellis%2C+Broad&file_format=bed&format=json&limit=all"
 
 parser = argparse.ArgumentParser(
@@ -291,7 +292,12 @@ def read_local_accessions_from_pickle(pickle_path):
 
 def is_preferred_default_bed_from_default_analysis(default_analysis_id, file):
     return 'preferred_default' in file and file['preferred_default'] and file['file_format'] == 'bed' and file['analyses'][0]['@id'] == default_analysis_id
- 
+
+def get_dsQTL_preferred_default_file_accession(files):
+    for file in files:
+        if file.get("preferred_default", False) and file['status'] == 'released':
+            return file['accession']
+    return None
 
 def get_encode_accessions_from_portal():
     encode_accessions = []
@@ -305,8 +311,12 @@ def get_encode_accessions_from_portal():
     annotations.extend(requests.get(PWM_ANNOTATIONS_GRCH38_ENDPOINT).json()['@graph'])
     # get files in eQTLs
     annotations.extend(requests.get(EQTL_ANNOTATIONS_GRCH38_ENDPOINT).json()['@graph'])
+    # get files in dsQTLs
+    annotations.extend(requests.get(DSQTL_ANNOTATIONS_GRCH38_ENDPOINT).json()['@graph'])
     # get files for chromatin state for grch38
     chromatin_state_files = requests.get(CHROMATIN_STATE_FILES_GRCH38_ENDPOINT).json()['@graph']
+    # get files for chromatin state for grch38
+    ds_qtls = requests.get(DSQTL_ANNOTATIONS_GRCH38_ENDPOINT).json()['@graph']
 
     for experiment in experiments:
         files = experiment.get('files', [])
@@ -322,6 +332,18 @@ def get_encode_accessions_from_portal():
 
     for file in chromatin_state_files:
         encode_accessions.append(file['accession'])
+
+    for ds_qtl in ds_qtls:
+    
+        files = ds_qtl.get('files', [])
+        if files :
+            preferred_default_file_accession = get_dsQTL_preferred_default_file_accession(files)
+            if preferred_default_file_accession:
+                encode_accessions.append(preferred_default_file_accession)
+            else:
+                for file in files:
+                    if file['status'] == "released":
+                        encode_accessions.append(file['accession'])
 
     return encode_accessions
 
