@@ -110,7 +110,7 @@ DNASE_SEQ_EXPS_GRCH38_ENDPOINT = "https://www.encodeproject.org/search/?type=Exp
 FOOTPRINT_ANNOTATIONS_GRCH38_ENDPOINT = "https://www.encodeproject.org/search/?type=Annotation&annotation_type=footprints&assembly=GRCh38&field=files.accession&format=json&limit=all"
 PWM_ANNOTATIONS_GRCH38_ENDPOINT = "https://www.encodeproject.org/search/?type=Annotation&annotation_type=PWMs&assembly=GRCh38&field=files.accession&format=json&limit=all"
 EQTL_ANNOTATIONS_GRCH38_ENDPOINT = "https://www.encodeproject.org/search/?type=Annotation&annotation_type=eQTLs&assembly=GRCh38&field=files.accession&format=json&limit=all"
-DSQTL_ANNOTATIONS_GRCH38_ENDPOINT = "https://www.encodeproject.org/search/?type=Annotation&annotation_type=dsQTLs&assembly=GRCh38&field=files.accession&format=json&limit=all"
+DSQTL_ANNOTATIONS_GRCH38_ENDPOINT = "https://www.encodeproject.org/search/?type=Annotation&annotation_type=dsQTLs&assembly=GRCh38&&field=files.accession&field=files.status&field=files.preferred_default&format=json&limit=all"
 CHROMATIN_STATE_FILES_GRCH38_ENDPOINT = "https://www.encodeproject.org/search/?type=File&output_type=semi-automated+genome+annotation&status=released&assembly=GRCh38&lab.title=Manolis+Kellis%2C+Broad&file_format=bed&format=json&limit=all"
 
 parser = argparse.ArgumentParser(
