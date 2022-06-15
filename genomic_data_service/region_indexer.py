@@ -311,8 +311,6 @@ def get_encode_accessions_from_portal():
     annotations.extend(requests.get(PWM_ANNOTATIONS_GRCH38_ENDPOINT).json()['@graph'])
     # get files in eQTLs
     annotations.extend(requests.get(EQTL_ANNOTATIONS_GRCH38_ENDPOINT).json()['@graph'])
-    # get files in dsQTLs
-    annotations.extend(requests.get(DSQTL_ANNOTATIONS_GRCH38_ENDPOINT).json()['@graph'])
     # get files for chromatin state for grch38
     chromatin_state_files = requests.get(CHROMATIN_STATE_FILES_GRCH38_ENDPOINT).json()['@graph']
     # get files for chromatin state for grch38
