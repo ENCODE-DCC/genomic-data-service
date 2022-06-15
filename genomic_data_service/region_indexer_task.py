@@ -4,7 +4,7 @@ from elasticsearch import Elasticsearch
 from elasticsearch.exceptions import NotFoundError
 from elasticsearch.helpers import bulk
 from genomic_data_service.file_opener import LocalFileOpener,S3FileOpener
-from genomic_data_service.parser import SnfParser, RegionParser, FootPrintParser
+from genomic_data_service.parser import SnfParser, RegionParser, FootPrintParser, PWMsParser
 from genomic_data_service.constants import DATASET
 from genomic_data_service.strand import get_matrix_file_download_url, get_matrix_array, get_pwm
 import uuid
@@ -180,6 +180,13 @@ def index_regions_from_file(es, file_uuid, file_metadata, dataset_metadata, snp=
         matrix = get_matrix_array(url)
         pwm = get_pwm(matrix)
         docs = FootPrintParser(reader, pwm, cols_for_index, file_path).parse()
+    elif file_metadata.get('annotation_type') == 'PWMs' and file_metadata.get('assembly') == 'GRCh38':
+        href = dataset_metadata["documents"][0]["attachment"]["href"]
+        id = dataset_metadata["documents"][0]["@id"]
+        matrix_file_download_url = "https://www.encodeproject.org" + id + href
+        matrix = get_matrix_array(matrix_file_download_url)
+        pwm = get_pwm(matrix)
+        docs = PWMsParser(reader, pwm, cols_for_index, file_path).parse()
     else:
         docs = RegionParser(reader, cols_for_index, file_path).parse()
 
