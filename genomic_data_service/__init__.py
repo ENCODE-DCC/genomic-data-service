@@ -25,14 +25,13 @@ add_rna_client(app)
 
 
 if is_web_app():
-    from elasticsearch import Elasticsearch
+    from pymongo import MongoClient
 
-    regulome_es = Elasticsearch(
-        port=app.config["REGULOME_ES_PORT"], hosts=app.config["REGULOME_ES_HOSTS"]
+    regulome_es = MongoClient(
+        app.config["REGULOME_ES_HOSTS"], app.config["REGULOME_ES_PORT"]
     )
-    region_search_es = Elasticsearch(
-        port=app.config["REGION_SEARCH_ES_PORT"],
-        hosts=app.config["REGION_SEARCH_ES_HOSTS"],
+    region_search_es = MongoClient(
+        app.config["REGION_SEARCH_ES_HOSTS"], app.config["REGION_SEARCH_ES_PORT"]
     )
     app.url_map.strict_slashes = False
 

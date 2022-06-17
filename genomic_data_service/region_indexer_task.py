@@ -1,11 +1,11 @@
 from genomic_data_service import app
 from celery import Celery
-from elasticsearch import Elasticsearch
-from elasticsearch.exceptions import NotFoundError
-from elasticsearch.helpers import bulk
+from pymongo import MongoClient
+
 from genomic_data_service.file_opener import LocalFileOpener,S3FileOpener
 from genomic_data_service.parser import SnfParser, RegionParser, FootPrintParser, PWMsParser
 from genomic_data_service.constants import DATASET
+from genomic_data_service.rnaseq.tests.fixtures import client
 from genomic_data_service.strand import get_matrix_file_download_url, get_matrix_array, get_pwm
 import uuid
 
@@ -100,10 +100,12 @@ def get_cols_for_index(metadata):
         assembly = metadata['file']['assembly'].lower()
         return INDEX_COLS['eqtls'].get(assembly, {})
 
-def add_to_residence(es, metadata):
+def add_to_residence(client, metadata):
     metadata['chroms'] = list(set(metadata['chroms']))
+    metadata['_id'] = str(metadata['uuid'])
+    client.gds.residents.insert_one(metadata)
 
-    es.index(index=RESIDENTS_INDEX, doc_type=FOR_REGULOME_DB, body=metadata, id=str(metadata['uuid']))
+    #es.index(index=RESIDENTS_INDEX, doc_type=FOR_REGULOME_DB, body=metadata, id=str(metadata['uuid']))
 
 
 def snps_bulk_iterator(snp_index, chrom, snps_for_chrom):
@@ -111,22 +113,17 @@ def snps_bulk_iterator(snp_index, chrom, snps_for_chrom):
         yield {'_index': snp_index.lower(), '_type': chrom.lower(), '_id': snp['rsid'], '_source': snp}
 
 
-def index_snps(es, snps, metadata, chroms=None):
+def index_snps(client, snps, metadata, chroms=None):
     assembly  = metadata['file']['assembly']
-    snp_index = 'snp_' + assembly.lower()
-
-    metadata['index'] = snp_index
-
+    snp_collection = 'snp_' + assembly.lower()
     if chroms is None:
         chroms = list(snps.keys())
 
     for chrom in chroms:
-        if len(snps[chrom]) == 0:
-            continue
+        client.gds[snp_collection].insert_many(snps[chrom])
+        
 
-        bulk(es, snps_bulk_iterator(snp_index, chrom, snps[chrom]), chunk_size=100000, request_timeout=2000)
-
-        metadata['chroms'].append(chrom)
+        
 
     return True
 
@@ -139,26 +136,19 @@ def region_bulk_iterator(chrom, assembly, uuid, docs_for_chrom):
         yield {'_index': chrom.lower(), '_type': assembly, '_source': doc}
 
 
-def index_regions(es, regions, metadata, chroms):
-    uuid     = metadata['uuid']
+def index_regions(client, regions, metadata, chroms):
+    #uuid     = metadata['uuid']
     assembly = metadata['file']['assembly']
-
-    if chroms is None:
-        chroms = list(regions.keys())
-
-    for chrom in list(regions.keys()):
-        chrom_lc = chrom.lower()
-
-        if len(regions[chrom]) == 0:
-            continue
-
-        bulk(es, region_bulk_iterator(chrom_lc, assembly, uuid, regions[chrom]), chunk_size=5000, request_timeout=2000)
+    for chrom in chroms:
+        if chrom == 'chr1':
+            client.gds[assembly + '_' + chrom].insert_many(regions[chrom])
         metadata['chroms'].append(chrom)
+    
 
     return True
 
 
-def index_regions_from_file(es, file_uuid, file_metadata, dataset_metadata, snp=False):
+def index_regions_from_file(client, file_uuid, file_metadata, dataset_metadata, snp=False):
     metadata = metadata_doc(file_uuid, file_metadata, dataset_metadata)
     is_snp_reference = dataset_metadata['@type'][0].lower() == 'reference'
     cols_for_index = get_cols_for_index(metadata)
@@ -192,6 +182,7 @@ def index_regions_from_file(es, file_uuid, file_metadata, dataset_metadata, snp=
 
     if file_metadata['file_format'] == 'bed':
         for (chrom, doc) in docs:
+            doc['uuid'] = metadata['uuid']
             if chrom.lower() not in SUPPORTED_CHROMOSOMES:
                 continue
 
@@ -209,9 +200,10 @@ def index_regions_from_file(es, file_uuid, file_metadata, dataset_metadata, snp=
                 # 1 chrom at a time saves memory (but assumes the files are in chrom order!)
                 if not file_opener.should_load_file_in_memory() and file_data and len(chroms) > 0:
                     if is_snp_reference:
-                        index_snps(es, file_data, metadata, list(file_data.keys()))
+                        #index_snps(client, file_data, metadata, list(file_data.keys()))
+                        pass
                     else:
-                        index_regions(es, file_data, metadata, list(file_data.keys()))
+                        index_regions(client, file_data, metadata, list(file_data.keys()))
                     file_data = {}
 
                 file_data[chrom] = []
@@ -227,19 +219,20 @@ def index_regions_from_file(es, file_uuid, file_metadata, dataset_metadata, snp=
         raise IOError('Error parsing file %s' % file_metadata['href'])
 
     if is_snp_reference:
-        index_snps(es, file_data, metadata, list(file_data.keys()))
+        #index_snps(client, file_data, metadata, list(file_data.keys()))
+        pass
     else:
-        index_regions(es, file_data, metadata, list(file_data.keys()))
+        index_regions(client, file_data, metadata, list(file_data.keys()))
 
     if not file_opener.should_load_file_in_memory() and metadata['chroms'] != chroms:
         print(metadata['file']['@id'] + ' chromosomes ' + ('SNPs' if is_snp_reference else 'regions')  +' indexed out of order!')
 
     file_opener.close()
 
-    add_to_residence(es, metadata)
+    add_to_residence(client, metadata)
     
 
-def index_regions_from_test_snp_file(es, file_uuid, file_path, file_metadata):
+def index_regions_from_test_snp_file(client, file_uuid, file_path, file_metadata):
     dateset_metadata = DATASET
     metadata = metadata_doc(file_uuid, file_metadata, dateset_metadata)
     metadata['chroms'] = []
@@ -269,7 +262,7 @@ def index_regions_from_test_snp_file(es, file_uuid, file_path, file_metadata):
             # we are done with current chromosome and move on
             # 1 chrom at a time saves memory (but assumes the files are in chrom order!)
             if file_data and len(chroms) > 0:
-                index_snps(es, file_data, metadata, list(file_data.keys()))
+                #index_snps(client, file_data, metadata, list(file_data.keys()))
                 
                 file_data = {}
 
@@ -284,9 +277,9 @@ def index_regions_from_test_snp_file(es, file_uuid, file_path, file_metadata):
     if len(chroms) == 0 or not file_data:
         raise IOError('Error parsing file %s' % file_path)
 
-    index_snps(es, file_data, metadata, list(file_data.keys()))
+    #index_snps(client, file_data, metadata, list(file_data.keys()))
 
-    add_to_residence(es, metadata)
+    add_to_residence(client, metadata)
 
 def list_targets(dataset):
     target_labels = []
@@ -365,40 +358,24 @@ def remove_region_from_es(file_uuid, assembly, es):
 
 
 
-def file_in_es(file_uuid, es):
-    try:
-        return es.get(index=RESIDENTS_INDEX, id=str(file_uuid), doc_type=FOR_REGULOME_DB).get('_source', {})
-    except NotFoundError:
-        return None
-    except Exception:
-        pass
 
-    return None
 
 
 @celery_app.task(bind=True, autoretry_for=(Exception,), retry_kwargs={'max_retries': 5, 'countdown': 2})
 def index_file(self, file_metadata, dataset_metadata, es_hosts, es_port, force_reindex=False):
-    es = Elasticsearch(port=es_port, hosts=es_hosts)
+    client = MongoClient()
 
     file_uuid = file_metadata['uuid']
 
-    indexed_file = file_in_es(file_uuid, es)
-
-    if indexed_file:
-        if force_reindex:
-            remove_from_es(indexed_file, file_uuid, es)
-        else:
-            return f"File {file_uuid} is already indexed"
-
-    index_regions_from_file(es, file_uuid, file_metadata, dataset_metadata)
+    index_regions_from_file(client, file_uuid, file_metadata, dataset_metadata)
 
     return f"File {file_uuid} was indexed via {file_metadata['href']}"
 
 @celery_app.task(bind=True, autoretry_for=(Exception,), retry_kwargs={'max_retries': 5, 'countdown': 2})
 def index_local_snp_files(self, file_path, file_properties, es_hosts, es_port):
-    es = Elasticsearch(port=es_port, hosts=es_hosts)
-    id = uuid.uuid4()
+    client = MongoClient()
+    id = str(uuid.uuid4())
     print("indexing local file ", file_path, id)
-    index_regions_from_test_snp_file(es, id, file_path, file_properties)
+    index_regions_from_test_snp_file(client, id, file_path, file_properties)
 
     return f"File {file_path} was indexed"
