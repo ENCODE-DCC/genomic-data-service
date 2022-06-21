@@ -62,27 +62,30 @@ class RegulomeApp:
         chrom = result['chrom']
         start = result['start']
         end = result['end']
+        
+        all_hits = region_get_hits(
+            self.atlas,
+            self.assembly,
+            chrom,
+            start,
+            end,
+            peaks_too=self.return_peaks or self.matched_pwm_peak_bed_only
+        )
+        datasets = all_hits.get('datasets', [])
+          
         try:
-            all_hits = region_get_hits(
-                self.atlas,
-                self.assembly,
-                chrom,
-                start,
-                end,
-                peaks_too=self.return_peaks or self.matched_pwm_peak_bed_only
-            )
             evidence = self.atlas.regulome_evidence(
-                all_hits['datasets'], chrom, int(start), int(end)
+                datasets, chrom, int(start), int(end)
             )
             if not self.matched_pwm_peak_bed_only:
                 result['score'] = self.atlas.regulome_score(
-                    all_hits['datasets'], evidence
+                    datasets, evidence
                 )
                 result['features'] = evidence_to_features(evidence)
         except Exception:
             return 1, 'Regulome search failed on {}:{}-{}'.format(
                 chrom, start, end
-            )
+        )
         if self.matched_pwm_peak_bed_only:
             if not evidence.get('PWM_matched', []):
                 return 0, ''
