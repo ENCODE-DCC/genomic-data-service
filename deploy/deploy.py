@@ -275,7 +275,7 @@ def parse_args():
     parser.add_argument(
         "--instance-type", default="t2.medium", help="AWS Instance type"
     )
-    parser.add_argument("--profile-name", default=None, help="AWS creds profile")
+    parser.add_argument("--profile-name", default="regulome", help="AWS creds profile")
     parser.add_argument("--redis-ip", default="localhost", help="Redis IP.")
     parser.add_argument("--redis-port", default=6379, help="Redis Port.")
     parser.add_argument(
@@ -294,8 +294,13 @@ def parse_args():
     )
 
     args = parser.parse_args()
+    if not args.branch:
+        args.branch = subprocess.check_output(
+            ['git', 'rev-parse', '--abbrev-ref', 'HEAD']
+        ).decode('utf-8').strip()
     args.role = "candidate"
-    print(args.role)
+    print("Role:", args.role)
+    print("Using branch:", args.branch)
     return args
 
 
