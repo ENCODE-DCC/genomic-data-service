@@ -41,10 +41,13 @@ runcmd:
 - sudo systemctl enable --now genomic.socket
 - sudo systemctl enable genomic.service
 - sudo systemctl enable nginx.service
-- sudo service elasticsearch start
+- sudo systemctl enable elasticsearch.service
+- sudo systemctl start elasticsearch.service
 - sudo systemctl start genomic
-- sudo service celery start
-- sudo service flower start
+- sudo systemctl enable celery.service
+- sudo systemctl start celery
+- sudo systemctl enable flower.service
+- sudo systemctl start flower
 - sudo systemctl start nginx
 - PUBLIC_DNS_NAME="$(curl http://169.254.169.254/latest/meta-data/public-hostname)"
 - sudo echo "127.0.0.0 $PUBLIC_DNS_NAME" | sudo tee --append /etc/hosts
