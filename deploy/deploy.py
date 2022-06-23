@@ -11,6 +11,8 @@ from os.path import expanduser
 
 import boto3
 
+DEMO_CONFIG = ":deploy/cloud-config-demo.yml"
+CONFIG = ":deploy/cloud-config.yml"
 
 def nameify(in_str):
     name = "".join(c if c.isalnum() else "-" for c in in_str.lower()).strip("-")
@@ -159,7 +161,10 @@ def _get_run_args(main_args, instances_tag_data):
         "REDIS_IP": main_args.redis_ip,
         "REDIS_PORT": main_args.redis_port,
     }
-    config_file = ":deploy/cloud-config.yml"
+    if main_args.demo:
+        config_file = DEMO_CONFIG
+    else:
+        config_file = CONFIG
     user_data = get_user_data(
         instances_tag_data["commit"], config_file, data_insert, main_args
     )
@@ -292,6 +297,7 @@ def parse_args():
         default="https://github.com/ENCODE-DCC/genomic-data-service.git",
         help="Git repo to checkout branches: https://github.com/{user|org}/{repo}.git",
     )
+    parser.add_argument("--demo", action='store_true', help="Deploy a demo for RegulomDB")
 
     args = parser.parse_args()
     if not args.branch:
@@ -299,8 +305,11 @@ def parse_args():
             ['git', 'rev-parse', '--abbrev-ref', 'HEAD']
         ).decode('utf-8').strip()
     args.role = "candidate"
+    if args.demo:
+        args.instance_type = "r5.2xlarge"
+        args.volume_size = "500"
     print("Role:", args.role)
-    print("Using branch:", args.branch)
+    print("Deploy RegulomeDB demo using branch:", args.branch)
     return args
 
 

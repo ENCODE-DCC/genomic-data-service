@@ -1,0 +1,9 @@
+[Unit]
+Description=Genomic Data Service socket
+
+[Socket]
+ListenStream=/home/ubuntu/genomic-data-service/genomic.sock
+SocketUser=ubuntu
+
+[Install]
+WantedBy=sockets.target
