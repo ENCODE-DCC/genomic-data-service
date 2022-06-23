@@ -278,11 +278,12 @@ def search_peaks(query_coordinates, atlas, assembly, num_variants):
         all_hits = region_get_hits(
             atlas, assembly, chrom, start, end, peaks_too=True
         )
+        datasets = all_hits.get('datasets', [])
         evidence = atlas.regulome_evidence(
-            all_hits['datasets'], chrom, start, end
+            datasets, chrom, start, end
         )
         regulome_score = atlas.regulome_score(
-            all_hits['datasets'], evidence
+            datasets, evidence
         )
         features = evidence_to_features(evidence)
     except Exception as e:
