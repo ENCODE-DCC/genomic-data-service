@@ -11,8 +11,11 @@ from os.path import expanduser
 
 import boto3
 
-DEMO_CONFIG = ":deploy/cloud-config-demo.yml"
-CONFIG = ":deploy/cloud-config.yml"
+DEMO_CONFIG = ':deploy/cloud-config-demo.yml'
+CONFIG = ':deploy/cloud-config.yml'
+DEMO_INDEXER_USER = 'indexer'
+DEMO_INDEXER_PASSWORD = 'test'
+
 
 def nameify(in_str):
     name = "".join(c if c.isalnum() else "-" for c in in_str.lower()).strip("-")
@@ -84,6 +87,9 @@ def get_user_data(commit, config_file, data_insert, main_args):
     )
     data_insert["S3_AUTH_KEYS"] = auth_keys_dir
     data_insert["REDIS_PORT"] = main_args.redis_port
+    data_insert['DEMO_INDEXER_USER'] = DEMO_INDEXER_USER
+    data_insert['DEMO_INDEXER_PASSWORD'] = DEMO_INDEXER_PASSWORD
+
     user_data = config_template % data_insert
     return user_data
 

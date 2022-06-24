@@ -37,6 +37,8 @@ runcmd:
 - sudo cp /home/ubuntu/genomic-data-service/deploy/celery.service /etc/systemd/system/celery.service
 - sudo cp /home/ubuntu/genomic-data-service/deploy/flower.service /etc/systemd/system/flower.service
 - sudo cp /home/ubuntu/genomic-data-service/deploy/nginx /etc/nginx/sites-available/default
+- sudo mkdir -p /etc/apache2
+- sudo htpasswd -cb /etc/apache2/.htpasswd %(DEMO_INDEXER_USER)s %(DEMO_INDEXER_PASSWORD)s
 - sudo systemctl daemon-reload
 - sudo systemctl enable --now genomic.socket
 - sudo systemctl enable genomic.service
