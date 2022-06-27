@@ -224,10 +224,10 @@ def create_security_group(ec2_client, gds_private_ip, main_args):
     cidr_ip = gds_private_ip + '/32'
     group_name = main_args.branch + '-' + main_args.commit + '-' + main_args.username
     try:
-        response = ec2_client.create_security_group(
+        security_group = ec2_client.create_security_group(
             GroupName=group_name, Description=group_name, VpcId=VPC_ID
         )
-        security_group_id = response["GroupId"]
+        security_group_id = security_group.group_id
         print("Security Group Created %s in vpc %s." % (security_group_id, VPC_ID))
 
         data = ec2_client.authorize_security_group_ingress(
