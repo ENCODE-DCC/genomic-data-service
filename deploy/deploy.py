@@ -173,7 +173,8 @@ def _wait_and_tag_instances(
         tag_ec2_instance(instance, instances_tag_data)
         print("Instance ready")
 
-def create_instance(ec2_client, instances_tag_data, main_args, ec2_name):
+def create_instance(ec2_client, main_args, ec2_name):
+    instances_tag_data = _get_instances_tag_data(main_args, ec2_name)
     if instances_tag_data is None:
         sys.exit(10)
     if ec2_client is None:
@@ -191,7 +192,6 @@ def create_instance(ec2_client, instances_tag_data, main_args, ec2_name):
     ):
         print("An instance already exists with name: %s" % instances_tag_data["name"])
         sys.exit(30)
-    instances_tag_data = _get_instances_tag_data(main_args, ec2_name)
     run_args = _get_run_args(main_args, instances_tag_data)
     if main_args.dry_run_aws:
         print("Dry Run AWS")
