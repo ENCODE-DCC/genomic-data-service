@@ -347,8 +347,7 @@ def parse_args():
         args.branch = subprocess.check_output(
             ['git', 'rev-parse', '--abbrev-ref', 'HEAD']
         ).decode('utf-8').strip()
-
-    args["commit"] = (
+    args.commit = (
         subprocess.check_output(
             ["git", "rev-parse", "--short", args.branch]
         )
