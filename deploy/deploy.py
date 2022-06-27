@@ -105,31 +105,11 @@ def get_user_data(commit, config_file, data_insert, main_args):
 def _get_instances_tag_data(main_args, ec2_name=None):
     instances_tag_data = {
         "branch": main_args.branch,
-        "commit": None,
+        "commit": main_args.commit,
         "name": main_args.name,
-        "username": None,
+        "username": main_args.username,
     }
-    if instances_tag_data["branch"] is None:
-        instances_tag_data["branch"] = (
-            subprocess.check_output(["git", "rev-parse", "--abbrev-ref", "HEAD"])
-            .decode("utf-8")
-            .strip()
-        )
-    instances_tag_data["commit"] = (
-        subprocess.check_output(
-            ["git", "rev-parse", "--short", instances_tag_data["branch"]]
-        )
-        .decode("utf-8")
-        .strip()
-    )
-    if not subprocess.check_output(
-        ["git", "branch", "-r", "--contains", instances_tag_data["commit"]]
-    ).strip():
-        print(
-            "Commit %r not in origin. Did you git push?" % instances_tag_data["commit"]
-        )
-        sys.exit(1)
-    instances_tag_data["username"] = getpass.getuser()
+    
     if instances_tag_data["name"] is None:
         instances_tag_data["name"] = nameify(
             "%s-%s-%s-%s"
@@ -240,11 +220,12 @@ def create_instance(ec2_client, instances_tag_data, main_args, ec2_name):
     _wait_and_tag_instances(main_args, run_args, instances_tag_data, instances)
     return instances
 
-def create_security_group(ec2_client, gds_private_ip):
+def create_security_group(ec2_client, gds_private_ip, main_args):
     cidr_ip = gds_private_ip + '/32'
+    group_name = main_args.branch + '-' + main_args.commit + '-' + main_args.username
     try:
         response = ec2_client.create_security_group(
-            GroupName="test_boto_mingjie", Description="test boto3", VpcId=VPC_ID
+            GroupName=group_name, Description=group_name, VpcId=VPC_ID
         )
         security_group_id = response["GroupId"]
         print("Security Group Created %s in vpc %s." % (security_group_id, VPC_ID))
@@ -263,7 +244,7 @@ def create_security_group(ec2_client, gds_private_ip):
         print("Ingress Successfully Set %s" % data)
         return response
     except exception as e:
-        print(e)
+        print("fail to create security group:", e)
         return None
 
 def main():
@@ -277,7 +258,7 @@ def main():
         security_group_id = None
         for i, instance in enumerate(instances_gds):
             gds_private_ip = instance.private_ip_address
-            security_group = create_security_group(ec2_client, gds_private_ip) 
+            security_group = create_security_group(ec2_client, gds_private_ip, main_args) 
             security_group_id = security_group.get('GroupId', None)
             SECURITY_GROUPS.append(security_group_id)
             instance.modify_attribute(Groups=SECURITY_GROUPS)
@@ -366,6 +347,22 @@ def parse_args():
         args.branch = subprocess.check_output(
             ['git', 'rev-parse', '--abbrev-ref', 'HEAD']
         ).decode('utf-8').strip()
+
+    args["commit"] = (
+        subprocess.check_output(
+            ["git", "rev-parse", "--short", args.branch]
+        )
+        .decode("utf-8")
+        .strip()
+    )
+    if not subprocess.check_output(
+        ["git", "branch", "-r", "--contains", args.commit]
+    ).strip():
+        print(
+            "Commit %r not in origin. Did you git push?" % args.commit
+        )
+        sys.exit(1)
+    args.username = getpass.getuser()
     args.role = "candidate"
     print("Role:", args.role)
     print("Using branch:", args.branch)
