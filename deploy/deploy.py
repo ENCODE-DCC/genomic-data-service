@@ -230,8 +230,8 @@ def create_security_group(ec2_client, gds_private_ip, main_args):
         security_group_id = security_group.group_id
         print("Security Group Created %s in vpc %s." % (security_group_id, VPC_ID))
 
-        data = ec2_client.authorize_security_group_ingress(
-            GroupId=security_group_id,
+        data = security_group.authorize_ingress(
+            DryRun=False,
             IpPermissions=[
                 {
                     "IpProtocol": "tcp",
@@ -242,8 +242,8 @@ def create_security_group(ec2_client, gds_private_ip, main_args):
             ],
         )
         print("Ingress Successfully Set %s" % data)
-        return response
-    except exception as e:
+        return security_group
+    except Exception as e:
         print("fail to create security group:", e)
         return None
 
