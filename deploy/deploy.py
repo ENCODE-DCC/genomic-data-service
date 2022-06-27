@@ -259,7 +259,7 @@ def main():
         for i, instance in enumerate(instances_gds):
             gds_private_ip = instance.private_ip_address
             security_group = create_security_group(ec2_client, gds_private_ip, main_args) 
-            security_group_id = security_group.get('GroupId', None)
+            security_group_id = security_group.group_id
             SECURITY_GROUPS.append(security_group_id)
             instance.modify_attribute(Groups=SECURITY_GROUPS)
 
