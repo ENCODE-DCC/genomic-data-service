@@ -1,0 +1,108 @@
+#cloud-config
+ssh_authorized_keys:
+  - %(LOCAL_SSH_KEY)s
+bootcmd:
+- set -ex
+- cloud-init-per once fallocate-swapfile fallocate -l 4G /swapfile
+- cloud-init-per once chmod-swapfile chmod 600 /swapfile
+- cloud-init-per once mkswap-swapfile mkswap /swapfile
+package_upgrade: true
+power_state:
+  mode: reboot
+output:
+  all: '| tee -a /var/log/cloud-init-output.log'
+runcmd:
+- sudo -u ubuntu mv /home/ubuntu/.ssh/authorized_keys /home/ubuntu/.ssh/authorized_keys2
+- sudo -u ubuntu aws s3 cp --region=us-west-2 %(S3_AUTH_KEYS)s /home/ubuntu/.ssh/authorized_keys
+- cp /etc/redis/redis.conf /etc/redis/redis.conf.default
+- sed -i -e 's/port 6379/port %(REDIS_PORT)s/' /etc/redis/redis.conf
+- sed -i -e 's/bind 127\.0\.0\.1/bind 0\.0\.0\.0/' /etc/redis/redis.conf
+- service redis-server restart
+- set -ex
+- update-rc.d elasticsearch defaults
+- service elasticsearch restart
+- sudo -u ubuntu git clone --no-checkout %(GIT_REPO)s /home/ubuntu/genomic-data-service/
+- cd /home/ubuntu/genomic-data-service
+- sudo -u ubuntu git checkout %(COMMIT)s
+- sudo -u ubuntu python3 -m venv genomic-venv 
+- sudo -u ubuntu /home/ubuntu/genomic-data-service/genomic-venv/bin/pip install wheel==0.37.1
+- sudo -u ubuntu /home/ubuntu/genomic-data-service/genomic-venv/bin/pip install -e .
+- sudo -u ubuntu /home/ubuntu/genomic-data-service/genomic-venv/bin/python /home/ubuntu/genomic-data-service/utils/download_files.py
+- sudo -u ubuntu python3 -m venv cloudwatchmon-venv
+- sudo -u ubuntu /home/ubuntu/genomic-data-service/cloudwatchmon-venv/bin/pip --no-cache-dir install --upgrade pip setuptools
+- sudo -u ubuntu /home/ubuntu/genomic-data-service/cloudwatchmon-venv/bin/pip --no-cache-dir install cloudwatchmon 
+- sudo -u ubuntu aws s3 cp --recursive s3://regulome-conf-prod/.aws /home/ubuntu/.aws
+- sudo cp /home/ubuntu/genomic-data-service/deploy/genomic.socket /etc/systemd/system/genomic.socket
+- sudo cp /home/ubuntu/genomic-data-service/deploy/genomic.service /etc/systemd/system/genomic.service
+- sudo cp /home/ubuntu/genomic-data-service/deploy/celery.service /etc/systemd/system/celery.service
+- sudo cp /home/ubuntu/genomic-data-service/deploy/flower.service /etc/systemd/system/flower.service
+- sudo cp /home/ubuntu/genomic-data-service/deploy/nginx /etc/nginx/sites-available/default
+- sudo systemctl daemon-reload
+- sudo systemctl enable nginx.service
+- sudo systemctl enable elasticsearch.service
+- sudo systemctl start elasticsearch.service
+- sudo systemctl enable celery.service
+- sudo systemctl start celery
+- sudo systemctl enable flower.service
+- sudo systemctl start flower
+- sudo systemctl start nginx
+- PUBLIC_DNS_NAME="$(curl http://169.254.169.254/latest/meta-data/public-hostname)"
+- sudo echo "127.0.0.0 $PUBLIC_DNS_NAME" | sudo tee --append /etc/hosts
+users:
+- default
+- name: build
+  gecos: Build user
+  inactive: true
+  system: true
+write_files:
+- path: /etc/elasticsearch/elasticsearch.yml
+  content: |
+    network.host: 0.0.0.0
+    http.port: 9201
+    thread_pool:
+        search:
+            size: 100
+            queue_size: 2000
+        index:
+            queue_size: 400
+    indices.query.bool.max_clause_count: 8192
+- path: /etc/elasticsearch/jvm.options
+  content: |
+    -Xms8g
+    -Xmx8g
+    -XX:+UseG1GC
+    -XX:CMSInitiatingOccupancyFraction=75
+    -XX:+UseCMSInitiatingOccupancyOnly
+    -XX:+DisableExplicitGC
+    -XX:+AlwaysPreTouch
+    -server
+    -Xss1m
+    -Djava.awt.headless=true
+    -Dfile.encoding=UTF-8
+    -Djna.nosys=true
+    -Djdk.io.permissionsUseCanonicalPath=true
+    -Dio.netty.noUnsafe=true
+    -Dio.netty.noKeySetOptimization=true
+    -Dio.netty.recycler.maxCapacityPerThread=0
+    -Dlog4j.shutdownHookEnabled=false
+    -Dlog4j2.disable.jmx=true
+    -Dlog4j2.formatMsgNoLookups=true
+    -Dlog4j.skipJansi=true
+    -XX:+HeapDumpOnOutOfMemoryError
+- path: /etc/cron.daily/es-logrotate
+  content: |
+    #!/bin/bash
+    /usr/bin/find /var/log/elasticsearch -name elasticsearch-2*.log -mtime +1 -exec /bin/gzip --best {} \;
+  owner: root:root
+  permissions: '0755'
+- path: /etc/cron.d/cloudwatchmon
+  content: |
+    */5 * * * * nobody /home/ubuntu/genomic-data-service/cloudwatchmon-venv/bin/mon-put-instance-stats.py --mem-util --swap-util --disk-space-util --disk-path=/ --from-cron
+  owner: root:root
+  permissions: '644'
+- path: /etc/default/sysstat
+  content: |
+    ENABLED="true"
+  owner: root:root
+  permissions: '644'
+  content: |

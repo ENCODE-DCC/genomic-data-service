@@ -1,6 +1,7 @@
 import argparse
 import datetime
 import getpass
+from logging import exception
 import re
 import subprocess
 import sys
@@ -12,9 +13,16 @@ from os.path import expanduser
 import boto3
 
 DEMO_CONFIG = ':deploy/cloud-config-demo.yml'
-CONFIG = ':deploy/cloud-config.yml'
+MAIN_MACHINE_CONFIG = ':deploy/cloud-config-gds.yml'
+ES_MACHINE_CONFIG = ':deploy/cloud-config-es.yml'
 DEMO_INDEXER_USER = 'indexer'
 DEMO_INDEXER_PASSWORD = 'test'
+DEMO_MACHINE = 'demo'
+MAIN_MACHINE = 'gds'
+REGULOME_ES_MACHINE = 'regulome_es'
+ENCODE_ES_MACHINE = 'encode_es'
+VPC_ID = "vpc-b7ab4ed1"
+SECURITY_GROUPS=['sg-03506766d1d93e1e7']
 
 
 def nameify(in_str):
@@ -94,7 +102,7 @@ def get_user_data(commit, config_file, data_insert, main_args):
     return user_data
 
 
-def _get_instances_tag_data(main_args):
+def _get_instances_tag_data(main_args, ec2_name=None):
     instances_tag_data = {
         "branch": main_args.branch,
         "commit": None,
@@ -124,38 +132,25 @@ def _get_instances_tag_data(main_args):
     instances_tag_data["username"] = getpass.getuser()
     if instances_tag_data["name"] is None:
         instances_tag_data["name"] = nameify(
-            "%s-%s-%s"
+            "%s-%s-%s-%s"
             % (
                 instances_tag_data["branch"],
                 instances_tag_data["commit"],
+                ec2_name,
                 instances_tag_data["username"],
             )
         )
     return instances_tag_data
 
 
-def _get_ec2_client(main_args, instances_tag_data):
+def _get_ec2_client(main_args):
     session = boto3.Session(
         region_name="us-west-2", profile_name=main_args.profile_name
     )
     ec2 = session.resource("ec2")
-    if any(
-        ec2.instances.filter(
-            Filters=[
-                {"Name": "tag:Name", "Values": [instances_tag_data["name"]]},
-                {
-                    "Name": "instance-state-name",
-                    "Values": ["pending", "running", "stopping", "stopped"],
-                },
-            ]
-        )
-    ):
-        print("An instance already exists with name: %s" % instances_tag_data["name"])
-        return None
     return ec2
 
-
-def _get_run_args(main_args, instances_tag_data):
+def _get_run_args(main_args, instances_tag_data, ec2_name=None):
     master_user_data = None
     security_groups = ["ssh-http-https"]
     iam_role = "regulome-instance"
@@ -167,10 +162,11 @@ def _get_run_args(main_args, instances_tag_data):
         "REDIS_IP": main_args.redis_ip,
         "REDIS_PORT": main_args.redis_port,
     }
-    if main_args.demo:
-        config_file = DEMO_CONFIG
-    else:
-        config_file = CONFIG
+    config_file = DEMO_CONFIG
+    if ec2_name == MAIN_MACHINE:
+        config_file = MAIN_MACHINE_CONFIG
+    elif ec2_name == REGULOME_ES_MACHINE or ENCODE_ES_MACHINE:
+        config_file = ES_MACHINE_CONFIG
     user_data = get_user_data(
         instances_tag_data["commit"], config_file, data_insert, main_args
     )
@@ -197,16 +193,25 @@ def _wait_and_tag_instances(
         tag_ec2_instance(instance, instances_tag_data)
         print("Instance ready")
 
-
-def main():
-    # Gather Info
-    main_args = parse_args()
-    instances_tag_data = _get_instances_tag_data(main_args)
+def create_instance(ec2_client, instances_tag_data, main_args, ec2_name):
     if instances_tag_data is None:
         sys.exit(10)
-    ec2_client = _get_ec2_client(main_args, instances_tag_data)
     if ec2_client is None:
         sys.exit(20)
+    if any(
+        ec2_client.instances.filter(
+            Filters=[
+                {"Name": "tag:Name", "Values": [instances_tag_data["name"]]},
+                {
+                    "Name": "instance-state-name",
+                    "Values": ["pending", "running", "stopping", "stopped"],
+                },
+            ]
+        )
+    ):
+        print("An instance already exists with name: %s" % instances_tag_data["name"])
+        sys.exit(30)
+    instances_tag_data = _get_instances_tag_data(main_args, ec2_name)
     run_args = _get_run_args(main_args, instances_tag_data)
     if main_args.dry_run_aws:
         print("Dry Run AWS")
@@ -233,6 +238,57 @@ def main():
         },
     )
     _wait_and_tag_instances(main_args, run_args, instances_tag_data, instances)
+    return instances
+
+def create_security_group(ec2_client, gds_private_ip):
+    cidr_ip = gds_private_ip + '/32'
+    try:
+        response = ec2_client.create_security_group(
+            GroupName="test_boto_mingjie", Description="test boto3", VpcId=VPC_ID
+        )
+        security_group_id = response["GroupId"]
+        print("Security Group Created %s in vpc %s." % (security_group_id, VPC_ID))
+
+        data = ec2_client.authorize_security_group_ingress(
+            GroupId=security_group_id,
+            IpPermissions=[
+                {
+                    "IpProtocol": "tcp",
+                    "FromPort": 9201,
+                    "ToPort": 9201,
+                    "IpRanges": [{"CidrIp": cidr_ip}],
+                }
+            ],
+        )
+        print("Ingress Successfully Set %s" % data)
+        return response
+    except exception as e:
+        print(e)
+        return None
+
+def main():
+    # Gather Info
+    main_args = parse_args()
+    ec2_client = _get_ec2_client(main_args)
+    if main_args.demo:
+        create_instance(ec2_client, main_args, DEMO_MACHINE)
+    else:
+        instances_gds = create_instance(ec2_client, main_args, MAIN_MACHINE)
+        security_group_id = None
+        for i, instance in enumerate(instances_gds):
+            gds_private_ip = instance.private_ip_address
+            security_group = create_security_group(ec2_client, gds_private_ip) 
+            security_group_id = security_group.get('GroupId', None)
+            SECURITY_GROUPS.append(security_group_id)
+            instance.modify_attribute(Groups=SECURITY_GROUPS)
+
+        instances_regluome_es = create_instance(ec2_client, main_args, REGULOME_ES_MACHINE)
+        for i, instance in enumerate(instances_regluome_es):
+            instance.modify_attribute(Groups=SECURITY_GROUPS)
+        instances_encode_es = create_instance(ec2_client, main_args, ENCODE_ES_MACHINE)
+        for i, instance in enumerate(instances_encode_es):
+            instance.modify_attribute(Groups=SECURITY_GROUPS)
+    
 
 
 def parse_args():
@@ -284,14 +340,14 @@ def parse_args():
         help=("Ubuntu 20.04 AMI with require dependencies"),
     )
     parser.add_argument(
-        "--instance-type", default="t2.medium", help="AWS Instance type"
+        "--instance-type", default="r5.2xlarge", help="AWS Instance type"
     )
     parser.add_argument("--profile-name", default="regulome", help="AWS creds profile")
     parser.add_argument("--redis-ip", default="localhost", help="Redis IP.")
     parser.add_argument("--redis-port", default=6379, help="Redis Port.")
     parser.add_argument(
         "--volume-size",
-        default=120,
+        default=500,
         type=check_volume_size,
         help="Size of disk. Allowed values 120, 200, and 500",
     )
@@ -311,11 +367,10 @@ def parse_args():
             ['git', 'rev-parse', '--abbrev-ref', 'HEAD']
         ).decode('utf-8').strip()
     args.role = "candidate"
-    if args.demo:
-        args.instance_type = "r5.2xlarge"
-        args.volume_size = "500"
     print("Role:", args.role)
-    print("Deploy RegulomeDB demo using branch:", args.branch)
+    print("Using branch:", args.branch)
+    if args.demo:    
+        print("Deploy RegulomeDB demo.")
     return args
 
 
