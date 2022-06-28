@@ -134,10 +134,13 @@ mssh ubuntu@i-foobarbaz123 --profile regulome --region us-west-2
 
 3. On the main machine add the IP addresses of the ES machines into `/home/ubuntu/genomic-data-service/config/production.cfg`. Set the value of `REGULOME_ES_HOSTS` to the private IP address of the regulome data service machine, and the value of `REGION_SEARCH_ES_HOSTS` to the private IP address of the region search data service machine (note that in the normal case these values are lists with one item).
 
-4. Restart each service on the main machine:
+4. Start each service on the main machine:
 
     ```bash
     sudo systemctl daemon-reload
+    sudo systemctl enable --now genomic.socket
+    sudo systemctl enable genomic.service
+    sudo systemctl enable nginx.service
     sudo systemctl start genomic
     sudo systemctl start nginx
     ```
