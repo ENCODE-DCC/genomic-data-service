@@ -192,7 +192,7 @@ def create_instance(ec2_client, main_args, ec2_name):
     ):
         print("An instance already exists with name: %s" % instances_tag_data["name"])
         sys.exit(30)
-    run_args = _get_run_args(main_args, instances_tag_data)
+    run_args = _get_run_args(main_args, instances_tag_data, ec2_name)
     if main_args.dry_run_aws:
         print("Dry Run AWS")
         print("main_args", main_args)
