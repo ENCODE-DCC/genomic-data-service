@@ -99,14 +99,14 @@ mssh ubuntu@i-foobarbaz123 --profile regulome --region us-west-2
     python deploy/deploy.py --demo
     ```
 
-2. Start indexing on the machine. For regulomeDB:
+2. Start indexing on the machine. For RegulomeDB:
 
     ```bash
     cd /home/ubuntu/genomic-data-service
     source genomic-venv/bin/activate
     python genomic_data_service/region_indexer.py
 
-3. Or for region search:
+3. Or for Encode region search:
 
     ```bash
     cd /home/ubuntu/genomic-data-service

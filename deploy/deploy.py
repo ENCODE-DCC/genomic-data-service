@@ -365,7 +365,7 @@ def parse_args():
     print("Role:", args.role)
     print("Using branch:", args.branch)
     if args.demo:    
-        print("Deploy RegulomeDB demo.")
+        print("Deploy demo.")
     return args
 
 
