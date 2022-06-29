@@ -2,6 +2,7 @@ import pickle
 import math
 import pyBigWig
 from os.path import exists
+import logging
 
 RESIDENT_REGIONSET_KEY = (
     "resident_regionsets"  # keeps track of what datsets are resident
@@ -199,7 +200,7 @@ class RegulomeAtlas(object):
                 average = sum(values) / max(len(values), 1)
                 evidence[k] = 0.0 if math.isnan(average) else average
             except Exception as e:
-                print("wrong bigwig file for", k)
+                logging.error('failure to read bigwig file for evidence %s for %s:%s:%s', k, chrom, start, end)
                 evidence[k] = 0.0
 
         return evidence

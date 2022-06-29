@@ -4,6 +4,7 @@ from os import environ
 from genomic_data_service.searches.configs import add_registry
 from genomic_data_service.rnaseq.client import add_rna_client
 from genomic_data_service.rnaseq.rnaget.api import rnaget_api
+import logging
 
 
 def is_web_app():
@@ -17,7 +18,7 @@ app.register_blueprint(rnaget_api)
 if "GENOMIC_DATA_SERVICE_SETTINGS" in environ:
     app.config.from_envvar("GENOMIC_DATA_SERVICE_SETTINGS")
 else:
-    print("[CONFIG] Defaulting to development config")
+    logging.info("[CONFIG] Defaulting to development config")
     app.config.from_pyfile("../config/development.cfg")
 
 add_registry(app)
