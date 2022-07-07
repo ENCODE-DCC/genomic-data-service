@@ -145,7 +145,7 @@ def _get_run_args(main_args, instances_tag_data, ec2_name=None):
     config_file = DEMO_CONFIG
     if ec2_name == MAIN_MACHINE:
         config_file = MAIN_MACHINE_CONFIG
-    elif ec2_name == REGULOME_ES_MACHINE or ENCODE_ES_MACHINE:
+    elif ec2_name == REGULOME_ES_MACHINE or ec2_name == ENCODE_ES_MACHINE:
         config_file = ES_MACHINE_CONFIG
     user_data = get_user_data(
         instances_tag_data["commit"], config_file, data_insert, main_args
