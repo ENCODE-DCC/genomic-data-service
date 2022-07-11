@@ -291,7 +291,7 @@ def read_local_accessions_from_pickle(pickle_path):
     return encode_accessions
 
 def is_preferred_default_bed_from_default_analysis(default_analysis_id, file):
-    return 'preferred_default' in file and file['preferred_default'] and file['file_format'] == 'bed' and file['analyses'][0]['@id'] == default_analysis_id
+    return file.get('preferred_default', None) and file['file_format'] == 'bed' and file.get('analyses', []) and file['analyses'][0]['@id'] == default_analysis_id
 
 def get_dsQTL_preferred_default_file_accession(files):
     for file in files:
