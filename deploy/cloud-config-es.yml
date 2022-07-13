@@ -32,10 +32,20 @@ runcmd:
 - sudo -u ubuntu /home/ubuntu/genomic-data-service/cloudwatchmon-venv/bin/pip --no-cache-dir install --upgrade pip setuptools
 - sudo -u ubuntu /home/ubuntu/genomic-data-service/cloudwatchmon-venv/bin/pip --no-cache-dir install cloudwatchmon 
 - sudo -u ubuntu aws s3 cp --recursive s3://regulome-conf-prod/.aws /home/ubuntu/.aws
+- sudo cp /home/ubuntu/genomic-data-service/deploy/genomic.socket /etc/systemd/system/genomic.socket
 - sudo cp /home/ubuntu/genomic-data-service/deploy/genomic.service /etc/systemd/system/genomic.service
 - sudo cp /home/ubuntu/genomic-data-service/deploy/celery.service /etc/systemd/system/celery.service
 - sudo cp /home/ubuntu/genomic-data-service/deploy/flower.service /etc/systemd/system/flower.service
 - sudo cp /home/ubuntu/genomic-data-service/deploy/nginx /etc/nginx/sites-available/default
+- sudo systemctl daemon-reload
+- sudo systemctl enable nginx.service
+- sudo systemctl enable elasticsearch.service
+- sudo systemctl start elasticsearch.service
+- sudo systemctl enable celery.service
+- sudo systemctl start celery
+- sudo systemctl enable flower.service
+- sudo systemctl start flower
+- sudo systemctl start nginx
 - PUBLIC_DNS_NAME="$(curl http://169.254.169.254/latest/meta-data/public-hostname)"
 - sudo echo "127.0.0.0 $PUBLIC_DNS_NAME" | sudo tee --append /etc/hosts
 users:

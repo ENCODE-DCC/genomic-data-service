@@ -1,6 +1,6 @@
 [Unit]
 Description=Genomic Data Service
-Requires=socket
+Requires=genomic.socket
 After=network.target
 
 [Service]
