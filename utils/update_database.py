@@ -46,62 +46,71 @@ INDEXES = [
 es = Elasticsearch(ES_ENDPOINT)
 
 def get_metadata(accession):
-    url = ENCODE_URL + 'search/?accession=' + accession + '&format=json&field=*&limit=all'
-    data = requests.get(url).json()['@graph'][0]
+    data = {}
+    try:
+        url = ENCODE_URL + 'search/?accession=' + accession + '&format=json&field=*&limit=all'
+        data = requests.get(url).json()['@graph'][0]
+    except:
+        print(accession, "is not found in Encode database")
     return data
 
 def get_file_uuid(file_accession):
     metadata = get_metadata(file_accession)
-    return metadata['uuid']
+    return metadata.get('uuid', None)
 
 def delete_file_by_accession(file_accession):
     file_uuid = get_file_uuid(file_accession)
-    resident_regionsets_url = ES_ENDPOINT + RESIDENT + file_uuid + '?pretty'
-    response = requests.delete(resident_regionsets_url)
-    result = response.json().get('result', None)
-    if result == 'not_found':
-        print(file_accession, "is not found")
-    elif response.json().get('result', None)== 'deleted':
-        print(file_accession, "is deleted in residents index")
-        is_fail = False
-        for index in INDEXES:
-            json_data = {
-                'query': {
-                    'match': {
-                        'uuid': file_uuid,
+    if file_uuid:
+        resident_regionsets_url = ES_ENDPOINT + RESIDENT + file_uuid + '?pretty'
+        response = requests.delete(resident_regionsets_url)
+        result = response.json().get('result', None)
+        if result == 'not_found':
+            print(file_accession, "is not found in Regulome database")
+        elif response.json().get('result', None)== 'deleted':
+            print(file_accession, "is deleted in residents index")
+            is_fail = False
+            for index in INDEXES:
+                json_data = {
+                    'query': {
+                        'match': {
+                            'uuid': file_uuid,
+                        },
                     },
-                },
-            }
-            url = ES_ENDPOINT + index + '_delete_by_query'
-            response = requests.post(url, headers={}, json=json_data)
-            data = response.json()
-            failures = data.get('failures', [])
-            if failures:
-                is_fail = True
-                print("fail to delete", file_accession, 'on', index )
-        if not is_fail:
-            print(file_accession, "is deleted in regions index")
+                }
+                url = ES_ENDPOINT + index + '_delete_by_query'
+                response = requests.post(url, headers={}, json=json_data)
+                data = response.json()
+                failures = data.get('failures', [])
+                if failures:
+                    is_fail = True
+                    print("fail to delete", file_accession, 'on', index )
+            if not is_fail:
+                print(file_accession, "is deleted in regions index")
 
 def get_resident(file_accession):
-    file_metadata = get_metadata(file_accession)
-    file_uuid = file_metadata['uuid']
-    url = ES_ENDPOINT + RESIDENT + file_uuid + '?pretty'
-    response = requests.get(url).json()
-    return response
+    data = {}
+    file_uuid = get_file_uuid(file_accession)
+    if file_uuid:
+        url = ES_ENDPOINT + RESIDENT + file_uuid + '?pretty'
+        data = requests.get(url).json()
+    return data
 
 def delete_resident(file_accession):
     file_uuid = get_file_uuid(file_accession)
-    resident_regionsets_url = ES_ENDPOINT + RESIDENT + file_uuid + '?pretty'
-    response = requests.delete(resident_regionsets_url)
+    if file_uuid:
+        resident_regionsets_url = ES_ENDPOINT + RESIDENT + file_uuid + '?pretty'
+        response = requests.delete(resident_regionsets_url)
 
 
 def re_index_resident(file_accessions):
     is_re_index = True
     for file_accession in file_accessions:
         resident = get_resident(file_accession)
-        if resident.get('found', None) == False:
+        if not resident or resident.get('found', None) == False:
             is_re_index = False
-            print(file_accession, "is not found in database, abort. Please use a correct list of file accessions")
+            if resident.get('found', None) == False:
+                print(file_accession, "is not found in Regulome database.")
+            print("Abort. Please use a correct list of file accessions")
             break
     if is_re_index:
         for file_accession in file_accessions:
@@ -124,10 +133,13 @@ def add_files(accessions):
     ).setup_indices()
     is_new = True
     for accession in accessions:
-        data = get_resident(accession)
-        if data.get('found', None) == True:
-            print(accession, "is already indexed, abort. Please use a correct list of file accessions")
+        resident = get_resident(accession)
+        if not resident or resident.get('found', None) == True:
             is_new = False
+            if resident.get('found', None) == True:
+                print(accession, "is already indexed.")
+            print("Abort. Please use a correct list of file accessions")
+            
             break
     if is_new: 
         index_regulome_db(ES_URL, ES_PORT, accessions, [])    
@@ -167,3 +179,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+
