@@ -275,7 +275,7 @@ def fetch_datasets(files, datasets):
         datasets[dataset["accession"]] = dataset
 
 
-def index_regulome_db(encode_accessions, local_files, filter_files=False):
+def index_regulome_db(es_uri, es_port, encode_accessions, local_files, filter_files=False):
 
     datasets = {}
     per_request = 350
@@ -345,5 +345,5 @@ if __name__ == "__main__":
         local_files.append(local_file)
         
 
-    index_regulome_db(encode_accessions, local_files)
+    index_regulome_db(es_uri, es_port, encode_accessions, local_files)
     
