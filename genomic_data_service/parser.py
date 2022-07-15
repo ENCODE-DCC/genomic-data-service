@@ -111,6 +111,8 @@ class RegionParser(Parser):
             gene_name = self.gene_symbol_dict.get(ensg_id)
             if gene_name:
                 doc['value'] = gene_name
+            else:
+                doc['value'] = line[self.cols_for_index['ensg_id_col'] + 1]
         if 'name_col' in self.cols_for_index and self.cols_for_index['name_col'] < len(line):
             doc['name'] = line[self.cols_for_index['name_col']]
         if 'p_value_col' in self.cols_for_index and self.cols_for_index['p_value_col'] < len(line):

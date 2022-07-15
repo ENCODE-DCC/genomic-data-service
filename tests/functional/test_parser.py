@@ -33,6 +33,16 @@ def test_RegionParser_eqtls_grch38(reader_eqtls_grch38):
         'effect_size': '-2.27865',
         'ensg_id': 'ENSG00000227232'
     }
+    (chrom, doc) = docs[3]
+    assert chrom == "chr1"
+    assert doc == {
+        'coordinates': {'gte': 769576, 'lt': 769577},
+        'name': 'chr1_769577_G_A_b38',
+        'value': 'RP11-206L10.9',
+        'p_value': 1.05819e-09,
+        'effect_size': '1.43971',
+        'ensg_id': 'ENSG00000237491'
+    }
 
 
 
