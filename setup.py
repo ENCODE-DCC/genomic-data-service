@@ -15,7 +15,7 @@ setup(
         'Flask-Script==2.0.6',
         'Flask-Excel==0.0.7',
         'elasticsearch==5.4.0',
-        'requests==2.27.1',
+        'requests==2.28.1',
         'pyBigWig==0.3.18',
         'scikit-learn==1.0.1',
         'gunicorn==20.1.0',

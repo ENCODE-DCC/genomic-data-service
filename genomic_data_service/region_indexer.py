@@ -345,7 +345,7 @@ def get_encode_accessions_from_portal():
 
     return encode_accessions
 
-def index_regulome_db(encode_accessions, local_files=None, filter_files=False, per_request=350):
+def index_regulome_db(es_uri, es_port, encode_accessions, local_files=None, filter_files=False, per_request=350):
     print("Number of files for indexing from ENCODE:", len(encode_accessions))
     datasets = {}
     chunks = [
@@ -407,7 +407,7 @@ if __name__ == "__main__":
                 encode_accessions.extend(get_encode_accessions_from_portal())
             else:
                 raise ValueError(f'Invalid assembly: {assembly}')
-        index_regulome_db(encode_accessions)
+        index_regulome_db(es_uri, es_port, encode_accessions)
     else:
         encode_accessions = list(pickle.load(open(TEST_ENCODE_ACCESSIONS_PATH, "rb")))
         local_files = [
@@ -416,4 +416,4 @@ if __name__ == "__main__":
                 "file_metadata": FILE_HG19
             }
         ]
-        index_regulome_db(encode_accessions, local_files)
+        index_regulome_db(es_uri, es_port, encode_accessions, local_files)
