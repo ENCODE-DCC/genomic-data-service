@@ -2,10 +2,11 @@ from asyncio.log import logger
 import abc
 import pickle
 import py2bit
-from genomic_data_service.strand import get_p_value
 
 TWO_BIT_FILE_PATH = 'ml_models/two_bit_files/hg38.2bit'
 GENE_LOOKUP_FILE_PATH = 'gene_lookup.pickle'
+PWM_GRCH38_STRAND_COL = 3
+PWM_GRCH38_SEQ_COL = 4
 
 class Parser:
     def __init__(self, reader, cols_for_index={}, file_path=None, gene_lookup=False):
@@ -157,4 +158,26 @@ class FootPrintParser(Parser):
         else:
             doc['strand'] = '-'
             doc['value'] = str(score_reverse_complement)
+        return (chrom, doc)
+
+
+class PWMsParser(Parser):
+    def __init__(self, reader, pwm, cols_for_index={}, file_path=None):
+        super().__init__(reader, cols_for_index, file_path)
+        self.pwm = pwm
+        self.chars_index = {'A':0,'C':1,'G':2,'T':3}
+    def document_generator(self, line):
+        chrom, start, end = line[0], int(line[1]), int(line[2])
+        doc = {
+            'coordinates': {
+                'gte': start,
+                'lt': end
+            },
+        }    
+        doc['strand'] = line[PWM_GRCH38_STRAND_COL]
+        sequence = line[PWM_GRCH38_SEQ_COL]
+        score = 0
+        for i in range(len(sequence)):
+            score += self.pwm[i][self.chars_index[sequence[i]]]
+        doc['value'] = str(score)
         return (chrom, doc)

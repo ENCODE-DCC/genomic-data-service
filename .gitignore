@@ -142,3 +142,6 @@ ml_models/bigwig_files
 
 # Desktop Services Store
 .DS_Store
+
+# query results
+encode_accessions_all.pickle

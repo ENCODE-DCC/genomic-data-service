@@ -2,6 +2,7 @@ import pickle
 import math
 import pyBigWig
 from os.path import exists
+import logging
 
 RESIDENT_REGIONSET_KEY = (
     "resident_regionsets"  # keeps track of what datsets are resident
@@ -165,21 +166,21 @@ class RegulomeAtlas(object):
 
         evidence = {}
         targets = {"ChIP": [], "PWM": [], "Footprint": []}
-
-        for dataset in datasets.values():
-            character = self._score_category(dataset)
-            if character is None:
-                continue
-            if character not in evidence:
-                evidence[character] = []
-            evidence[character].append(dataset)
-            target = dataset.get("target")
-            if target and character in ["ChIP", "PWM", "Footprint"]:
-                if isinstance(target, str):
-                    targets[character].append(target)
-                elif isinstance(target, list):  # rare but PWM targets might be list
-                    for targ in target:
-                        targets[character].append(targ)
+        if datasets:
+            for dataset in datasets.values():
+                character = self._score_category(dataset)
+                if character is None:
+                    continue
+                if character not in evidence:
+                    evidence[character] = []
+                evidence[character].append(dataset)
+                target = dataset.get("target")
+                if target and character in ["ChIP", "PWM", "Footprint"]:
+                    if isinstance(target, str):
+                        targets[character].append(target)
+                    elif isinstance(target, list):  # rare but PWM targets might be list
+                        for targ in target:
+                            targets[character].append(targ)
 
         # For each ChIP target, there could be a PWM and/or Footprint to match
         for target in targets["ChIP"]:
@@ -194,9 +195,13 @@ class RegulomeAtlas(object):
 
         # Get values/signals from bigWig
         for k, bw in self.bigwig_signal_map.items():
-            values = bw.values(chrom, start, end)
-            average = sum(values) / max(len(values), 1)
-            evidence[k] = 0.0 if math.isnan(average) else average
+            try:
+                values = bw.values(chrom, start, end)
+                average = sum(values) / max(len(values), 1)
+                evidence[k] = 0.0 if math.isnan(average) else average
+            except Exception as e:
+                logging.error('failure to read bigwig file for evidence %s for %s:%s:%s', k, chrom, start, end)
+                evidence[k] = 0.0
 
         return evidence
 

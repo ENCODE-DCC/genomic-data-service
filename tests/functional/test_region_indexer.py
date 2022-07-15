@@ -1,6 +1,7 @@
 import pytest
-from genomic_data_service.region_indexer import encode_graph, clean_up, FILE_REQUIRED_FIELDS, need_to_fetch_documents, filter_files
-from genomic_data_service.region_indexer import dataset_accession, fetch_datasets, print_progress_bar, log, fetch_documents
+from genomic_data_service.region_indexer import encode_graph, clean_up, FILE_REQUIRED_FIELDS, need_to_fetch_documents, filter_files, SUPPORTED_ASSEMBLIES
+from genomic_data_service.region_indexer import dataset_accession, fetch_datasets, print_progress_bar, log, fetch_documents, get_encode_accessions_from_portal
+from genomic_data_service.region_indexer import read_local_accessions_from_pickle, ENCODE_ACCESSIONS_HG19_PATH
 
 def test_encode_graph(query):
     graph = encode_graph(query)[0]
@@ -76,4 +77,16 @@ def test_log(capsys):
     log("test", True)
     captured = capsys.readouterr()
     assert captured.out == "test\n"
+
+def test_get_encode_accessions_from_portal():
+    encode_accessions = get_encode_accessions_from_portal()
+    assert len(encode_accessions) > 42000
+    assert "ENCFF797GRA" in encode_accessions
+    assert "ENCFF518SJY" in encode_accessions
+
+def test_read_local_accessions_from_pickle():
+    encode_accessions = read_local_accessions_from_pickle(ENCODE_ACCESSIONS_HG19_PATH)
+    assert len(encode_accessions) == 37689
+    assert "ENCFF361SFG" in encode_accessions
+
 

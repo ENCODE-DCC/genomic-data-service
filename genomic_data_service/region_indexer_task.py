@@ -4,7 +4,7 @@ from elasticsearch import Elasticsearch
 from elasticsearch.exceptions import NotFoundError
 from elasticsearch.helpers import bulk
 from genomic_data_service.file_opener import LocalFileOpener,S3FileOpener
-from genomic_data_service.parser import SnfParser, RegionParser, FootPrintParser
+from genomic_data_service.parser import SnfParser, RegionParser, FootPrintParser, PWMsParser
 from genomic_data_service.constants import DATASET
 from genomic_data_service.strand import get_matrix_file_download_url, get_matrix_array, get_pwm
 import uuid
@@ -180,6 +180,13 @@ def index_regions_from_file(es, file_uuid, file_metadata, dataset_metadata, snp=
         matrix = get_matrix_array(url)
         pwm = get_pwm(matrix)
         docs = FootPrintParser(reader, pwm, cols_for_index, file_path).parse()
+    elif file_metadata.get('annotation_type') == 'PWMs' and file_metadata.get('assembly') == 'GRCh38':
+        href = dataset_metadata["documents"][0]["attachment"]["href"]
+        id = dataset_metadata["documents"][0]["@id"]
+        matrix_file_download_url = "https://www.encodeproject.org" + id + href
+        matrix = get_matrix_array(matrix_file_download_url)
+        pwm = get_pwm(matrix)
+        docs = PWMsParser(reader, pwm, cols_for_index, file_path).parse()
     else:
         docs = RegionParser(reader, cols_for_index, file_path).parse()
 
@@ -342,9 +349,20 @@ def remove_from_es(indexed_file, file_uuid, es):
         for chrom in indexed_file['chroms']:
             es.delete(index=chrom.lower(), doc_type=indexed_file['assembly'], id=str(file_uuid))
 
-        es.delete(index=RESIDENTS_INDEX, doc_type=use_type, id=str(file_uuid))
+        es.delete(index=RESIDENTS_INDEX, doc_type=FOR_REGULOME_DB, id=str(file_uuid))
         
         return True
+
+def remove_snp_from_es(snp_index, file_uuid, es):
+    es.delete(index=snp_index)
+    es.delete(index=RESIDENTS_INDEX, doc_type=FOR_REGULOME_DB, id=str(file_uuid))
+
+def remove_region_from_es(file_uuid, assembly, es):
+    for chrom in SUPPORTED_CHROMOSOMES:
+        es.delete(index=chrom.lower(), doc_type=assembly, id=str(file_uuid))
+
+    es.delete(index=RESIDENTS_INDEX, doc_type=FOR_REGULOME_DB, id=str(file_uuid))
+
 
 
 def file_in_es(file_uuid, es):
