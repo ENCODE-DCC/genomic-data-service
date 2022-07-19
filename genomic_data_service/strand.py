@@ -1,4 +1,3 @@
-from xml.dom.minidom import Document
 import requests
 import numpy as np
 from pytfmpval import tfmp
