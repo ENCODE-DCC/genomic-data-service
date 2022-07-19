@@ -1,16 +1,20 @@
 import requests
 import numpy as np
 from pytfmpval import tfmp
+import logging
+
 
 
 def get_matrix_file_download_url(dataset_metadata):
-    matrix_file_download_url = None
     documents = dataset_metadata['documents']
-    if documents:
+    try: 
         document = documents[0]
-        href = document["attachment"]["href"]
-        id = document["@id"]
-        matrix_file_download_url = "https://www.encodeproject.org" + id + href
+    except IndexError:
+        logging.error("Missing documents for dataset:", dataset_metadata["accession"])
+        raise
+    href = document["attachment"]["href"]
+    id = document["@id"]
+    matrix_file_download_url = "https://www.encodeproject.org" + id + href
     return matrix_file_download_url
 
 
