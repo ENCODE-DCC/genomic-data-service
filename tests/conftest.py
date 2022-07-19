@@ -235,27 +235,32 @@ def bed_file():
         "status": "archived",
     }
 
+
 @pytest.fixture
 def s3_uri():
     return "s3://encode-public/2017/07/02/a55e8a04-d40d-4715-8bee-7b23dc4f1050/ENCFF603JQT.bed.gz"
 
-@pytest.fixture
-def reader_chip_seq():    
-    file = gzip.open("./tests/data/ENCFF141SAU.bed.gz", mode='rt')
-    file_reader = csv.reader(file, delimiter='\t')
-    return file_reader
 
 @pytest.fixture
-def reader_eqtls_grch38():   
-    file = gzip.open("./tests/data/ENCFF776SWB_eqtls_grch38.bed.gz", mode='rt')
-    file_reader = csv.reader(file, delimiter='\t')
+def reader_chip_seq():
+    file = gzip.open("./tests/data/ENCFF141SAU.bed.gz", mode="rt")
+    file_reader = csv.reader(file, delimiter="\t")
     return file_reader
 
+
 @pytest.fixture
-def reader_snp():    
-    file = gzip.open("./tests/data/test_snp_file.bed.gz", mode='rt')
-    file_reader = csv.reader(file, delimiter='\t')
+def reader_eqtls_grch38():
+    file = gzip.open("./tests/data/ENCFF776SWB_eqtls_grch38.bed.gz", mode="rt")
+    file_reader = csv.reader(file, delimiter="\t")
     return file_reader
+
+
+@pytest.fixture
+def reader_snp():
+    file = gzip.open("./tests/data/test_snp_file.bed.gz", mode="rt")
+    file_reader = csv.reader(file, delimiter="\t")
+    return file_reader
+
 
 @pytest.fixture
 def dataset_target():
@@ -387,6 +392,7 @@ def dataset_targets():
         }
     ]
 
+
 @pytest.fixture(scope="session")
 def regulome_elasticsearch_client(host="elasticsearch", port=9200):
     from genomic_data_service.region_indexer_elastic_search import (
@@ -400,3 +406,58 @@ def regulome_elasticsearch_client(host="elasticsearch", port=9200):
     yield RegionIndexerElasticSearch(
         host, port, SUPPORTED_CHROMOSOMES, SUPPORTED_ASSEMBLIES
     )
+
+
+@pytest.fixture
+def footprint_dataset():
+    return {
+        "@id": "/annotations/ENCSR815YBE/",
+        "@type": ["Annotation", "FileSet", "Dataset", "Item"],
+        "accession": "ENCSR815YBE",
+        "annotation_type": "footprints",
+        "biosample_ontology": {
+            "dbxrefs": [],
+            "organ_slims": ["large intestine", "colon", "intestine"],
+            "system_slims": ["digestive system"],
+            "aliases": [],
+            "references": [],
+            "@type": ["BiosampleType", "Item"],
+            "synonyms": [],
+            "term_id": "UBERON:0008971",
+            "classification": "tissue",
+            "uuid": "abb1d295-454f-4af7-889f-84ea7189426b",
+            "schema_version": "1",
+            "term_name": "left colon",
+            "cell_slims": [],
+            "developmental_slims": ["endoderm"],
+            "name": "tissue_UBERON_0008971",
+            "@id": "/biosample-types/tissue_UBERON_0008971/",
+            "status": "released",
+        },
+        "documents": [
+            {
+                "aliases": ["j-michael-cherry:regulomeDB-Motifs-JASPAR2020-MA0149.1"],
+                "references": [],
+                "date_created": "2021-11-16T17:03:06.645153+00:00",
+                "@type": ["Document", "Item"],
+                "submitted_by": "/users/7f171ff2-5107-48d4-91c7-4c2d0576e246/",
+                "description": "MA0149.1_EWSR1-FLI1",
+                "lab": "/labs/alan-boyle/",
+                "uuid": "5f806098-bbf7-48e2-9ad2-588590baf2c5",
+                "schema_version": "8",
+                "urls": [],
+                "award": "/awards/U41HG009293/",
+                "attachment": {
+                    "download": "MA0149.1.txt",
+                    "md5sum": "63b3b176f3251d4c71dc7df58e3315dd",
+                    "href": "@@download/attachment/MA0149.1.txt",
+                    "type": "text/plain",
+                },
+                "@id": "/documents/5f806098-bbf7-48e2-9ad2-588590baf2c5/",
+                "status": "released",
+                "document_type": "position weight matrix",
+            }
+        ],
+        "targets": [],
+        "uuid": "8d3721b4-3e49-4b42-9e37-eb9ee37ff13d",
+    }

@@ -8,28 +8,12 @@ from genomic_data_service.strand import (
 import numpy as np
 
 
-def test_get_matrix_file_download_url(mocker):
-    mock_response = mocker.Mock()
-    mock_response.json.return_value = {
-        "aliases": [
-            "j-michael-cherry:regulomeDB-Files-TRACE-Footprints-MA0125.1-ENCFF642YJJ"
-        ],
-        "@graph": [
-            {
-                "documents": [
-                    {
-                        "@id": "/documents/fcc8d285-b294-45e9-8a17-12e4deb1599d/",
-                        "attachment": {"href": "@@download/attachment/MA0125.1.txt"},
-                    }
-                ]
-            }
-        ],
-    }
-    mocker.patch("genomic_data_service.strand.requests.get", return_value=mock_response)
-    url = get_matrix_file_download_url("ENCFF300WPY")
+def test_get_matrix_file_download_url(footprint_dataset):
+
+    url = get_matrix_file_download_url(footprint_dataset)
     assert (
         url
-        == "https://www.encodeproject.org/documents/fcc8d285-b294-45e9-8a17-12e4deb1599d/@@download/attachment/MA0125.1.txt"
+        == "https://www.encodeproject.org/documents/5f806098-bbf7-48e2-9ad2-588590baf2c5/@@download/attachment/MA0149.1.txt"
     )
 
 
