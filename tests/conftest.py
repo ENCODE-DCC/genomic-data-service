@@ -1,8 +1,6 @@
-import py
 import pytest
 import csv
 import gzip
-
 from genomic_data_service import app
 
 
