@@ -27,6 +27,8 @@ class Parser:
                 logger.error('%s - failure to parse line %s:%s:%s, skipping line',
                         self.file_path, line[0], line[1], line[2])
                 continue
+            if not chrom and not doc:
+                continue
             yield (chrom, doc)  
     @abc.abstractmethod
     def document_generator(self, line):
@@ -146,21 +148,24 @@ class FootPrintParser(Parser):
             },
         }
         sequence = self.seq_reader.sequence(chrom, start, end)
-        sequence_reverse_complement = "".join(self.complement.get(base, base) for base in reversed(sequence))
-
-        score = 0
-        score_reverse_complement = 0
-
-        for i in range(len(sequence)):
-            score += self.pwm[i][self.chars_index[sequence[i]]]
-            score_reverse_complement += self.pwm[i][self.chars_index[sequence_reverse_complement[i]]] #add up scores for given bases on each position
-        if score >= score_reverse_complement:
-            doc['strand'] = '+'
-            doc['value'] = str(score)
+        if 'N' in sequence:
+            return (None, None)
         else:
-            doc['strand'] = '-'
-            doc['value'] = str(score_reverse_complement)
-        return (chrom, doc)
+            sequence_reverse_complement = "".join(self.complement.get(base, base) for base in reversed(sequence))
+
+            score = 0
+            score_reverse_complement = 0
+
+            for i in range(len(sequence)):
+                score += self.pwm[i][self.chars_index[sequence[i]]]
+                score_reverse_complement += self.pwm[i][self.chars_index[sequence_reverse_complement[i]]] #add up scores for given bases on each position
+            if score >= score_reverse_complement:
+                doc['strand'] = '+'
+                doc['value'] = str(score)
+            else:
+                doc['strand'] = '-'
+                doc['value'] = str(score_reverse_complement)
+            return (chrom, doc)
 
 
 class PWMsParser(Parser):
