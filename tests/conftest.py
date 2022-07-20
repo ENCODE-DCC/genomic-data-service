@@ -260,10 +260,12 @@ def reader_snp():
     file_reader = csv.reader(file, delimiter="\t")
     return file_reader
 
+
 @pytest.fixture
 def reader_footprint_grch38():
-    file_reader = csv.reader(open('./tests/data/footprint_grch38.bed'), delimiter="\t")
+    file_reader = csv.reader(open("./tests/data/footprint_grch38.bed"), delimiter="\t")
     return file_reader
+
 
 @pytest.fixture
 def dataset_target():
