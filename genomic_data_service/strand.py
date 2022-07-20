@@ -10,7 +10,7 @@ def get_matrix_file_download_url(dataset_metadata):
     try: 
         document = documents[0]
     except IndexError:
-        logging.error("Missing documents for dataset:", dataset_metadata["accession"])
+        logging.error("Missing documents for dataset: %s", dataset_metadata["accession"])
         raise
     href = document["attachment"]["href"]
     id = document["@id"]
