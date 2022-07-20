@@ -62,16 +62,29 @@ def test_SnpParser(reader_snp):
     }
 
 
-def test_foot_print_parser(reader_footprint_grch38):
+def test_foot_print_parser(reader_footprint_grch38, mocker):
+    mock_reader = mocker.Mock()
+    mock_reader.sequence.return_value = "TCTGCCTGCCTTCCCTCT"
+    mocker.patch("genomic_data_service.parser.py2bit.open", return_value=mock_reader)
     url = "https://www.encodeproject.org/documents/5f806098-bbf7-48e2-9ad2-588590baf2c5/@@download/attachment/MA0149.1.txt"
     matrix = get_matrix_array(url)
     pwm = get_pwm(matrix)
     docs = list(FootPrintParser(reader_footprint_grch38, pwm).parse())
-    assert len(docs) == 1
+    assert len(docs) == 2
     (chrom, doc) = docs[0]
     assert chrom == "chr9"
     assert doc == {
-        "coordinates": {"gte": 63817178, "lt": 63817196},
+        "coordinates": {"gte": 41229353, "lt": 41229371},
         "strand": "-",
         "value": "5.6463",
     }
+
+def test_foot_print_parser_with_n(reader_footprint_grch38, mocker):
+    mock_reader = mocker.Mock()
+    mock_reader.sequence.return_value = "NNNNNNNNNNNNNNNNNN"
+    mocker.patch("genomic_data_service.parser.py2bit.open", return_value=mock_reader)
+    url = "https://www.encodeproject.org/documents/5f806098-bbf7-48e2-9ad2-588590baf2c5/@@download/attachment/MA0149.1.txt"
+    matrix = get_matrix_array(url)
+    pwm = get_pwm(matrix)
+    docs = list(FootPrintParser(reader_footprint_grch38, pwm).parse())
+    assert len(docs) == 0
