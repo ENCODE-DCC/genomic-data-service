@@ -4,9 +4,9 @@ workflows:
   gds-tests:
     jobs:
       - lint
-      - build-and-test
-        requires:
-          - lint
+      - build-and-test:
+          requires:
+            - lint
 
 jobs:
   lint:
