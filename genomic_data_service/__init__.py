@@ -1,5 +1,3 @@
-import genomic_data_service.rnaseq.views
-import genomic_data_service.errors
 from flask import Flask, jsonify, make_response
 from os import environ
 
