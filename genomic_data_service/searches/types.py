@@ -8,7 +8,7 @@ types = [
             'properties': {
                 'uuid': {
                     'title': 'UUID',
-                    
+
                 },
                 'expression': {
                     'type': 'object',

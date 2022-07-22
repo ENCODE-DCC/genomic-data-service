@@ -6,7 +6,7 @@ from tempfile import TemporaryFile
 from elasticsearch import Elasticsearch
 from genomic_data_service import app
 from genomic_data_service.constants import GENOME_TO_ALIAS
-from genomic_data_service.rsid_coordinates_resolver import ( 
+from genomic_data_service.rsid_coordinates_resolver import (
     get_coordinates,
     region_get_hits,
     evidence_to_features
@@ -47,8 +47,8 @@ class RegulomeApp:
     @property
     def atlas(self):
         regulome_es = Elasticsearch(
-        port=app.config["REGULOME_ES_PORT"], hosts=app.config["REGULOME_ES_HOSTS"]
-    )
+            port=app.config['REGULOME_ES_PORT'], hosts=app.config['REGULOME_ES_HOSTS']
+        )
         self._atlas = RegulomeAtlas(regulome_es)
         return self._atlas
 
@@ -62,7 +62,7 @@ class RegulomeApp:
         chrom = result['chrom']
         start = result['start']
         end = result['end']
-        
+
         all_hits = region_get_hits(
             self.atlas,
             self.assembly,
@@ -72,7 +72,7 @@ class RegulomeApp:
             peaks_too=self.return_peaks or self.matched_pwm_peak_bed_only
         )
         datasets = all_hits.get('datasets', [])
-          
+
         try:
             evidence = self.atlas.regulome_evidence(
                 datasets, chrom, int(start), int(end)
@@ -85,7 +85,7 @@ class RegulomeApp:
         except Exception:
             return 1, 'Regulome search failed on {}:{}-{}'.format(
                 chrom, start, end
-        )
+            )
         if self.matched_pwm_peak_bed_only:
             if not evidence.get('PWM_matched', []):
                 return 0, ''
@@ -231,6 +231,7 @@ class RegulomeApp:
             for snp in snps
         ]
 
+
 def main():
     parser = argparse.ArgumentParser(
         description='Regulome search for one or more variations.'
@@ -244,12 +245,12 @@ def main():
     )
     parser.add_argument(
         '--peaks',
-        help="Return peaks. By default, only scores will be return.",
+        help='Return peaks. By default, only scores will be return.',
         action='store_true',
     )
     parser.add_argument(
         '--matched-pwm-peak-only',
-        help="Return motif peak details in BED format.",
+        help='Return motif peak details in BED format.',
         action='store_true',
     )
     parser.add_argument(
@@ -311,7 +312,8 @@ def main():
         for query_region in args.variants:
             query_stream.write('{}\n'.format(query_region))
         query_stream.seek(0)
-    chunksize = query_count // args.processes + (query_count % args.processes > 0)
+    chunksize = query_count // args.processes + \
+        (query_count % args.processes > 0)
 
     print(
         'Found {} queries and converting them to potential {}...'.format(

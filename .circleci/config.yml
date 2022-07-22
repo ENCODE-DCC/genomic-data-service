@@ -3,9 +3,20 @@ version: 2.1
 workflows:
   gds-tests:
     jobs:
-      - build-and-test
+      - lint
+      - build-and-test:
+          requires:
+            - lint
 
 jobs:
+  lint:
+    docker:
+      - image: circleci/python:3.8
+    working_directory: ~/genomic_data_service
+    steps:
+      - checkout
+      - run: pip install pre-commit==2.17.0
+      - run: pre-commit run --all-files
   build-and-test:
     machine:
       image: ubuntu-2004:202111-02
@@ -16,7 +27,7 @@ jobs:
       - checkout
       - run:
           name: Build docker images
-          command: docker-compose -f docker-compose-test-intel.yml build 
+          command: docker-compose -f docker-compose-test-intel.yml build
       - run:
           name: Tests
           command: |

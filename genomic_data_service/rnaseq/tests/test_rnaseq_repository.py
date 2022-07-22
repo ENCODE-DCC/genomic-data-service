@@ -1,6 +1,7 @@
 import pytest
 import time
 
+
 def test_rnaseq_repository_memory_init():
     from genomic_data_service.rnaseq.repository.memory import Memory
     memory = Memory()

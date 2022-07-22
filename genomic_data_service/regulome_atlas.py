@@ -5,17 +5,17 @@ from os.path import exists
 import logging
 
 RESIDENT_REGIONSET_KEY = (
-    "resident_regionsets"  # keeps track of what datsets are resident
+    'resident_regionsets'  # keeps track of what datsets are resident
 )
-FOR_REGULOME_DB = "regulomedb"
+FOR_REGULOME_DB = 'regulomedb'
 EVIDENCE_CATEGORIES = [
-    "QTL",
-    "ChIP",
-    "DNase",
-    "PWM",
-    "Footprint",
-    "PWM_matched",
-    "Footprint_matched",
+    'QTL',
+    'ChIP',
+    'DNase',
+    'PWM',
+    'Footprint',
+    'PWM_matched',
+    'Footprint_matched',
 ]
 
 # when iterating scored snps or bases, chunk calls to index for efficiency
@@ -24,20 +24,20 @@ REGDB_SCORE_CHUNK_SIZE = 30000
 
 # RegulomeDB scores for bigWig (bedGraph) are converted to numeric and can be converted back
 REGDB_STR_SCORES = [
-    "1a",
-    "1b",
-    "1c",
-    "1d",
-    "1e",
-    "1f",
-    "2a",
-    "2b",
-    "2c",
-    "3a",
-    "3b",
-    "4",
-    "5",
-    "6",
+    '1a',
+    '1b',
+    '1c',
+    '1d',
+    '1e',
+    '1f',
+    '2a',
+    '2b',
+    '2c',
+    '3a',
+    '3b',
+    '4',
+    '5',
+    '6',
 ]
 REGDB_NUM_SCORES = [
     1000,
@@ -58,11 +58,12 @@ REGDB_NUM_SCORES = [
 
 FILE_IC_MATCHED_MAX_PATH_LOCAL = './ml_models/bigwig_files/IC_matched_max.bw'
 FILE_IC_MAX_PATH_LOCAL = './ml_models/bigwig_files/IC_max.bw'
-FILE_IC_MATCHED_MAX_PATH_REMOTE = "https://regulome-ml-models.s3.amazonaws.com/bigwig_files/IC_matched_max.bw"
-FILE_IC_MAX_PATH_REMOTE = "https://regulome-ml-models.s3.amazonaws.com/bigwig_files/IC_max.bw"
+FILE_IC_MATCHED_MAX_PATH_REMOTE = 'https://regulome-ml-models.s3.amazonaws.com/bigwig_files/IC_matched_max.bw'
+FILE_IC_MAX_PATH_REMOTE = 'https://regulome-ml-models.s3.amazonaws.com/bigwig_files/IC_max.bw'
 
 try:
-    TRAINED_REG_MODEL = pickle.load(open("./ml_models/rf_model1.0.1.sav", "rb"))
+    TRAINED_REG_MODEL = pickle.load(
+        open('./ml_models/rf_model1.0.1.sav', 'rb'))
 except FileNotFoundError:
     TRAINED_REG_MODEL = None
 
@@ -78,15 +79,15 @@ except RuntimeError:
 
 try:
     if file_IC_max_exists:
-       IC_MAX_BW = pyBigWig.open(FILE_IC_MAX_PATH_LOCAL)
-    else: 
+        IC_MAX_BW = pyBigWig.open(FILE_IC_MAX_PATH_LOCAL)
+    else:
         IC_MAX_BW = pyBigWig.open(FILE_IC_MAX_PATH_REMOTE)
 except RuntimeError:
     IC_MAX_BW = None
 
 LOCAL_BIGWIGS = {
-    "IC_matched_max": IC_MATCHED_MAX_BW,
-    "IC_max": IC_MAX_BW,
+    'IC_matched_max': IC_MATCHED_MAX_BW,
+    'IC_max': IC_MAX_BW,
 }
 
 SEARCH_MAX = 9999
@@ -98,17 +99,17 @@ class RegulomeAtlas(object):
         self.bigwig_signal_map = LOCAL_BIGWIGS
 
     def snp_es_index_name(self, assembly):
-        return "snp_" + assembly.lower()
+        return 'snp_' + assembly.lower()
 
     def find_snp(self, assembly, rsid):
         try:
             res = self.es.get(
-                index=self.snp_es_index_name(assembly), doc_type="_all", id=rsid
+                index=self.snp_es_index_name(assembly), doc_type='_all', id=rsid
             )
         except Exception:
             return None
 
-        return res["_source"]
+        return res['_source']
 
     def find_snps(self, assembly, chrom, start, end, max_results=SEARCH_MAX, maf=None):
         range_query = self._range_query(start, end, maf=maf)
@@ -124,7 +125,7 @@ class RegulomeAtlas(object):
         except Exception:
             return []
 
-        return [hit["_source"] for hit in results["hits"]["hits"]]
+        return [hit['_source'] for hit in results['hits']['hits']]
 
     def find_peaks(
         self, assembly, chrom, start, end, peaks_too=False, max_results=SEARCH_MAX
@@ -139,24 +140,25 @@ class RegulomeAtlas(object):
             size=max_results,
         )
 
-        return list(results["hits"]["hits"])
+        return list(results['hits']['hits'])
 
     def find_peaks_filtered(self, assembly, chrom, start, end, peaks_too=False):
-        peaks = self.find_peaks(assembly, chrom, start, end, peaks_too=peaks_too)
+        peaks = self.find_peaks(assembly, chrom, start,
+                                end, peaks_too=peaks_too)
 
         if not peaks:
             return (peaks, None)
 
-        uuids = list(set([peak["_source"]["uuid"] for peak in peaks]))
+        uuids = list(set([peak['_source']['uuid'] for peak in peaks]))
         details = self._resident_details(uuids)
         if not details:
             return ([], details)
 
         filtered_peaks = []
         for peak in peaks:
-            uuid = peak["_source"]["uuid"]
+            uuid = peak['_source']['uuid']
             if uuid in details:
-                peak["resident_detail"] = details[uuid]
+                peak['resident_detail'] = details[uuid]
                 filtered_peaks.append(peak)
 
         return (filtered_peaks, details)
@@ -165,7 +167,7 @@ class RegulomeAtlas(object):
         """Returns evidence for scoring: datasets in a characterized dict"""
 
         evidence = {}
-        targets = {"ChIP": [], "PWM": [], "Footprint": []}
+        targets = {'ChIP': [], 'PWM': [], 'Footprint': []}
         if datasets:
             for dataset in datasets.values():
                 character = self._score_category(dataset)
@@ -174,8 +176,8 @@ class RegulomeAtlas(object):
                 if character not in evidence:
                     evidence[character] = []
                 evidence[character].append(dataset)
-                target = dataset.get("target")
-                if target and character in ["ChIP", "PWM", "Footprint"]:
+                target = dataset.get('target')
+                if target and character in ['ChIP', 'PWM', 'Footprint']:
                     if isinstance(target, str):
                         targets[character].append(target)
                     elif isinstance(target, list):  # rare but PWM targets might be list
@@ -183,15 +185,15 @@ class RegulomeAtlas(object):
                             targets[character].append(targ)
 
         # For each ChIP target, there could be a PWM and/or Footprint to match
-        for target in targets["ChIP"]:
-            if target in targets["PWM"]:
-                if "PWM_matched" not in evidence:
-                    evidence["PWM_matched"] = []
-                evidence["PWM_matched"].append(target)
-            if target in targets["Footprint"]:
-                if "Footprint_matched" not in evidence:
-                    evidence["Footprint_matched"] = []
-                evidence["Footprint_matched"].append(target)
+        for target in targets['ChIP']:
+            if target in targets['PWM']:
+                if 'PWM_matched' not in evidence:
+                    evidence['PWM_matched'] = []
+                evidence['PWM_matched'].append(target)
+            if target in targets['Footprint']:
+                if 'Footprint_matched' not in evidence:
+                    evidence['Footprint_matched'] = []
+                evidence['Footprint_matched'].append(target)
 
         # Get values/signals from bigWig
         for k, bw in self.bigwig_signal_map.items():
@@ -200,7 +202,8 @@ class RegulomeAtlas(object):
                 average = sum(values) / max(len(values), 1)
                 evidence[k] = 0.0 if math.isnan(average) else average
             except Exception as e:
-                logging.error('failure to read bigwig file for evidence %s for %s:%s:%s', k, chrom, start, end)
+                logging.error(
+                    'failure to read bigwig file for evidence %s for %s:%s:%s', k, chrom, start, end)
                 evidence[k] = 0.0
 
         return evidence
@@ -211,31 +214,32 @@ class RegulomeAtlas(object):
         # only single point intersection
         # use start not end for 0-base open ended
 
-        query = {"query": {"bool": {"filter": []}}, "size": max_results}
+        query = {'query': {'bool': {'filter': []}}, 'size': max_results}
 
         if abs(int(end) - int(start)) == 1:
-            query_filter = {"term": {"coordinates": start}}
+            query_filter = {'term': {'coordinates': start}}
         else:
             query_filter = {
-                "range": {
-                    "coordinates": {
-                        "gte": start,
-                        "lt": end,
-                        "relation": "intersects",
+                'range': {
+                    'coordinates': {
+                        'gte': start,
+                        'lt': end,
+                        'relation': 'intersects',
                     }
                 }
             }
 
-        query["query"]["bool"]["filter"].append(query_filter)
+        query['query']['bool']['filter'].append(query_filter)
 
         if maf is not None:
-            query["query"]["bool"]["filter"].append({"range": {"maf": {"gte": maf}}})
+            query['query']['bool']['filter'].append(
+                {'range': {'maf': {'gte': maf}}})
 
         return query
 
     def _resident_details(self, uuids, max_results=SEARCH_MAX):
         try:
-            id_query = {"query": {"ids": {"values": uuids}}}
+            id_query = {'query': {'ids': {'values': uuids}}}
             res = self.es.search(
                 index=RESIDENT_REGIONSET_KEY,
                 body=id_query,
@@ -247,9 +251,9 @@ class RegulomeAtlas(object):
 
         details = {}
 
-        hits = res.get("hits", {}).get("hits", [])
+        hits = res.get('hits', {}).get('hits', [])
         for hit in hits:
-            details[hit["_source"]["uuid"]] = hit["_source"]
+            details[hit['_source']['uuid']] = hit['_source']
 
         return details
 
@@ -262,11 +266,11 @@ class RegulomeAtlas(object):
         overlap = set()
         for peak in peaks:
             if (
-                chrom == peak["_index"]
-                and start <= peak["_source"]["coordinates"]["lt"]
-                and end >= peak["_source"]["coordinates"]["gte"]
+                chrom == peak['_index']
+                and start <= peak['_source']['coordinates']['lt']
+                and end >= peak['_source']['coordinates']['gte']
             ):
-                overlap.add(peak["_source"]["uuid"])
+                overlap.add(peak['_source']['uuid'])
 
         return overlap
 
@@ -275,7 +279,7 @@ class RegulomeAtlas(object):
         """private: returns only the details that match the uuids"""
         if uuids is None:
             assert peaks is not None
-            uuids = list(set([peak["_source"]["uuid"] for peak in peaks]))
+            uuids = list(set([peak['_source']['uuid'] for peak in peaks]))
         filtered = {}
         for uuid in uuids:
             if uuid in details:  # region peaks may not be in regulome only details
@@ -294,10 +298,10 @@ class RegulomeAtlas(object):
         for uuid in uuids:
             if uuid not in details:
                 continue
-            afile = details[uuid]["file"]
-            file_dets[afile["@id"]] = afile
-            dataset = details[uuid]["dataset"]
-            dataset_dets[dataset["@id"]] = dataset
+            afile = details[uuid]['file']
+            file_dets[afile['@id']] = afile
+            dataset = details[uuid]['dataset']
+            dataset_dets[dataset['@id']] = dataset
         return (dataset_dets, file_dets)
 
     @staticmethod
@@ -309,18 +313,18 @@ class RegulomeAtlas(object):
         """private: returns one of the categories of evidence that are needed for scoring."""
         # score categories are slighly different from regulome categories
         collection_type = dataset.get(
-            "collection_type", ""
+            'collection_type', ''
         ).lower()  # resident_regionset dataset
-        if collection_type in ["chip-seq", "binding sites"]:
-            return "ChIP"
-        if collection_type == "dnase-seq":
-            return "DNase"
-        if collection_type == "pwms":
-            return "PWM"
-        if collection_type == "footprints":
-            return "Footprint"
-        if collection_type in ["eqtls", "dsqtls", "curated snvs"]:
-            return "QTL"
+        if collection_type in ['chip-seq', 'binding sites']:
+            return 'ChIP'
+        if collection_type == 'dnase-seq':
+            return 'DNase'
+        if collection_type == 'pwms':
+            return 'PWM'
+        if collection_type == 'footprints':
+            return 'Footprint'
+        if collection_type in ['eqtls', 'dsqtls', 'curated snvs']:
+            return 'QTL'
         return None
 
     def _regulome_category(self, score_category=None, dataset=None):
@@ -328,17 +332,17 @@ class RegulomeAtlas(object):
         # regulome category 'Motifs' contains score categories 'PWM' and 'Footprint'
         if score_category is None:
             if dataset is None:
-                return "???"
+                return '???'
             score_category = self._score_category(dataset)
-        if score_category == "ChIP":
-            return "Protein_Binding"
-        if score_category == "DNase":
-            return "Chromatin_Structure"
-        if score_category in ["PWM", "Footprint"]:
-            return "Motifs"
-        if score_category == "QTL":
-            return "Single_Nucleotides"
-        return "???"
+        if score_category == 'ChIP':
+            return 'Protein_Binding'
+        if score_category == 'DNase':
+            return 'Chromatin_Structure'
+        if score_category in ['PWM', 'Footprint']:
+            return 'Motifs'
+        if score_category == 'QTL':
+            return 'Single_Nucleotides'
+        return '???'
 
     def _write_a_brief(self, category, snp_evidence):
         """private: given evidence for a category make a string that summarizes it"""
@@ -350,48 +354,50 @@ class RegulomeAtlas(object):
         #           Protein_Binding|ChIP-seq|E2F1|MCF-7|, ...
         # Us: Chromatin_Structure:DNase-seq:|ENCSR...|Chorion|,|ENCSR...|Adultcd4th1| (tab)
         #           Protein_Binding/ChIP-seq:|ENCSR...|E2F1|MCF-7|,|ENCSR...|SP4|H1-hESC|
-        brief = ""
-        cur_score_category = ""
-        cur_regdb_category = ""
+        brief = ''
+        cur_score_category = ''
+        cur_regdb_category = ''
         for dataset in snp_evidence_category:
             new_score_category = self._score_category(dataset)
             if cur_score_category != new_score_category:
                 cur_score_category = new_score_category
-                new_regdb_category = self._regulome_category(cur_score_category)
+                new_regdb_category = self._regulome_category(
+                    cur_score_category)
                 if cur_regdb_category != new_regdb_category:
                     cur_regdb_category = new_regdb_category
-                    if brief != "":  # 'PWM' and 'Footprint' are both 'Motif'
-                        brief += ";"
-                    brief += "%s:" % cur_regdb_category
-                brief += "%s:|" % cur_score_category
+                    if brief != '':  # 'PWM' and 'Footprint' are both 'Motif'
+                        brief += ';'
+                    brief += '%s:' % cur_regdb_category
+                brief += '%s:|' % cur_score_category
             try:
                 brief += (
-                    dataset.get("@id", "").split("/")[-2] + "|"
+                    dataset.get('@id', '').split('/')[-2] + '|'
                 )  # accession is buried in @id
             except Exception:
-                brief += "|"
-            target = dataset.get("target")
+                brief += '|'
+            target = dataset.get('target')
             if target:
                 if isinstance(target, list):
-                    target = "/".join(target)
-                brief += target.replace(" ", "") + "|"
+                    target = '/'.join(target)
+                brief += target.replace(' ', '') + '|'
             biosample = dataset.get(
-                "biosample_term_name", dataset.get("biosample_summary")
+                'biosample_term_name', dataset.get('biosample_summary')
             )
             if biosample:
-                brief += biosample.replace(" ", "") + "|"
-            brief += ","
+                brief += biosample.replace(' ', '') + '|'
+            brief += ','
         return brief[:-1]  # remove last comma
 
     def make_a_case(self, snp):
         """Convert evidence json to list of evidence strings for bed batch downloads."""
         case = {}
-        if "evidence" in snp:
-            for category in snp["evidence"].keys():
-                if category.endswith("_matched"):
-                    case[category] = ",".join(snp["evidence"][category])
+        if 'evidence' in snp:
+            for category in snp['evidence'].keys():
+                if category.endswith('_matched'):
+                    case[category] = ','.join(snp['evidence'][category])
                 else:
-                    case[category] = self._write_a_brief(category, snp["evidence"])
+                    case[category] = self._write_a_brief(
+                        category, snp['evidence'])
         return case
 
     @staticmethod
@@ -399,16 +405,16 @@ class RegulomeAtlas(object):
         """private: returns regulome score from characterization set"""
         # Predict as probability of being a regulatory SNP from prediction
         binary_keys = [
-            "ChIP",
-            "DNase",
-            "PWM",
-            "Footprint",
-            "QTL",
-            "PWM_matched",
-            "Footprint_matched",
+            'ChIP',
+            'DNase',
+            'PWM',
+            'Footprint',
+            'QTL',
+            'PWM_matched',
+            'Footprint_matched',
         ]
         query = [int(k in characterization) for k in binary_keys]
-        numeric_keys = ["IC_max", "IC_matched_max"]
+        numeric_keys = ['IC_max', 'IC_matched_max']
         query += [characterization[k] for k in numeric_keys]
         # The TRAINED_REG_MODEL is a `sklearn.ensemble.forest.RandomForestClassifier`
         # https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html
@@ -421,56 +427,57 @@ class RegulomeAtlas(object):
         # `TRAINED_REG_MODEL.predict_proba([query])` is numpy array of
         # shape = [1, 2]. Specifically, the second column is the probability we
         # would like to output. So `[:, 1][0]` will be the desired score.
-        probability = str(round(TRAINED_REG_MODEL.predict_proba([query])[:, 1][0], 5))
-        ranking = "7"
-        if "QTL" in characterization:
-            if "ChIP" in characterization:
-                if "DNase" in characterization:
+        probability = str(
+            round(TRAINED_REG_MODEL.predict_proba([query])[:, 1][0], 5))
+        ranking = '7'
+        if 'QTL' in characterization:
+            if 'ChIP' in characterization:
+                if 'DNase' in characterization:
                     if (
-                        "PWM_matched" in characterization
-                        and "Footprint_matched" in characterization
+                        'PWM_matched' in characterization
+                        and 'Footprint_matched' in characterization
                     ):
-                        ranking = "1a"
-                    elif "PWM" in characterization and "Footprint" in characterization:
-                        ranking = "1b"
-                    elif "PWM_matched" in characterization:
-                        ranking = "1c"
-                    elif "PWM" in characterization:
-                        ranking = "1d"
+                        ranking = '1a'
+                    elif 'PWM' in characterization and 'Footprint' in characterization:
+                        ranking = '1b'
+                    elif 'PWM_matched' in characterization:
+                        ranking = '1c'
+                    elif 'PWM' in characterization:
+                        ranking = '1d'
                     else:
-                        ranking = "1f"
-                elif "PWM_matched" in characterization:
-                    ranking = "1e"
+                        ranking = '1f'
+                elif 'PWM_matched' in characterization:
+                    ranking = '1e'
                 else:
-                    ranking = "1f"
-            elif "DNase" in characterization:
-                ranking = "1f"
-            elif "PWM" in characterization or "Footprint" in characterization:
-                ranking = "6"
-        elif "ChIP" in characterization:
-            if "DNase" in characterization:
+                    ranking = '1f'
+            elif 'DNase' in characterization:
+                ranking = '1f'
+            elif 'PWM' in characterization or 'Footprint' in characterization:
+                ranking = '6'
+        elif 'ChIP' in characterization:
+            if 'DNase' in characterization:
                 if (
-                    "PWM_matched" in characterization
-                    and "Footprint_matched" in characterization
+                    'PWM_matched' in characterization
+                    and 'Footprint_matched' in characterization
                 ):
-                    ranking = "2a"
-                elif "PWM" in characterization and "Footprint" in characterization:
-                    ranking = "2b"
-                elif "PWM_matched" in characterization:
-                    ranking = "2c"
-                elif "PWM" in characterization:
-                    ranking = "3a"
+                    ranking = '2a'
+                elif 'PWM' in characterization and 'Footprint' in characterization:
+                    ranking = '2b'
+                elif 'PWM_matched' in characterization:
+                    ranking = '2c'
+                elif 'PWM' in characterization:
+                    ranking = '3a'
                 else:
-                    ranking = "4"
-            elif "PWM_matched" in characterization:
-                ranking = "3b"
+                    ranking = '4'
+            elif 'PWM_matched' in characterization:
+                ranking = '3b'
             else:
-                ranking = "5"
-        elif "DNase" in characterization:
-            ranking = "5"
-        elif "PWM" in characterization or "Footprint" in characterization:
-            ranking = "6"
-        return {"probability": probability, "ranking": ranking}
+                ranking = '5'
+        elif 'DNase' in characterization:
+            ranking = '5'
+        elif 'PWM' in characterization or 'Footprint' in characterization:
+            ranking = '6'
+        return {'probability': probability, 'ranking': ranking}
 
     def regulome_score(self, datasets, evidence):
         """Calculate RegulomeDB score based upon hits and voodoo"""
@@ -484,10 +491,10 @@ class RegulomeAtlas(object):
         if len(snps) <= window:
             return snps
 
-        snps = sorted(snps, key=lambda s: s["coordinates"]["gte"])
+        snps = sorted(snps, key=lambda s: s['coordinates']['gte'])
         ix = 0
         for snp in snps:
-            if snp["coordinates"]["gte"] >= center_pos:
+            if snp['coordinates']['gte'] >= center_pos:
                 break
             ix += 1
 
@@ -504,31 +511,34 @@ class RegulomeAtlas(object):
         if window > 0:
             snps = self._snp_window(snps, window, center_pos)
 
-        start = snps[0]["coordinates"]["gte"]  # SNPs must be in location order!
-        end = snps[-1]["coordinates"]["lt"]  # MUST do SLOW peaks_too
+        # SNPs must be in location order!
+        start = snps[0]['coordinates']['gte']
+        end = snps[-1]['coordinates']['lt']  # MUST do SLOW peaks_too
         (peaks, details) = self.find_peaks_filtered(
             assembly, chrom, start, end, peaks_too=True
         )
         if not peaks or not details:
             for snp in snps:
-                snp["score"] = None
+                snp['score'] = None
                 yield snp
                 return
 
         last_uuids = {}
         for snp in snps:
-            snp["score"] = None  # default
-            snp["assembly"] = assembly
+            snp['score'] = None  # default
+            snp['assembly'] = assembly
             snp_uuids = self._peak_uuids_in_overlap(
-                peaks, snp["chrom"], snp["coordinates"]["gte"]
+                peaks, snp['chrom'], snp['coordinates']['gte']
             )
             if snp_uuids:
                 # Otherwise datasets hits would be the same
                 if snp_uuids != last_uuids:
                     last_uuids = snp_uuids
-                    snp_details = self._filter_details(details, uuids=list(snp_uuids))
+                    snp_details = self._filter_details(
+                        details, uuids=list(snp_uuids))
                     if snp_details:
-                        (snp_datasets, _snp_files) = self.details_breakdown(snp_details)
+                        (snp_datasets, _snp_files) = self.details_breakdown(
+                            snp_details)
                     else:
                         snp_datasets = {}
                 # Regulome evidence now includes signals from bigWig.
@@ -536,13 +546,14 @@ class RegulomeAtlas(object):
                 if snp_datasets:
                     snp_evidence = self.regulome_evidence(
                         snp_datasets,
-                        snp["chrom"],
-                        snp["coordinates"]["gte"],
-                        snp["coordinates"]["lt"],
+                        snp['chrom'],
+                        snp['coordinates']['gte'],
+                        snp['coordinates']['lt'],
                     )
                     if snp_evidence:
-                        snp["score"] = self.regulome_score(snp_datasets, snp_evidence)
-                        snp["evidence"] = snp_evidence
+                        snp['score'] = self.regulome_score(
+                            snp_datasets, snp_evidence)
+                        snp['evidence'] = snp_evidence
                         yield snp
                         continue
             # if we are here this snp had no score
@@ -573,7 +584,8 @@ class RegulomeAtlas(object):
                     continue
                 else:
                     last_uuids = base_uuids
-                    base_details = self._filter_details(details, uuids=list(base_uuids))
+                    base_details = self._filter_details(
+                        details, uuids=list(base_uuids))
                     if base_details:
                         (base_datasets, _base_files) = self.details_breakdown(
                             base_details
@@ -585,7 +597,7 @@ class RegulomeAtlas(object):
                             if base_evidence:
                                 score = self.regulome_score(
                                     base_datasets, base_evidence
-                                ).get("ranking", "")
+                                ).get('ranking', '')
                                 if score:
                                     num_score = self.numeric_score(score)
                                     if num_score == region_score:
@@ -676,4 +688,4 @@ class RegulomeAtlas(object):
         try:
             return REGDB_STR_SCORES[REGDB_NUM_SCORES.index(int_score)]
         except Exception:
-            return ""
+            return ''

@@ -71,7 +71,7 @@ class RnaSeqFile:
     DOMAIN = DOMAIN
     FILE_FIELDS = FILE_FIELDS
     DATASET_FIELDS = DATASET_FIELDS
-    
+
     def __init__(self, props, repositories):
         self.props = props
         self.repositories = repositories
@@ -161,7 +161,6 @@ class RnaSeqFile:
     def _get_documents(self):
         for expression in self._get_expressions():
             yield self._build_document(expression)
-
 
     def as_documents(self):
         self._extract_file_properties()

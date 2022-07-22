@@ -5,7 +5,7 @@ MATCH_ALL = {
 }
 
 
-INDEX_SETTINGS =  {
+INDEX_SETTINGS = {
     'index.refresh_interval': '-1',
     'index.max_result_window': 200000,
     'index.mapping.total_fields.limit': 5000,

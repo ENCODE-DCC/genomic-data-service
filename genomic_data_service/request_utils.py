@@ -10,11 +10,12 @@ def validate_search_request(request):
 
     return (True, None)
 
+
 def extract_search_params(params):
     assembly = params.get('genome')
-    from_   = params.get('from', type=int) or 0
-    format  = params.get('format', 'json')
-    maf     = params.get('maf', None)
+    from_ = params.get('from', type=int) or 0
+    format = params.get('format', 'json')
+    maf = params.get('maf', None)
 
     regions = params.get('regions', [])
     if regions:
@@ -28,4 +29,3 @@ def extract_search_params(params):
                       if not re.match(r'^(#.*)|(\s*)$', region_query)]
 
     return assembly, from_, size, format, maf, region_queries
-

@@ -4,7 +4,7 @@ services:
 
   elasticsearch:
     image: elasticsearch:5.6.16
-    expose: 
+    expose:
       - "9200"
       - "9300"
     ulimits:

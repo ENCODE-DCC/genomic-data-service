@@ -15,14 +15,14 @@ log = logging.getLogger(__name__)
 def ensembl_assembly_mapper(location, species, input_assembly, output_assembly):
     # maps location on GRCh38 to hg19 for example
     url = (ENSEMBL_URL + 'map/' + species + '/'
-               + input_assembly + '/' + location + '/' + output_assembly
-               + '/?content-type=application/json')
+           + input_assembly + '/' + location + '/' + output_assembly
+           + '/?content-type=application/json')
     try:
         response = requests.get(url).json()
-        mappings = response["mappings"]
+        mappings = response['mappings']
     except Exception:
         return('', '', '')
-    
+
     if len(mappings) < 1:
         return('', '', '')
 
@@ -35,7 +35,7 @@ def ensembl_assembly_mapper(location, species, input_assembly, output_assembly):
 
 
 def get_ensemblid_coordinates(id, assembly):
-    species = GENOME_TO_SPECIES.get(assembly, "homo_sapiens")
+    species = GENOME_TO_SPECIES.get(assembly, 'homo_sapiens')
     url = '{ensembl}lookup/id/{id}?content-type=application/json'.format(
         ensembl=ENSEMBL_URL,
         id=id
@@ -58,10 +58,10 @@ def get_ensemblid_coordinates(id, assembly):
             return('chr' + chromosome, start, end)
         elif assembly == 'GRCh37':
             return ensembl_assembly_mapper(location, species, 'GRCh38', assembly)
-        elif assembly == "GRCm38":
-            return ensembl_assembly_mapper(location, species, "GRCm39", assembly)
-        elif assembly == "GRCm37":
-            return ensembl_assembly_mapper(location, species, "GRCm39", "NCBIM37")
+        elif assembly == 'GRCm38':
+            return ensembl_assembly_mapper(location, species, 'GRCm39', assembly)
+        elif assembly == 'GRCm37':
+            return ensembl_assembly_mapper(location, species, 'GRCm39', 'NCBIM37')
         else:
             return ('', '', '')
 
@@ -74,8 +74,9 @@ def get_rsid_coordinates_from_atlas(atlas, assembly, rsid):
 
     if chrom and coordinates and 'gte' in coordinates and 'lt' in coordinates:
         return (chrom, coordinates['gte'], coordinates['lt'])
-    
-    log.warning("Could not find %s on %s, using ensemble. Elasticsearch response: %s" % (rsid, assembly, snp))
+
+    log.warning('Could not find %s on %s, using ensemble. Elasticsearch response: %s' % (
+        rsid, assembly, snp))
     return None
 
 
@@ -84,14 +85,14 @@ def get_rsid_coordinates_from_ensembl(assembly, rsid):
 
     ensembl_url = ENSEMBL_URL_GRCH37 if (assembly == 'GRCh37') else ENSEMBL_URL
 
-    path = "variation/%s/%s?content-type=application/json" % (species, rsid)
-    url  = ensembl_url + path
+    path = 'variation/%s/%s?content-type=application/json' % (species, rsid)
+    url = ensembl_url + path
 
     try:
         response = requests.get(url).json()
         mappings = response['mappings']
     except Exception:
-        log.error("Failed connecitng to Ensembl: %s" % url)
+        log.error('Failed connecitng to Ensembl: %s' % url)
         return('', '', '')
 
     for mapping in mappings:
@@ -103,15 +104,17 @@ def get_rsid_coordinates_from_ensembl(assembly, rsid):
             elif assembly == 'GRCh37':
                 return ensembl_assembly_mapper(mapping['location'], species, 'GRCh38', assembly)
     return ('', '', '',)
-    
+
 
 def get_rsid_coordinates(rsid, assembly, atlas=None, webfetch=True):
     if atlas and assembly in ['GRCh38', 'hg19', 'GRCh37']:
-        chrom, start, end = get_rsid_coordinates_from_atlas(atlas, assembly, rsid)
+        chrom, start, end = get_rsid_coordinates_from_atlas(
+            atlas, assembly, rsid)
 
         if chrom is None and webfetch:
-            raise ValueError("Could not find %s on %s, using ensemble" % (rsid, assembly))
-        
+            raise ValueError(
+                'Could not find %s on %s, using ensemble' % (rsid, assembly))
+
         return(chrom, start, end)
 
     chrom, start, end = get_rsid_coordinates_from_ensembl(assembly, rsid)
@@ -138,7 +141,8 @@ def get_coordinates(query_term, assembly='GRCh37', atlas=None):
         else:
             query_match = re.match(r'^ensg\d+', query_term)
             if query_match:
-                chrom, start, end = get_ensemblid_coordinates(query_term.upper(), assembly)
+                chrom, start, end = get_ensemblid_coordinates(
+                    query_term.upper(), assembly)
 
     try:
         start, end = int(start), int(end)
@@ -147,12 +151,12 @@ def get_coordinates(query_term, assembly='GRCh37', atlas=None):
 
     chrom = chrom.replace('x', 'X').replace('y', 'Y')
 
-    return chrom, min(start, end), max(start,end)
+    return chrom, min(start, end), max(start, end)
 
 
 def resolve_coordinates_and_variants(region_queries, assembly, atlas, maf):
-    variants          = {}
-    notifications     = {}
+    variants = {}
+    notifications = {}
     query_coordinates = []
 
     for region_query in region_queries:
@@ -162,7 +166,8 @@ def resolve_coordinates_and_variants(region_queries, assembly, atlas, maf):
             notifications[region_query] = 'Failed: invalid region input'
             continue
 
-        query_coordinates.append('{}:{}-{}'.format(chrom, int(start), int(end)))
+        query_coordinates.append(
+            '{}:{}-{}'.format(chrom, int(start), int(end)))
 
         snps = atlas.find_snps(
             GENOME_TO_ALIAS.get(assembly, 'hg19'), chrom, start, end, maf=maf
@@ -219,10 +224,12 @@ def region_get_hits(atlas, assembly, chrom, start, end, peaks_too=False):
 
     all_hits['peak_count'] = len(peaks)
     if peaks_too:
-        all_hits['peaks'] = peaks  # For "download_elements", contains 'inner_hits' with positions
+        # For "download_elements", contains 'inner_hits' with positions
+        all_hits['peaks'] = peaks
     # NOTE: peak['inner_hits']['positions']['hits']['hits'] may exist with uuids but to same file
 
-    (all_hits['datasets'], all_hits['files']) = atlas.details_breakdown(peak_details)
+    (all_hits['datasets'], all_hits['files']
+     ) = atlas.details_breakdown(peak_details)
 
     all_hits['dataset_paths'] = list(all_hits['datasets'].keys())
     all_hits['file_count'] = len(all_hits['files'])
@@ -291,7 +298,8 @@ def search_peaks(query_coordinates, atlas, assembly, num_variants):
         notifications[coord] = 'Failed: (exception) {}'.format(e)
 
     for peak in all_hits.get('peaks', []):
-        documents =[resolve_relative_hrefs(document, 'document') for document in peak['resident_detail']['dataset']['documents']]
+        documents = [resolve_relative_hrefs(
+            document, 'document') for document in peak['resident_detail']['dataset']['documents']]
 
         peak_details.append({
             'chrom': peak['_index'],

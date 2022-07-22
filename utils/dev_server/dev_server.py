@@ -40,7 +40,8 @@ def start_elasticsearch(datadir='/tmp/genomic-server', host='127.0.0.1', port=92
             break
     else:
         code = process.wait()
-        msg = ('Process return code: %d\n' % code) + b''.join(lines).decode('utf-8')
+        msg = ('Process return code: %d\n' % code) + \
+            b''.join(lines).decode('utf-8')
         raise Exception(msg)
 
     if not echo:
@@ -50,7 +51,7 @@ def start_elasticsearch(datadir='/tmp/genomic-server', host='127.0.0.1', port=92
 
 
 def main():
-    set_start_method("fork")
+    set_start_method('fork')
     processes = [start_elasticsearch(echo=True)]
 
     print_processes = []
@@ -79,13 +80,16 @@ def main():
 
     readable, writable, err = select.select(stdouts, [], stdouts, 5)
     for stdout in readable:
-        print_processes.append(Process(target=print_to_terminal, args=(stdout,)))
+        print_processes.append(
+            Process(target=print_to_terminal, args=(stdout,)))
     for stdout in err:
-        print_processes.append(Process(target=print_to_terminal, args=(stdout,)))
+        print_processes.append(
+            Process(target=print_to_terminal, args=(stdout,)))
     for p in print_processes:
         p.start()
-    
-    print("Dev-server started! ^C to exit. Happy developing!")
+
+    print('Dev-server started! ^C to exit. Happy developing!')
+
 
 if __name__ == '__main__':
     main()

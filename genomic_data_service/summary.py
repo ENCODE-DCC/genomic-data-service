@@ -45,7 +45,7 @@ def summary():
 
     if not valid:
         raise BadRequest(error_msg)
-    
+
     assembly, from_, size, format_, maf, region_queries = extract_search_params(
         request.args
     )
@@ -61,9 +61,8 @@ def summary():
         }
         return jsonify(build_response(result))
 
-
     atlas = RegulomeAtlas(regulome_es)
-    
+
     variants, query_coordinates, notifications = resolve_coordinates_and_variants(
         region_queries, assembly, atlas, maf
     )
@@ -98,7 +97,7 @@ def summary():
         ],
         'notifications': notifications
     }
-    
+
     if not result['variants']:
         if not result['notifications']:
             result['notifications'] = {'Failed': 'No variants found'}
@@ -120,7 +119,8 @@ def summary():
         # parse_region_query makes sure variants returned are all scorable
 #        try:
         all_hits = region_get_hits(atlas, assembly, chrom, start, end)
-        evidence = atlas.regulome_evidence(all_hits['datasets'], chrom, int(start), int(end))
+        evidence = atlas.regulome_evidence(
+            all_hits['datasets'], chrom, int(start), int(end))
         regulome_score = atlas.regulome_score(all_hits['datasets'], evidence)
         features = evidence_to_features(evidence)
 #        except Exception as e:

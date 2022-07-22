@@ -15,7 +15,8 @@ class RegionService():
 
         if self.query:
             try:
-                self.chrm, self.start, self.end = get_coordinates(self.query, assembly=self.assembly, atlas=atlas)
+                self.chrm, self.start, self.end = get_coordinates(
+                    self.query, assembly=self.assembly, atlas=atlas)
                 self.chrm = self.chrm.lower()
             except ValueError:
                 self.chrm, self.start, self.end = (None, None, None)
@@ -37,7 +38,6 @@ class RegionService():
         self.regions_per_file = []
         self.regions = []
         self.total_regions = 0
-
 
     def region_search_query(self):
         return {
@@ -63,12 +63,12 @@ class RegionService():
             'sort': []
         }
 
-
     def intercepting_regions(self):
         if not (self.chrm and self.start and self.end):
             return
 
-        res = region_search_es.search(index=self.chrm, doc_type=self.assembly.lower(), _source=True, body=self.region_search_query())
+        res = region_search_es.search(index=self.chrm, doc_type=self.assembly.lower(
+        ), _source=True, body=self.region_search_query())
 
         self.total_regions = res['hits']['total']
 
@@ -77,7 +77,8 @@ class RegionService():
                 'uuid': agg['key'],
                 'count': agg['doc_count']
             })
-        self.regions_per_file = sorted(self.regions_per_file, key=lambda k: k['count'], reverse=True)
+        self.regions_per_file = sorted(
+            self.regions_per_file, key=lambda k: k['count'], reverse=True)
 
         for r in res['hits']['hits']:
             self.regions.append({

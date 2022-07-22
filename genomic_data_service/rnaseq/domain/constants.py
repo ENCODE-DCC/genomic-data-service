@@ -29,7 +29,7 @@ FILE = 'file'
 FILES = 'files'
 
 FILE_FIELDS = [
-     '@id',
+    '@id',
     'assay_title',
     'assembly',
     'biosample_ontology',

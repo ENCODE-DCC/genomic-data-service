@@ -118,7 +118,6 @@ def test_rnaseq_rnaget_project_by_id_view(client):
     assert project['id'] == 'ENCODE'
 
 
-
 @pytest.mark.integration
 def test_rnaseq_rnaget_project_by_id_not_found_view(client):
     r = client.get('/projects/NOTENCODE')
