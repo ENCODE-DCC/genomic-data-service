@@ -9,13 +9,14 @@ from genomic_data_service.request_utils import validate_search_request, extract_
 from genomic_data_service.constants import REGULOME_VALID_ASSEMBLY, TWO_BIT_HG19_FILE_PATH, TWO_BIT_HG38_FILE_PATH
 import py2bit
 
+
 def build_response(block):
     return {
         **block, **{
-        '@context': '/terms/',
-        '@id': request.full_path,
-        '@type': ['search'],
-        'title': 'Genomic Region Search',
+            '@context': '/terms/',
+            '@id': request.full_path,
+            '@type': ['search'],
+            'title': 'Genomic Region Search',
         }
     }
 
@@ -36,7 +37,7 @@ def search():
 
     if not valid:
         raise BadRequest(error_msg)
-    
+
     assembly, from_, size, format_, maf, region_queries = extract_search_params(
         request.args
     )
@@ -51,9 +52,8 @@ def search():
         }
         return jsonify(build_response(result))
 
-
     atlas = RegulomeAtlas(regulome_es)
-    
+
     variants, query_coordinates, notifications = resolve_coordinates_and_variants(
         region_queries, assembly, atlas, maf
     )
@@ -127,7 +127,7 @@ def region_search():
        start=754000
        end=754012
        chr=1
-       files_only = false (default) 
+       files_only = false (default)
        page=1 (default)
        limit=100 (default)
        assembly=GRCh38 (default)
@@ -151,6 +151,7 @@ def region_search():
         'regions_per_file': region_service.regions_per_file
     })
 
+
 def get_sequence(assembly, coordinate, window=50):
     if assembly == 'GRCh38':
         seq_reader = py2bit.open(TWO_BIT_HG38_FILE_PATH)
@@ -169,7 +170,7 @@ def get_sequence(assembly, coordinate, window=50):
     if end > chrom_len:
         end = chrom_len
         start = chrom_len - window
-    
+
     sequence = {
         'chrom': chrom,
         'start': start,
@@ -178,4 +179,3 @@ def get_sequence(assembly, coordinate, window=50):
     }
     seq_reader.close()
     return sequence
-    

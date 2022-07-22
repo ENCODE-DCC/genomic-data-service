@@ -3,138 +3,138 @@ import pytest
 
 EXPRESSION_ARRAY = [
     {
-        "expression": {
-            "tpm": 14.1,
-            "gene_id": "ENSG00000102974.15"
+        'expression': {
+            'tpm': 14.1,
+            'gene_id': 'ENSG00000102974.15'
         },
-        "file": {
-            "@id": "/files/ENCFF004JWA/"
+        'file': {
+            '@id': '/files/ENCFF004JWA/'
         },
-        "dataset": {
-            "biosample_summary": "ABC"
+        'dataset': {
+            'biosample_summary': 'ABC'
         },
-        "gene": {
-            "symbol": "CTCF"
+        'gene': {
+            'symbol': 'CTCF'
         }
     },
     {
-        "expression": {
-            "tpm": 0.0,
-            "gene_id": "ENSG00000115138.10"
+        'expression': {
+            'tpm': 0.0,
+            'gene_id': 'ENSG00000115138.10'
         },
-        "file": {
-            "@id": "/files/ENCFF004JWA/"
+        'file': {
+            '@id': '/files/ENCFF004JWA/'
         },
-        "dataset": {
-            "biosample_summary": "ABC"
+        'dataset': {
+            'biosample_summary': 'ABC'
         },
-        "gene": {
-            "symbol": "POMC"
+        'gene': {
+            'symbol': 'POMC'
         }
     },
     {
-        "expression": {
-            "tpm": 19.19,
-            "gene_id": "ENSG00000100393.12"
+        'expression': {
+            'tpm': 19.19,
+            'gene_id': 'ENSG00000100393.12'
         },
-        "file": {
-            "@id": "/files/ENCFF004JWA/"
+        'file': {
+            '@id': '/files/ENCFF004JWA/'
         },
-        "dataset": {
-            "biosample_summary": "ABC"
+        'dataset': {
+            'biosample_summary': 'ABC'
         },
-        "gene": {
-            "symbol": "EP300"
+        'gene': {
+            'symbol': 'EP300'
         }
     },
     {
-        "expression": {
-            "tpm": 75.65,
-            "gene_id": "ENSG00000100393.12"
+        'expression': {
+            'tpm': 75.65,
+            'gene_id': 'ENSG00000100393.12'
         },
-        "file": {
-            "@id": "/files/ENCFF006IHP/"
+        'file': {
+            '@id': '/files/ENCFF006IHP/'
         },
-        "dataset": {
-            "biosample_summary": "DEF"
+        'dataset': {
+            'biosample_summary': 'DEF'
         },
-        "gene": {
-            "symbol": "EP300"
+        'gene': {
+            'symbol': 'EP300'
         }
     },
     {
-        "expression": {
-            "tpm": 55.53,
-            "gene_id": "ENSG00000102974.15"
+        'expression': {
+            'tpm': 55.53,
+            'gene_id': 'ENSG00000102974.15'
         },
-        "file": {
-            "@id": "/files/ENCFF006IHP/"
+        'file': {
+            '@id': '/files/ENCFF006IHP/'
         },
-        "dataset": {
-            "biosample_summary": "DEF"
+        'dataset': {
+            'biosample_summary': 'DEF'
         },
-        "gene": {
-            "symbol": "CTCF"
+        'gene': {
+            'symbol': 'CTCF'
         }
     },
     {
-        "expression": {
-            "tpm": 2.94,
-            "gene_id": "ENSG00000115138.10"
+        'expression': {
+            'tpm': 2.94,
+            'gene_id': 'ENSG00000115138.10'
         },
-        "file": {
-            "@id": "/files/ENCFF006IHP/"
+        'file': {
+            '@id': '/files/ENCFF006IHP/'
         },
-        "dataset": {
-            "biosample_summary": "DEF"
+        'dataset': {
+            'biosample_summary': 'DEF'
         },
-        "gene": {
-            "symbol": "POMC"
+        'gene': {
+            'symbol': 'POMC'
         }
     },
     {
-        "expression": {
-            "tpm": 8.0,
-            "gene_id": "ENSG00000100393.12"
+        'expression': {
+            'tpm': 8.0,
+            'gene_id': 'ENSG00000100393.12'
         },
-        "file": {
-            "@id": "/files/ENCFF008KUV/"
+        'file': {
+            '@id': '/files/ENCFF008KUV/'
         },
-        "dataset": {
-            "biosample_summary": "GHI"
+        'dataset': {
+            'biosample_summary': 'GHI'
         },
-        "gene": {
-            "symbol": "EP300"
+        'gene': {
+            'symbol': 'EP300'
         }
     },
     {
-        "expression": {
-            "tpm": 0.02,
-            "gene_id": "ENSG00000115138.10"
+        'expression': {
+            'tpm': 0.02,
+            'gene_id': 'ENSG00000115138.10'
         },
-        "file": {
-            "@id": "/files/ENCFF008KUV/"
+        'file': {
+            '@id': '/files/ENCFF008KUV/'
         },
-        "dataset": {
-            "biosample_summary": "GHI"
+        'dataset': {
+            'biosample_summary': 'GHI'
         },
-        "gene": {
-            "symbol": "POMC"
+        'gene': {
+            'symbol': 'POMC'
         }
     },
     {
-        "expression": {
-            "tpm": 16.36,
-            "gene_id": "ENSG00000102974.15"
+        'expression': {
+            'tpm': 16.36,
+            'gene_id': 'ENSG00000102974.15'
         },
-        "file": {
-            "@id": "/files/ENCFF008KUV/"
+        'file': {
+            '@id': '/files/ENCFF008KUV/'
         },
-        "dataset": {
-            "biosample_summary": "GHI"
+        'dataset': {
+            'biosample_summary': 'GHI'
         },
-        "gene": {
-            "symbol": "CTCF"
+        'gene': {
+            'symbol': 'CTCF'
         }
     }
 ]
@@ -182,7 +182,8 @@ def test_reports_expressions_matrix_expression_matrix_as_matrix():
     em.from_array(EXPRESSION_ARRAY)
     matrix = list(em.as_matrix())
     expected_matrix = [
-        ['featureID', 'geneSymbol', '/files/ENCFF004JWA/, ABC', '/files/ENCFF006IHP/, DEF', '/files/ENCFF008KUV/, GHI'],
+        ['featureID', 'geneSymbol', '/files/ENCFF004JWA/, ABC',
+            '/files/ENCFF006IHP/, DEF', '/files/ENCFF008KUV/, GHI'],
         ['ENSG00000102974.15', 'CTCF', 14.1, 55.53, 16.36],
         ['ENSG00000100393.12', 'EP300', 19.19, 75.65, 8.0],
         ['ENSG00000115138.10', 'POMC', 0.0, 2.94, 0.02]
@@ -206,7 +207,8 @@ def test_reports_expressions_matrix_expression_matrix_as_tsv():
     em.from_array(EXPRESSION_ARRAY)
     em.add_comment('https://somehost/?some=query&string=route')
     em.add_comment('ENCODE file.@id and dataset.biosample_summary')
-    em.add_comment('Can use file.@id to get more metadata, e.g.: https://www.encodeproject.org/files/ENCFF006IHP')
+    em.add_comment(
+        'Can use file.@id to get more metadata, e.g.: https://www.encodeproject.org/files/ENCFF006IHP')
     actual_tsv = list(em.as_tsv())
     expected_tsv = [
         b'# https://somehost/?some=query&string=route\n',
@@ -227,7 +229,8 @@ def test_reports_expressions_matrix_range_expression_matrix_as_matrix():
     rem.from_array(EXPRESSION_ARRAY)
     matrix = list(rem.as_matrix())
     expected_matrix = [
-        ['featureID', 'geneSymbol', '/files/ENCFF004JWA/, ABC', '/files/ENCFF006IHP/, DEF', '/files/ENCFF008KUV/, GHI'],
+        ['featureID', 'geneSymbol', '/files/ENCFF004JWA/, ABC',
+            '/files/ENCFF006IHP/, DEF', '/files/ENCFF008KUV/, GHI'],
         ['ENSG00000102974.15', 'CTCF', 14.1, 55.53, 16.36],
         ['ENSG00000100393.12', 'EP300', 19.19, 75.65, 8.0],
         ['ENSG00000115138.10', 'POMC', 0.0, 2.94, 0.02]
@@ -251,7 +254,8 @@ def test_reports_expressions_matrix_range_expression_matrix_as_matrix():
     rem.from_array(FILTERED_EXPRESSION_ARRAY)
     matrix = list(rem.as_matrix())
     expected_matrix = [
-        ['featureID', 'geneSymbol', '/files/ENCFF004JWA/, ABC', '/files/ENCFF006IHP/, DEF', '/files/ENCFF008KUV/, GHI'],
+        ['featureID', 'geneSymbol', '/files/ENCFF004JWA/, ABC',
+            '/files/ENCFF006IHP/, DEF', '/files/ENCFF008KUV/, GHI'],
         ['ENSG00000102974.15', 'CTCF', 14.1, 55.53, 16.36],
         ['ENSG00000100393.12', 'EP300', 19.19, 75.65, 8.0]
     ]
@@ -266,7 +270,8 @@ def test_reports_expressions_matrix_range_expression_matrix_as_matrix():
     rem.from_array(FILTERED_EXPRESSION_ARRAY)
     matrix = list(rem.as_matrix())
     expected_matrix = [
-        ['featureID', 'geneSymbol', '/files/ENCFF004JWA/, ABC', '/files/ENCFF006IHP/, DEF', '/files/ENCFF008KUV/, GHI'],
+        ['featureID', 'geneSymbol', '/files/ENCFF004JWA/, ABC',
+            '/files/ENCFF006IHP/, DEF', '/files/ENCFF008KUV/, GHI'],
         ['ENSG00000102974.15', 'CTCF', 14.1, 55.53, 16.36],
         ['ENSG00000115138.10', 'POMC', 0.0, 2.94, 0.02]
     ]

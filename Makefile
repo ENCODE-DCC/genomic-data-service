@@ -42,8 +42,7 @@ index:
 
 index_local:
 	python3 genomic_data_service/region_indexer.py --local
-	
+
 index_docker:
 	sleep 10
-	GENOMIC_DATA_SERVICE_SETTINGS=../config/development_docker.cfg python3 genomic_data_service/region_indexer.py --local --uri elasticsearch --port 9200 
-
+	GENOMIC_DATA_SERVICE_SETTINGS=../config/development_docker.cfg python3 genomic_data_service/region_indexer.py --local --uri elasticsearch --port 9200

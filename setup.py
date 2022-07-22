@@ -1,8 +1,8 @@
 from setuptools import setup
 
 setup(
-    name="genomic_data_service",
-    packages=["genomic_data_service"],
+    name='genomic_data_service',
+    packages=['genomic_data_service'],
     include_package_data=True,
     install_requires=[
         'antlr4-python3-runtime==4.9.3',
@@ -31,11 +31,11 @@ setup(
         'pytfmpval==0.2.1'
     ],
     extras_require={
-        "test": [
-            "pytest==5.3.2",
-            "pytest-mock==2.0.0",
-            "pytest-cov==3.0.0",
-            "coveralls==3.3.1",
+        'test': [
+            'pytest==5.3.2',
+            'pytest-mock==2.0.0',
+            'pytest-cov==3.0.0',
+            'coveralls==3.3.1',
         ]
     },
 )

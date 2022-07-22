@@ -27,7 +27,7 @@ jobs:
       - checkout
       - run:
           name: Build docker images
-          command: docker-compose -f docker-compose-test-intel.yml build 
+          command: docker-compose -f docker-compose-test-intel.yml build
       - run:
           name: Tests
           command: |

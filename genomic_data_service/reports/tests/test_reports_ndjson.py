@@ -23,7 +23,7 @@ def test_reports_ndjson_ndjson_generator():
     r = ndjg.as_response()
     assert isinstance(r, Response)
     assert r.mimetype == 'application/x-ndjson'
-    assert r.get_data() ==  (
+    assert r.get_data() == (
         b'{"a": "b"}\n{"x": {"y": "z\\nttt"}}\n'
         b'{"and": ["another", {"thing": "nested"}]}\n'
     )

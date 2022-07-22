@@ -60,7 +60,8 @@ def test_rnaseq_expression_as_dict():
 def test_rnaseq_expression_remove_version_from_gene_id():
     from genomic_data_service.rnaseq.domain.expression import remove_version_from_gene_id
     assert remove_version_from_gene_id('ENSG00000224939') == 'ENSG00000224939'
-    assert remove_version_from_gene_id('ENSG00000224939.14') == 'ENSG00000224939'
+    assert remove_version_from_gene_id(
+        'ENSG00000224939.14') == 'ENSG00000224939'
 
 
 def test_rnaseq_expression_gene_id_without_version():
@@ -89,7 +90,8 @@ def test_rnaseq_expression_expressions_init(mock_portal):
 def test_rnaseq_expression_prefix_numerical_gene_id():
     from genomic_data_service.rnaseq.domain.expression import prefix_numerical_gene_id
     assert prefix_numerical_gene_id('ENSG00000224939') == 'ENSG00000224939'
-    assert prefix_numerical_gene_id('ENSG00000224939.14') == 'ENSG00000224939.14'
+    assert prefix_numerical_gene_id(
+        'ENSG00000224939.14') == 'ENSG00000224939.14'
     assert prefix_numerical_gene_id('21301') == 'tRNAscan:21301'
     assert prefix_numerical_gene_id('32719') == 'tRNAscan:32719'
     assert prefix_numerical_gene_id(21301) == 'tRNAscan:21301'

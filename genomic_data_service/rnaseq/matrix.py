@@ -33,7 +33,7 @@ def join_tuples(values, sep=', '):
 
 class ExpressionMatrix:
     '''
-    Naive implementation of pivoting a table in order to make an 
+    Naive implementation of pivoting a table in order to make an
     expression matrix from an array of expression values. Requires
     pulling all expression values into memory.
     '''

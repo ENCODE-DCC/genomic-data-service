@@ -141,7 +141,8 @@ def test_rnaseq_views_rnaget_search_view(client, rnaseq_data_in_elasticsearch):
             'open_on_load': False
         }
     ]
-    assert r.json['filters'] == [{'field': 'type', 'term': 'RNAExpression', 'remove': '/rnaget-search/'}]
+    assert r.json['filters'] == [
+        {'field': 'type', 'term': 'RNAExpression', 'remove': '/rnaget-search/'}]
     assert r.json['sort'] == {
         'expression.tpm': {'order': 'desc', 'unmapped_type': 'keyword'},
         'gene.symbol': {'order': 'asc', 'unmapped_type': 'keyword'}
@@ -152,11 +153,13 @@ def test_rnaseq_views_rnaget_search_view(client, rnaseq_data_in_elasticsearch):
 
 @pytest.mark.integration
 def test_rnaseq_views_rnaget_search_view_no_results_raises_404(client, rnaseq_data_in_elasticsearch):
-    r = client.get('/rnaget-search/?type=RNAExpression&searchTerm=no match term')
+    r = client.get(
+        '/rnaget-search/?type=RNAExpression&searchTerm=no match term')
     assert '@graph' in r.json
     assert len(r.json['@graph']) == 0
     assert r.status_code == 404
-    r = client.get('/rnaget-search/?type=RNAExpression&searchTerm=no match term&format=json')
+    r = client.get(
+        '/rnaget-search/?type=RNAExpression&searchTerm=no match term&format=json')
     assert r.json['notification'] == 'No results found'
     assert len(r.json['@graph']) == 0
     assert r.status_code == 404
@@ -178,7 +181,8 @@ def test_rnaseq_views_rnaget_report_view(client, rnaseq_data_in_elasticsearch):
     assert r.json['notification'] == 'Success'
     assert r.json['@type'] == ['RNAExpressionReport']
     assert r.json['clear_filters'] == '/rnaget-report/?type=RNAExpression'
-    r = client.get('/rnaget-report/?type=RNAExpression&expression.tpm=gt:9.1&field=expression.tpm')
+    r = client.get(
+        '/rnaget-report/?type=RNAExpression&expression.tpm=gt:9.1&field=expression.tpm')
     assert len(r.json['@graph']) == 8
     r = client.get(
         '/rnaget-report/?type=RNAExpression&expression.tpm=gt:9.1&searchTerm=RNF19A'

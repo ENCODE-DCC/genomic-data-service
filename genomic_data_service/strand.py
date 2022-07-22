@@ -5,21 +5,21 @@ from pytfmpval import tfmp
 
 def get_matrix_file_download_url(footprint_file):
     footprint_file_url = (
-        "https://www.encodeproject.org/files/" + footprint_file + "/?format=json"
+        'https://www.encodeproject.org/files/' + footprint_file + '/?format=json'
     )
 
     data = requests.get(footprint_file_url).json()
-    matrix_file_name = data["aliases"][0].split("-")[-2]
+    matrix_file_name = data['aliases'][0].split('-')[-2]
 
     footprint_pwms_url = (
-        "https://www.encodeproject.org/search/?type=Annotation&searchTerm="
+        'https://www.encodeproject.org/search/?type=Annotation&searchTerm='
         + matrix_file_name
-        + "&annotation_type=PWMs&assembly=GRCh38&field=documents&format=json"
+        + '&annotation_type=PWMs&assembly=GRCh38&field=documents&format=json'
     )
-    data = requests.get(footprint_pwms_url).json()["@graph"][0]["documents"][0]
-    href = data["attachment"]["href"]
-    id = data["@id"]
-    matrix_file_download_url = "https://www.encodeproject.org" + id + href
+    data = requests.get(footprint_pwms_url).json()['@graph'][0]['documents'][0]
+    href = data['attachment']['href']
+    id = data['@id']
+    matrix_file_download_url = 'https://www.encodeproject.org' + id + href
     return matrix_file_download_url
 
 
@@ -48,6 +48,7 @@ def get_pwm(pcm, pseudo=1):
             score = round(np.log2(p) - np.log2(0.25), 4)
             pwm[i][base] = score
     return pwm
+
 
 def get_p_value(pwm, score):
     pwm = np.transpose(pwm)

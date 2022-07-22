@@ -99,7 +99,8 @@ def encode_annotations(ignore=[], dry_run=False):
         'annotation_subtype=all'
     ] + ENCODE_QUERY
 
-    accessions_cis = index_encode_files(query, requirements, accessions + ignore, dry_run)
+    accessions_cis = index_encode_files(
+        query, requirements, accessions + ignore, dry_run)
 
     return accessions + accessions_cis
 
@@ -133,7 +134,7 @@ def encode_experiments(ignore=[], dry_run=False):
         'files.file_format=bed'
     ] + ENCODE_QUERY
 
-    return index_encode_files(query, requirements, ignore, dry_run)    
+    return index_encode_files(query, requirements, ignore, dry_run)
 
 
 def index_encode_region_search(dry_run=False):
@@ -142,7 +143,8 @@ def index_encode_region_search(dry_run=False):
     return encode_experiments(ignore=func_exps + annotations, dry_run=dry_run)
 
 
-if __name__ == "__main__":
-    RegionIndexerElasticSearch(es_uri, es_port, SUPPORTED_CHROMOSOMES, SUPPORTED_ASSEMBLIES).setup_indices()
+if __name__ == '__main__':
+    RegionIndexerElasticSearch(
+        es_uri, es_port, SUPPORTED_CHROMOSOMES, SUPPORTED_ASSEMBLIES).setup_indices()
 
     index_encode_region_search()

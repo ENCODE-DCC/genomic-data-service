@@ -27,7 +27,7 @@ def start_elasticsearch(host='127.0.0.1', port=9202):
     )
     for line in io.TextIOWrapper(
             process.stdout,
-            encoding="utf-8"
+            encoding='utf-8'
     ):
         print(line)
         if 'started' in line:
