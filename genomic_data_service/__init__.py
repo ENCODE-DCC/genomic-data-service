@@ -1,5 +1,3 @@
-import genomic_data_service.rnaseq.views
-import genomic_data_service.errors
 from flask import Flask, jsonify, make_response
 from os import environ
 
@@ -42,6 +40,8 @@ if is_web_app():
     # Enabled endpoints:
     import genomic_data_service.search
     import genomic_data_service.summary
+    import genomic_data_service.rnaseq.views
+    import genomic_data_service.errors
 
     @app.route('/healthcheck/', methods=['GET'])
     def healthcheck():
