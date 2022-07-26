@@ -1,24 +1,19 @@
 import requests
 import numpy as np
 from pytfmpval import tfmp
+import logging
 
 
-def get_matrix_file_download_url(footprint_file):
-    footprint_file_url = (
-        'https://www.encodeproject.org/files/' + footprint_file + '/?format=json'
-    )
-
-    data = requests.get(footprint_file_url).json()
-    matrix_file_name = data['aliases'][0].split('-')[-2]
-
-    footprint_pwms_url = (
-        'https://www.encodeproject.org/search/?type=Annotation&searchTerm='
-        + matrix_file_name
-        + '&annotation_type=PWMs&assembly=GRCh38&field=documents&format=json'
-    )
-    data = requests.get(footprint_pwms_url).json()['@graph'][0]['documents'][0]
-    href = data['attachment']['href']
-    id = data['@id']
+def get_matrix_file_download_url(dataset_metadata):
+    documents = dataset_metadata['documents']
+    try:
+        document = documents[0]
+    except IndexError:
+        logging.error('Missing documents for dataset: %s',
+                      dataset_metadata['accession'])
+        raise
+    href = document['attachment']['href']
+    id = document['@id']
     matrix_file_download_url = 'https://www.encodeproject.org' + id + href
     return matrix_file_download_url
 
