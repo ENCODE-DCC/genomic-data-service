@@ -28,6 +28,8 @@ class Parser:
                 logger.error('%s - failure to parse line %s:%s:%s, skipping line',
                              self.file_path, line[0], line[1], line[2])
                 continue
+            if not chrom and not doc:
+                continue
             yield (chrom, doc)
 
     @abc.abstractmethod
@@ -115,6 +117,8 @@ class RegionParser(Parser):
             gene_name = self.gene_symbol_dict.get(ensg_id)
             if gene_name:
                 doc['value'] = gene_name
+            else:
+                doc['value'] = line[self.cols_for_index['ensg_id_col'] + 1]
         if 'name_col' in self.cols_for_index and self.cols_for_index['name_col'] < len(line):
             doc['name'] = line[self.cols_for_index['name_col']]
         if 'p_value_col' in self.cols_for_index and self.cols_for_index['p_value_col'] < len(line):
@@ -151,23 +155,26 @@ class FootPrintParser(Parser):
             },
         }
         sequence = self.seq_reader.sequence(chrom, start, end)
-        sequence_reverse_complement = ''.join(
-            self.complement.get(base, base) for base in reversed(sequence))
-
-        score = 0
-        score_reverse_complement = 0
-
-        for i in range(len(sequence)):
-            score += self.pwm[i][self.chars_index[sequence[i]]]
-            # add up scores for given bases on each position
-            score_reverse_complement += self.pwm[i][self.chars_index[sequence_reverse_complement[i]]]
-        if score >= score_reverse_complement:
-            doc['strand'] = '+'
-            doc['value'] = str(score)
+        if 'N' in sequence:
+            return (None, None)
         else:
-            doc['strand'] = '-'
-            doc['value'] = str(score_reverse_complement)
-        return (chrom, doc)
+            sequence_reverse_complement = ''.join(
+                self.complement.get(base, base) for base in reversed(sequence))
+
+            score = 0
+            score_reverse_complement = 0
+
+            for i in range(len(sequence)):
+                score += self.pwm[i][self.chars_index[sequence[i]]]
+                # add up scores for given bases on each position
+                score_reverse_complement += self.pwm[i][self.chars_index[sequence_reverse_complement[i]]]
+            if score >= score_reverse_complement:
+                doc['strand'] = '+'
+                doc['value'] = str(score)
+            else:
+                doc['strand'] = '-'
+                doc['value'] = str(score_reverse_complement)
+            return (chrom, doc)
 
 
 class PWMsParser(Parser):
