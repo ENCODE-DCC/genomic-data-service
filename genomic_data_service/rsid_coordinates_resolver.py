@@ -309,8 +309,8 @@ def search_peaks(query_coordinates, atlas, assembly, num_variants):
             'value': peak['_source'].get('value'),
             'file': peak['resident_detail']['file']['@id'].split('/')[2],
             'targets': peak['resident_detail']['dataset'].get('target', []),
+            'target_label': peak['resident_detail']['dataset'].get('target_label'),
             'method': peak['resident_detail']['dataset']['collection_type'],
-
             'documents': documents,
             'dataset': resolve_relative_hrefs(peak['resident_detail']['dataset']['@id'], 'dataset'),
             'dataset_rel': peak['resident_detail']['dataset']['@id'],

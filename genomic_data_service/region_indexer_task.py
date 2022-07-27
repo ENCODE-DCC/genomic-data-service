@@ -184,7 +184,7 @@ def index_regions_from_file(es, file_uuid, file_metadata, dataset_metadata, snp=
         docs = RegionParser(reader, cols_for_index,
                             file_path, gene_lookup=True).parse()
     elif file_metadata.get('annotation_type') == 'footprints' and file_metadata.get('assembly') == 'GRCh38':
-        url = get_matrix_file_download_url(dataset_metadata)
+        url = get_matrix_file_download_url(file_metadata['accession'])
         matrix = get_matrix_array(url)
         pwm = get_pwm(matrix)
         docs = FootPrintParser(reader, pwm, cols_for_index, file_path).parse()
@@ -317,6 +317,20 @@ def list_targets(dataset):
     return target_labels
 
 
+def get_target_label(dataset):
+    target_label = None
+
+    target = dataset.get('target', dataset.get('targets'))
+    if target:
+        if isinstance(target, dict):
+            target_label = target['label']
+
+        if isinstance(target, list) and target:
+            target_label = target[0]['label']
+
+    return target_label
+
+
 def metadata_doc(file_uuid, file_metadata, dataset_metadata):
     meta_doc = {
         'uuid': file_uuid,
@@ -330,17 +344,20 @@ def metadata_doc(file_uuid, file_metadata, dataset_metadata):
             'uuid': dataset_metadata['uuid'],
             '@id': dataset_metadata['@id'],
             'target': list_targets(dataset_metadata),
+            'target_label': get_target_label(dataset_metadata),
             'biosample_ontology': dataset_metadata.get('biosample_ontology', {}),
             'biosample_term_name': dataset_metadata.get('biosample_ontology', {}).get('term_name'),
-            'documents': [],
-            'description': dataset_metadata.get('description'),
+            'documents': []
         },
         'dataset_type': dataset_metadata['@type'][0]
     }
 
     for prop in REGULOME_COLLECTION_TYPES:
         prop_value = dataset_metadata.get(prop)
-        if prop_value:
+        assay_title = dataset_metadata.get('assay_title')
+        if assay_title == 'Histone ChIP-seq':
+            meta_doc['dataset']['collection_type'] = assay_title
+        elif prop_value:
             meta_doc['dataset']['collection_type'] = prop_value
 
     if meta_doc['dataset']['collection_type'].lower() in ['footprints', 'pwms']:

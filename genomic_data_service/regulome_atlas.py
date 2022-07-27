@@ -3,6 +3,7 @@ import math
 import pyBigWig
 from os.path import exists
 import logging
+from genomic_data_service.constants import ORGANS
 
 RESIDENT_REGIONSET_KEY = (
     'resident_regionsets'  # keeps track of what datsets are resident
@@ -91,6 +92,11 @@ LOCAL_BIGWIGS = {
 }
 
 SEARCH_MAX = 9999
+
+HISTONE_MARKS = ['H3K27ac', 'H3K36me3', 'H3K4me1', 'H3K4me3', 'H3K27me3']
+
+TISSUE_SPECIFIC_FEATURE_KEYS = [
+    'H3K27ac', 'H3K36me3', 'H3K4me1', 'H3K4me3', 'H3K27me3', 'DNase', 'Footprint']
 
 
 class RegulomeAtlas(object):
@@ -205,7 +211,6 @@ class RegulomeAtlas(object):
                 logging.error(
                     'failure to read bigwig file for evidence %s for %s:%s:%s', k, chrom, start, end)
                 evidence[k] = 0.0
-
         return evidence
 
     @staticmethod
@@ -315,6 +320,8 @@ class RegulomeAtlas(object):
         collection_type = dataset.get(
             'collection_type', ''
         ).lower()  # resident_regionset dataset
+        if collection_type == 'histone chip-seq':
+            return dataset.get('target_label')
         if collection_type in ['chip-seq', 'binding sites']:
             return 'ChIP'
         if collection_type == 'dnase-seq':
@@ -416,6 +423,20 @@ class RegulomeAtlas(object):
         query = [int(k in characterization) for k in binary_keys]
         numeric_keys = ['IC_max', 'IC_matched_max']
         query += [characterization[k] for k in numeric_keys]
+        tissue_specific_query = {}
+        for organ in ORGANS:
+            tissue_specific_query[organ] = [0]*7
+        for i in range(len(TISSUE_SPECIFIC_FEATURE_KEYS)):
+            if TISSUE_SPECIFIC_FEATURE_KEYS[i] in characterization:
+                datasets = characterization[TISSUE_SPECIFIC_FEATURE_KEYS[i]]
+                organs = []
+                for dataset in datasets:
+                    organs.extend(
+                        dataset['biosample_ontology'].get('organ_slims', []))
+                organs = list(set(organs))
+                for organ in organs:
+                    tissue_specific_query[organ][i] = 1
+
         # The TRAINED_REG_MODEL is a `sklearn.ensemble.forest.RandomForestClassifier`
         # https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html
         # In general, the input of the `predict_proba` method is a matrix of
