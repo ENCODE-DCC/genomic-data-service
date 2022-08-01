@@ -75,7 +75,7 @@ def parse_file(file_uuid, file_metadata, dataset_metadata):
         docs = RegionParser(reader, cols_for_index,
                             file_path, gene_lookup=True).parse()
     elif file_metadata.get('annotation_type') == 'footprints' and file_metadata.get('assembly') == 'GRCh38':
-        url = get_matrix_file_download_url(file_metadata)
+        url = get_matrix_file_download_url(dataset_metadata)
         matrix = get_matrix_array(url)
         pwm = get_pwm(matrix)
         docs = FootPrintParser(reader, pwm, cols_for_index, file_path).parse()
