@@ -134,13 +134,16 @@ def index_regulome_db(encode_accessions, per_request=350):
                     f"========= No dataset {dataset_accession(f)} found for file {f['accession']}"
                 )
                 continue
+            try:
+                parse_file(
+                    f['uuid'],
+                    clean_up(f, FILE_REQUIRED_FIELDS),
+                    clean_up(dataset, DATASET_REQUIRED_FIELDS),
 
-            parse_file(
-                f['uuid'],
-                clean_up(f, FILE_REQUIRED_FIELDS),
-                clean_up(dataset, DATASET_REQUIRED_FIELDS),
-
-            )
+                )
+            except Exception as e:
+                print('fail to parse file:', f['accession'])
+                print('exception:', e)
 
 
 def main():
