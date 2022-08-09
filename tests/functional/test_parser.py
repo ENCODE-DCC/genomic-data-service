@@ -57,6 +57,7 @@ def test_SnpParser(reader_snp):
         'chrom': 'chr10',
         'coordinates': {'gte': 60089, 'lt': 60090},
         'rsid': 'rs1399657112',
+        'variation_type': 'SNV',
         'maf': 7.964e-06,
         'ref_allele_freq': {'G': {'TOPMED': 1.0}},
         'alt_allele_freq': {'T': {'TOPMED': 7.964e-06}},
