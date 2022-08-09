@@ -55,16 +55,20 @@ class SnfParser(Parser):
             },
         }
         info_tags = line[8].split(';')
-        try:
-            freq_tag = [
-                tag for tag in info_tags if tag.startswith('FREQ=')
-            ][0][5:]
-        except IndexError:
-            freq_tag = None
+        freq_tag = None
+        vc_tag = None
+        for tag in info_tags:
+            if tag.startswith('FREQ='):
+                freq_tag = tag[5:]
+            if tag.startswith('VC='):
+                vc_tag = tag[3:]
+        snp_doc['variation_type'] = vc_tag
+        ref_allele_freq_map = {line[5]: {}}
+        alt_allele_freq_map = {}
+        alt_alleles = line[6].split(',')
+        for alt_allele in alt_alleles:
+            alt_allele_freq_map[alt_allele] = {}
         if freq_tag:
-            ref_allele_freq_map = {line[5]: {}}
-            alt_alleles = line[6].split(',')
-            alt_allele_freq_map = {}
             alt_allele_freqs = set()
             for population_freq in freq_tag.split('|'):
                 population, freqs = population_freq.split(':')
@@ -72,19 +76,19 @@ class SnfParser(Parser):
                 try:
                     ref_allele_freq_map[line[5]][population] = float(ref_freq)
                 except ValueError:
-                    pass
+                    ref_allele_freq_map[line[5]][population] = None
                 for allele, freq_str in zip(alt_alleles, alt_freqs):
-                    alt_allele_freq_map.setdefault(allele, {})
                     try:
                         freq = float(freq_str)
+                        alt_allele_freq_map[allele][population] = freq
+                        alt_allele_freqs.add(freq)
                     except (TypeError, ValueError):
-                        continue
-                    alt_allele_freqs.add(freq)
-                    alt_allele_freq_map[allele][population] = freq
-            snp_doc['ref_allele_freq'] = ref_allele_freq_map
-            snp_doc['alt_allele_freq'] = alt_allele_freq_map
+                        alt_allele_freq_map[allele][population] = None
+
             if alt_allele_freqs:
                 snp_doc['maf'] = max(alt_allele_freqs)
+        snp_doc['ref_allele_freq'] = ref_allele_freq_map
+        snp_doc['alt_allele_freq'] = alt_allele_freq_map
         return (chrom, snp_doc)
 
 
