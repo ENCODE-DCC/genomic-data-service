@@ -4,6 +4,7 @@ import pyBigWig
 from os.path import exists
 import logging
 from genomic_data_service.constants import ORGANS
+import numpy as np
 
 RESIDENT_REGIONSET_KEY = (
     'resident_regionsets'  # keeps track of what datsets are resident
@@ -67,6 +68,12 @@ try:
         open('./ml_models/rf_model1.0.1.sav', 'rb'))
 except FileNotFoundError:
     TRAINED_REG_MODEL = None
+
+try:
+    TRAINED_TISSUE_SPECIFIC_MODEL = pickle.load(
+        open('./ml_models/TURF_tissue_specific_sklearn_1.0.pkl', 'rb'))
+except FileNotFoundError:
+    TRAINED_TISSUE_SPECIFIC_MODEL = None
 
 file_IC_matched_max_exists = exists(FILE_IC_MATCHED_MAX_PATH_LOCAL)
 file_IC_max_exists = exists(FILE_IC_MAX_PATH_LOCAL)
@@ -435,7 +442,8 @@ class RegulomeAtlas(object):
                         dataset['biosample_ontology'].get('organ_slims', []))
                 organs = list(set(organs))
                 for organ in organs:
-                    tissue_specific_query[organ][i] = 1
+                    if organ in ORGANS:
+                        tissue_specific_query[organ][i] = 1
 
         # The TRAINED_REG_MODEL is a `sklearn.ensemble.forest.RandomForestClassifier`
         # https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html
@@ -448,8 +456,8 @@ class RegulomeAtlas(object):
         # `TRAINED_REG_MODEL.predict_proba([query])` is numpy array of
         # shape = [1, 2]. Specifically, the second column is the probability we
         # would like to output. So `[:, 1][0]` will be the desired score.
-        probability = str(
-            round(TRAINED_REG_MODEL.predict_proba([query])[:, 1][0], 5))
+        probability = round(
+            TRAINED_REG_MODEL.predict_proba([query])[:, 1][0], 5)
         ranking = '7'
         if 'QTL' in characterization:
             if 'ChIP' in characterization:
@@ -498,7 +506,14 @@ class RegulomeAtlas(object):
             ranking = '5'
         elif 'PWM' in characterization or 'Footprint' in characterization:
             ranking = '6'
-        return {'probability': probability, 'ranking': ranking}
+        tissue_specific_scores = {}
+        for tissue, binary_values in tissue_specific_query.items():
+            tissue_specific_score = np.mean(np.array([list(TRAINED_TISSUE_SPECIFIC_MODEL[c].predict_proba(
+                [binary_values])[:, 1]) for c in TRAINED_TISSUE_SPECIFIC_MODEL.keys()]), axis=0)
+            tissue_specific_scores[tissue] = str(
+                round(tissue_specific_score[0] * probability, 5))
+        probability = str(probability)
+        return {'probability': probability, 'ranking': ranking, 'tissue_specific_scores': tissue_specific_scores}
 
     def regulome_score(self, datasets, evidence):
         """Calculate RegulomeDB score based upon hits and voodoo"""
