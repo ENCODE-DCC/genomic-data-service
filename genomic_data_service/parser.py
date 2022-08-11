@@ -41,7 +41,15 @@ class Parser:
         return
 
 
+class SnfParserConstant:
+    FREQ_TAG_START = 5
+    VC_TAG_START = 3
+    REF_ALLELE_COLUMN_INDEX = 5
+    ALT_ALLELES_COLUMN_INDEX = 6
+
+
 class SnfParser(Parser):
+
     def document_generator(self, line):
         chrom, start, end, rsid = line[0], int(line[1]), int(line[2]), line[3]
         if start == end:
@@ -59,13 +67,15 @@ class SnfParser(Parser):
         vc_tag = None
         for tag in info_tags:
             if tag.startswith('FREQ='):
-                freq_tag = tag[5:]
+                freq_tag = tag[SnfParserConstant.FREQ_TAG_START:]
             if tag.startswith('VC='):
-                vc_tag = tag[3:]
+                vc_tag = tag[SnfParserConstant.VC_TAG_START:]
         snp_doc['variation_type'] = vc_tag
-        ref_allele_freq_map = {line[5]: {}}
+        ref_allele = line[SnfParserConstant.REF_ALLELE_COLUMN_INDEX]
+        ref_allele_freq_map = {ref_allele: {}}
         alt_allele_freq_map = {}
-        alt_alleles = line[6].split(',')
+        alt_alleles = line[SnfParserConstant.ALT_ALLELES_COLUMN_INDEX].split(
+            ',')
         for alt_allele in alt_alleles:
             alt_allele_freq_map[alt_allele] = {}
         if freq_tag:
@@ -74,9 +84,10 @@ class SnfParser(Parser):
                 population, freqs = population_freq.split(':')
                 ref_freq, *alt_freqs = freqs.split(',')
                 try:
-                    ref_allele_freq_map[line[5]][population] = float(ref_freq)
+                    ref_allele_freq_map[ref_allele][population] = float(
+                        ref_freq)
                 except ValueError:
-                    ref_allele_freq_map[line[5]][population] = None
+                    ref_allele_freq_map[ref_allele][population] = None
                 for allele, freq_str in zip(alt_alleles, alt_freqs):
                     try:
                         freq = float(freq_str)
