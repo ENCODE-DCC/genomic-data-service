@@ -41,14 +41,19 @@ class Parser:
         return
 
 
-class SnfParserConstant:
-    FREQ_TAG_START = 5
-    VC_TAG_START = 3
-    REF_ALLELE_COLUMN_INDEX = 5
-    ALT_ALLELES_COLUMN_INDEX = 6
-
-
 class SnfParser(Parser):
+    class SnfParserConstant:
+        FREQ_TAG_START = 5
+        VC_TAG_START = 3
+        REF_ALLELE_COLUMN_INDEX = 5
+        ALT_ALLELES_COLUMN_INDEX = 6
+
+    def __init__(self, reader, cols_for_index={}, file_path=None):
+        super().__init__(reader, cols_for_index, file_path)
+        self.FREQ_TAG_START = self.SnfParserConstant.FREQ_TAG_START
+        self.VC_TAG_START = self.SnfParserConstant.VC_TAG_START
+        self.REF_ALLELE_COLUMN_INDEX = self.SnfParserConstant.REF_ALLELE_COLUMN_INDEX
+        self.ALT_ALLELES_COLUMN_INDEX = self.SnfParserConstant.ALT_ALLELES_COLUMN_INDEX
 
     def document_generator(self, line):
         chrom, start, end, rsid = line[0], int(line[1]), int(line[2]), line[3]
@@ -67,14 +72,14 @@ class SnfParser(Parser):
         vc_tag = None
         for tag in info_tags:
             if tag.startswith('FREQ='):
-                freq_tag = tag[SnfParserConstant.FREQ_TAG_START:]
+                freq_tag = tag[self.FREQ_TAG_START:]
             if tag.startswith('VC='):
-                vc_tag = tag[SnfParserConstant.VC_TAG_START:]
+                vc_tag = tag[self.VC_TAG_START:]
         snp_doc['variation_type'] = vc_tag
-        ref_allele = line[SnfParserConstant.REF_ALLELE_COLUMN_INDEX]
+        ref_allele = line[self.REF_ALLELE_COLUMN_INDEX]
         ref_allele_freq_map = {ref_allele: {}}
         alt_allele_freq_map = {}
-        alt_alleles = line[SnfParserConstant.ALT_ALLELES_COLUMN_INDEX].split(
+        alt_alleles = line[self.ALT_ALLELES_COLUMN_INDEX].split(
             ',')
         for alt_allele in alt_alleles:
             alt_allele_freq_map[alt_allele] = {}
