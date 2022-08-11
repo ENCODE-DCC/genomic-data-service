@@ -47,18 +47,6 @@ class SnfParser(Parser):
     REF_ALLELE_COLUMN_INDEX = 5
     ALT_ALLELES_COLUMN_INDEX = 6
 
-    def get_freq_tag_start(self):
-        return self.FREQ_TAG_START
-
-    def get_vc_tag_start(self):
-        return self.VC_TAG_START
-
-    def get_ref_allele_column_index(self):
-        return self.REF_ALLELE_COLUMN_INDEX
-
-    def get_alt_alleles_column_index(self):
-        return self.ALT_ALLELES_COLUMN_INDEX
-
     def document_generator(self, line):
         chrom, start, end, rsid = line[0], int(line[1]), int(line[2]), line[3]
         if start == end:
@@ -76,14 +64,14 @@ class SnfParser(Parser):
         vc_tag = None
         for tag in info_tags:
             if tag.startswith('FREQ='):
-                freq_tag = tag[self.get_freq_tag_start():]
+                freq_tag = tag[self.FREQ_TAG_START:]
             if tag.startswith('VC='):
-                vc_tag = tag[self.get_vc_tag_start():]
+                vc_tag = tag[self.VC_TAG_START:]
         snp_doc['variation_type'] = vc_tag
-        ref_allele = line[self.get_ref_allele_column_index()]
+        ref_allele = line[self.REF_ALLELE_COLUMN_INDEX]
         ref_allele_freq_map = {ref_allele: {}}
         alt_allele_freq_map = {}
-        alt_alleles = line[self.get_alt_alleles_column_index()].split(
+        alt_alleles = line[self.ALT_ALLELES_COLUMN_INDEX].split(
             ',')
         for alt_allele in alt_alleles:
             alt_allele_freq_map[alt_allele] = {}
