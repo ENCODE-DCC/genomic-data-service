@@ -317,6 +317,16 @@ def list_targets(dataset):
     return target_labels
 
 
+def get_ancestry(file_metadata):
+    ancestry = None
+    aliases = file_metadata.get('aliases')
+    if aliases:
+        tag = aliases[0].split('-')[-1]
+        if not tag.startswith('PMID'):
+            ancestry = tag
+    return ancestry
+
+
 def metadata_doc(file_uuid, file_metadata, dataset_metadata):
     meta_doc = {
         'uuid': file_uuid,
@@ -346,6 +356,10 @@ def metadata_doc(file_uuid, file_metadata, dataset_metadata):
     if meta_doc['dataset']['collection_type'].lower() in ['footprints', 'pwms']:
         meta_doc['dataset']['documents'] = dataset_metadata.get(
             'documents', [])
+    if file_metadata.get('annotation_type') == 'caQTLs':
+        ancestry = get_ancestry(file_metadata)
+        if ancestry:
+            meta_doc['file']['ancestry'] = ancestry
 
     return meta_doc
 
