@@ -137,6 +137,9 @@ class RegionIndexerElasticSearch():
                     'coordinates': {
                         'type': 'integer_range'
                     },
+                    'variation_type': {
+                        'type': 'keyword'
+                    },
                     'maf': {
                         'type': 'float',
                     },
