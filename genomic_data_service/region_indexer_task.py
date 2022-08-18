@@ -337,7 +337,7 @@ def get_target_label(dataset):
 
 def get_disease_term_name(dataset_metadata):
     disease_term_name = None
-    replicates = dataset_metadata.get(replicates, [])
+    replicates = dataset_metadata.get('replicates', [])
     if replicates:
         library = replicates[0].get('library')
         biosample = library.get('biosample')
@@ -359,6 +359,7 @@ def metadata_doc(file_uuid, file_metadata, dataset_metadata):
             '@id': dataset_metadata['@id'],
             'target': list_targets(dataset_metadata),
             'target_label': get_target_label(dataset_metadata),
+            'disease_term_name': get_disease_term_name(dataset_metadata),
             'biosample_ontology': dataset_metadata.get('biosample_ontology', {}),
             'biosample_term_name': dataset_metadata.get('biosample_ontology', {}).get('term_name'),
             'documents': []
@@ -371,8 +372,6 @@ def metadata_doc(file_uuid, file_metadata, dataset_metadata):
         assay_title = dataset_metadata.get('assay_title')
         if assay_title == 'Histone ChIP-seq':
             meta_doc['dataset']['collection_type'] = assay_title
-            meta_doc['dataset']['disease_term_name'] = get_disease_term_name(
-                dataset_metadata)
         elif prop_value:
             meta_doc['dataset']['collection_type'] = prop_value
 
