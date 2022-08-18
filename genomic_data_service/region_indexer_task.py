@@ -316,6 +316,9 @@ def list_targets(dataset):
 
     return target_labels
 
+# This is to catch files that are in ENCSR533BHN / PMID30650056. This may need to be updated if the metadata at ENCODE is improved.
+# The ancestry info is stored in file aliases for now. It is the token after PMID.
+
 
 def get_ancestry(file_metadata):
     ancestry = None
