@@ -1,3 +1,4 @@
+from dbm.ndbm import library
 from genomic_data_service import app
 from celery import Celery
 from elasticsearch import Elasticsearch
@@ -334,6 +335,16 @@ def get_target_label(dataset):
     return target_label
 
 
+def get_disease_term_name(dataset_metadata):
+    disease_term_name = None
+    replicates = dataset_metadata.get(replicates, [])
+    if replicates:
+        library = replicates[0].get('library')
+        biosample = library.get('biosample')
+        disease_term_name = biosample.get('disease_term_name')
+    return disease_term_name
+
+
 def metadata_doc(file_uuid, file_metadata, dataset_metadata):
     meta_doc = {
         'uuid': file_uuid,
@@ -360,6 +371,8 @@ def metadata_doc(file_uuid, file_metadata, dataset_metadata):
         assay_title = dataset_metadata.get('assay_title')
         if assay_title == 'Histone ChIP-seq':
             meta_doc['dataset']['collection_type'] = assay_title
+            meta_doc['dataset']['disease_term_name'] = get_disease_term_name(
+                dataset_metadata)
         elif prop_value:
             meta_doc['dataset']['collection_type'] = prop_value
 

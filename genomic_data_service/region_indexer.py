@@ -103,6 +103,7 @@ DATASET_REQUIRED_FIELDS = [
     'reference_type',
     'biosample_ontology',
     'documents',
+    'replicates'
     'status',
 ]
 
