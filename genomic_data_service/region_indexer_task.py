@@ -366,14 +366,14 @@ def metadata_doc(file_uuid, file_metadata, dataset_metadata):
         },
         'dataset_type': dataset_metadata['@type'][0]
     }
-
-    for prop in REGULOME_COLLECTION_TYPES:
-        prop_value = dataset_metadata.get(prop)
-        assay_title = dataset_metadata.get('assay_title')
-        if assay_title == 'Histone ChIP-seq':
-            meta_doc['dataset']['collection_type'] = assay_title
-        elif prop_value:
-            meta_doc['dataset']['collection_type'] = prop_value
+    assay_title = dataset_metadata.get('assay_title')
+    if assay_title == 'Histone ChIP-seq':
+        meta_doc['dataset']['collection_type'] = assay_title
+    else:
+        for prop in REGULOME_COLLECTION_TYPES:
+            prop_value = dataset_metadata.get(prop)
+            if prop_value:
+                meta_doc['dataset']['collection_type'] = prop_value
 
     if meta_doc['dataset']['collection_type'].lower() in ['footprints', 'pwms']:
         meta_doc['dataset']['documents'] = dataset_metadata.get(

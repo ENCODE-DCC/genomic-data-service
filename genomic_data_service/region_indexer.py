@@ -103,7 +103,7 @@ DATASET_REQUIRED_FIELDS = [
     'reference_type',
     'biosample_ontology',
     'documents',
-    'replicates'
+    'replicates',
     'status',
 ]
 
@@ -394,7 +394,6 @@ def index_regulome_db(es_uri, es_port, encode_accessions, local_files=None, filt
                     f"========= No dataset {dataset_accession(f)} found for file {f['accession']}"
                 )
                 continue
-
             index_file.delay(
                 clean_up(f, FILE_REQUIRED_FIELDS),
                 clean_up(dataset, DATASET_REQUIRED_FIELDS),
