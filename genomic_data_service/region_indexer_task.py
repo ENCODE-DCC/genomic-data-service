@@ -326,7 +326,10 @@ def get_target_label(dataset):
             target_label = target['label']
 
         if isinstance(target, list) and target:
-            target_label = target[0]['label']
+            labels = []
+            for item in target:
+                labels.append(item['label'])
+            target_label = ', '.join(labels)
 
     return target_label
 
