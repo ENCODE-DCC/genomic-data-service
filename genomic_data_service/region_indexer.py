@@ -98,7 +98,7 @@ DATASET_REQUIRED_FIELDS = [
     'targets',
     'biosample_ontology',
     'assay_term_name',
-    'assay_title'
+    'assay_title',
     'annotation_type',
     'reference_type',
     'biosample_ontology',
@@ -420,24 +420,6 @@ if __name__ == '__main__':
         es_uri, es_port, SUPPORTED_CHROMOSOMES, SUPPORTED_ASSEMBLIES
     ).setup_indices()
 
-    if not is_local_install:
-        encode_accessions = []
-        for assembly in assemblies:
-            if assembly == 'hg19':
-                encode_accessions.extend(read_local_accessions_from_pickle(
-                    pickle_path=ENCODE_ACCESSIONS_HG19_PATH))
-            elif assembly == 'GRCh38':
-                encode_accessions.extend(get_encode_accessions_from_portal())
-            else:
-                raise ValueError(f'Invalid assembly: {assembly}')
-        index_regulome_db(es_uri, es_port, encode_accessions)
-    else:
-        encode_accessions = list(pickle.load(
-            open(TEST_ENCODE_ACCESSIONS_PATH, 'rb')))
-        local_files = [
-            {
-                'file_path': TEST_SNP_FILE,
-                'file_metadata': FILE_HG19
-            }
-        ]
-        index_regulome_db(es_uri, es_port, encode_accessions, local_files)
+    encode_accessions = ['ENCFF285CME']
+
+    index_regulome_db(es_uri, es_port, encode_accessions)
