@@ -1,4 +1,3 @@
-from dbm.ndbm import library
 from genomic_data_service import app
 from celery import Celery
 from elasticsearch import Elasticsearch
@@ -320,18 +319,15 @@ def list_targets(dataset):
 
 def get_target_label(dataset):
     target_label = None
-
     target = dataset.get('target', dataset.get('targets'))
     if target:
         if isinstance(target, dict):
             target_label = target['label']
-
         if isinstance(target, list) and target:
             labels = []
             for item in target:
                 labels.append(item['label'])
             target_label = ', '.join(labels)
-
     return target_label
 
 
