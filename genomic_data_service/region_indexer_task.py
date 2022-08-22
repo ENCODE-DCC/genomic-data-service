@@ -366,6 +366,9 @@ def metadata_doc(file_uuid, file_metadata, dataset_metadata):
     if assay_title == 'Histone ChIP-seq':
         meta_doc['dataset']['collection_type'] = assay_title
     else:
+        # regulome use three type of datasets: experiments, annotations and references. experiements has property assay_term_name, annotations has property annotation_type, references has property reference_type.
+        # Those properties will be indexed as dataset collection_type in regulome datase base.
+        # Annotations can have both assay_term_name and annotation_type, for example, imputations and gkm-SVMs, but we don't use those datasets in regulome.
         for prop in REGULOME_COLLECTION_TYPES:
             prop_value = dataset_metadata.get(prop)
             if prop_value:
