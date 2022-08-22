@@ -232,8 +232,7 @@ class RegulomeAtlas(object):
                 evidence['Footprint_matched'].append(target)
 
         # Get values/signals from bigWig
-        assembly = GENOME_TO_ALIAS.get(assembly)
-        for k, bw in self.bigwig_signal_map[assembly.lower()].items():
+        for k, bw in self.bigwig_signal_map[GENOME_TO_ALIAS.get(assembly)].items():
             try:
                 values = bw.values(chrom, start, end)
                 average = sum(values) / max(len(values), 1)
