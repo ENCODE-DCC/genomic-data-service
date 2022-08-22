@@ -56,10 +56,14 @@ REGDB_NUM_SCORES = [
     100,
 ]
 
-FILE_IC_MATCHED_MAX_PATH_LOCAL = './ml_models/bigwig_files/IC_matched_max.bw'
-FILE_IC_MAX_PATH_LOCAL = './ml_models/bigwig_files/IC_max.bw'
-FILE_IC_MATCHED_MAX_PATH_REMOTE = 'https://regulome-ml-models.s3.amazonaws.com/bigwig_files/IC_matched_max.bw'
-FILE_IC_MAX_PATH_REMOTE = 'https://regulome-ml-models.s3.amazonaws.com/bigwig_files/IC_max.bw'
+FILE_IC_MATCHED_MAX_HG19_PATH_LOCAL = './ml_models/bigwig_files/IC_matched_max.bw'
+FILE_IC_MAX_HG19_PATH_LOCAL = './ml_models/bigwig_files/IC_max.bw'
+FILE_IC_MATCHED_MAX_HG19_PATH_REMOTE = 'https://regulome-ml-models.s3.amazonaws.com/bigwig_files/IC_matched_max.bw'
+FILE_IC_MAX_HG19_PATH_REMOTE = 'https://regulome-ml-models.s3.amazonaws.com/bigwig_files/IC_max.bw'
+FILE_IC_MATCHED_MAX_GRCH38_PATH_LOCAL = './ml_models/bigwig_files/IC_matched_max_GRCh38.bw'
+FILE_IC_MAX_GRCH38_PATH_LOCAL = './ml_models/bigwig_files/IC_max_GRCh38.bw'
+FILE_IC_MATCHED_MAX_GRCH38_PATH_REMOTE = 'https://regulome-ml-models.s3.amazonaws.com/bigwig_files/IC_matched_max_GRCh38.bw'
+FILE_IC_MAX_GRCH38_PATH_REMOTE = 'https://regulome-ml-models.s3.amazonaws.com/bigwig_files/IC_max_GRCh38.bw'
 
 try:
     TRAINED_REG_MODEL = pickle.load(
@@ -67,27 +71,58 @@ try:
 except FileNotFoundError:
     TRAINED_REG_MODEL = None
 
-file_IC_matched_max_exists = exists(FILE_IC_MATCHED_MAX_PATH_LOCAL)
-file_IC_max_exists = exists(FILE_IC_MAX_PATH_LOCAL)
+file_IC_matched_max_hg19_exists = exists(FILE_IC_MATCHED_MAX_HG19_PATH_LOCAL)
+file_IC_max_hg19_exists = exists(FILE_IC_MAX_HG19_PATH_LOCAL)
+file_IC_matched_max_grch38_exists = exists(
+    FILE_IC_MATCHED_MAX_GRCH38_PATH_LOCAL)
+file_IC_max_grch38_exists = exists(FILE_IC_MAX_GRCH38_PATH_LOCAL)
 try:
-    if file_IC_matched_max_exists:
-        IC_MATCHED_MAX_BW = pyBigWig.open(FILE_IC_MATCHED_MAX_PATH_LOCAL)
+    if file_IC_matched_max_hg19_exists:
+        IC_MATCHED_MAX_BW_HG19 = pyBigWig.open(
+            FILE_IC_MATCHED_MAX_HG19_PATH_LOCAL)
     else:
-        IC_MATCHED_MAX_BW = pyBigWig.open(FILE_IC_MATCHED_MAX_PATH_REMOTE)
+        IC_MATCHED_MAX_BW_HG19 = pyBigWig.open(
+            FILE_IC_MATCHED_MAX_HG19_PATH_REMOTE)
 except RuntimeError:
-    IC_MATCHED_MAX_BW = None
+    IC_MATCHED_MAX_BW_HG19 = None
 
 try:
-    if file_IC_max_exists:
-        IC_MAX_BW = pyBigWig.open(FILE_IC_MAX_PATH_LOCAL)
+    if file_IC_max_hg19_exists:
+        IC_MAX_BW_HG19 = pyBigWig.open(FILE_IC_MAX_HG19_PATH_LOCAL)
     else:
-        IC_MAX_BW = pyBigWig.open(FILE_IC_MAX_PATH_REMOTE)
+        IC_MAX_BW_HG19 = pyBigWig.open(FILE_IC_MAX_HG19_PATH_REMOTE)
 except RuntimeError:
-    IC_MAX_BW = None
+    IC_MAX_BW_HG19 = None
+
+try:
+    if file_IC_matched_max_grch38_exists:
+        IC_MATCHED_MAX_BW_GRCH38 = pyBigWig.open(
+            FILE_IC_MATCHED_MAX_GRCH38_PATH_LOCAL)
+    else:
+        IC_MATCHED_MAX_BW_GRCH38 = pyBigWig.open(
+            FILE_IC_MATCHED_MAX_GRCH38_PATH_REMOTE)
+except RuntimeError:
+    IC_MATCHED_MAX_BW_GRCH38 = None
+
+try:
+    if file_IC_max_grch38_exists:
+        IC_MAX_BW_GRCH38 = pyBigWig.open(FILE_IC_MAX_GRCH38_PATH_LOCAL)
+    else:
+        IC_MAX_BW_GRCH38 = pyBigWig.open(FILE_IC_MAX_GRCH38_PATH_REMOTE)
+except RuntimeError:
+    IC_MAX_BW_GRCH38 = None
 
 LOCAL_BIGWIGS = {
-    'IC_matched_max': IC_MATCHED_MAX_BW,
-    'IC_max': IC_MAX_BW,
+    'hg19': {
+        'IC_matched_max': IC_MATCHED_MAX_BW_HG19,
+        'IC_max': IC_MAX_BW_HG19,
+    },
+    'grch38': {
+        'IC_matched_max': IC_MATCHED_MAX_BW_GRCH38,
+        'IC_max': IC_MAX_BW_GRCH38,
+    },
+
+
 }
 
 SEARCH_MAX = 9999
@@ -163,7 +198,7 @@ class RegulomeAtlas(object):
 
         return (filtered_peaks, details)
 
-    def regulome_evidence(self, datasets, chrom, start, end):
+    def regulome_evidence(self, assembly, datasets, chrom, start, end):
         """Returns evidence for scoring: datasets in a characterized dict"""
 
         evidence = {}
@@ -196,7 +231,7 @@ class RegulomeAtlas(object):
                 evidence['Footprint_matched'].append(target)
 
         # Get values/signals from bigWig
-        for k, bw in self.bigwig_signal_map.items():
+        for k, bw in self.bigwig_signal_map[assembly.lower()].items():
             try:
                 values = bw.values(chrom, start, end)
                 average = sum(values) / max(len(values), 1)
@@ -545,6 +580,7 @@ class RegulomeAtlas(object):
                 # Better to recalculate for every new locations.
                 if snp_datasets:
                     snp_evidence = self.regulome_evidence(
+                        assembly,
                         snp_datasets,
                         snp['chrom'],
                         snp['coordinates']['gte'],
@@ -592,7 +628,7 @@ class RegulomeAtlas(object):
                         )
                         if base_datasets:
                             base_evidence = self.regulome_evidence(
-                                base_datasets, chrom, start, end
+                                assembly, base_datasets, chrom, start, end
                             )
                             if base_evidence:
                                 score = self.regulome_score(
@@ -671,7 +707,8 @@ class RegulomeAtlas(object):
         if not peaks or not details:
             return None
         (datasets, _files) = self.details_breakdown(details)
-        evidence = self.regulome_evidence(datasets, chrom, pos, pos + 1)
+        evidence = self.regulome_evidence(
+            assembly, datasets, chrom, pos, pos + 1)
         return self.regulome_score(datasets, evidence)
 
     @staticmethod

@@ -287,7 +287,7 @@ def search_peaks(query_coordinates, atlas, assembly, num_variants):
         )
         datasets = all_hits.get('datasets', [])
         evidence = atlas.regulome_evidence(
-            datasets, chrom, start, end
+            assembly, datasets, chrom, start, end
         )
         regulome_score = atlas.regulome_score(
             datasets, evidence

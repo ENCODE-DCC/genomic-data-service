@@ -120,7 +120,7 @@ def summary():
 #        try:
         all_hits = region_get_hits(atlas, assembly, chrom, start, end)
         evidence = atlas.regulome_evidence(
-            all_hits['datasets'], chrom, int(start), int(end))
+            assembly, all_hits['datasets'], chrom, int(start), int(end))
         regulome_score = atlas.regulome_score(all_hits['datasets'], evidence)
         features = evidence_to_features(evidence)
 #        except Exception as e:
