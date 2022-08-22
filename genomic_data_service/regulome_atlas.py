@@ -3,6 +3,7 @@ import math
 import pyBigWig
 from os.path import exists
 import logging
+from genomic_data_service.constants import GENOME_TO_ALIAS
 
 RESIDENT_REGIONSET_KEY = (
     'resident_regionsets'  # keeps track of what datsets are resident
@@ -231,6 +232,7 @@ class RegulomeAtlas(object):
                 evidence['Footprint_matched'].append(target)
 
         # Get values/signals from bigWig
+        assembly = GENOME_TO_ALIAS.get(assembly)
         for k, bw in self.bigwig_signal_map[assembly.lower()].items():
             try:
                 values = bw.values(chrom, start, end)
