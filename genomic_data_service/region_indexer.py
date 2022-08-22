@@ -87,6 +87,7 @@ FILE_REQUIRED_FIELDS = [
     'assay_term_name',
     'annotation_type',
     'reference_type',
+    'aliases',
 ]
 
 DATASET_REQUIRED_FIELDS = [
