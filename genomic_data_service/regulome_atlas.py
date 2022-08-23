@@ -66,52 +66,35 @@ FILE_IC_MAX_GRCH38_PATH_LOCAL = './ml_models/bigwig_files/IC_max_GRCh38.bw'
 FILE_IC_MATCHED_MAX_GRCH38_PATH_REMOTE = 'https://regulome-ml-models.s3.amazonaws.com/bigwig_files/IC_matched_max_GRCh38.bw'
 FILE_IC_MAX_GRCH38_PATH_REMOTE = 'https://regulome-ml-models.s3.amazonaws.com/bigwig_files/IC_max_GRCh38.bw'
 
+
+def get_bigwig_file(file_path_local, file_path_remote):
+    is_exists = exists(file_path_local)
+    try:
+        if is_exists:
+            bigwig_file = pyBigWig.open(
+                file_path_local)
+        else:
+            bigwig_file = pyBigWig.open(
+                file_path_remote)
+    except RuntimeError:
+        bigwig_file = None
+    return bigwig_file
+
+
 try:
     TRAINED_REG_MODEL = pickle.load(
         open('./ml_models/rf_model1.0.1.sav', 'rb'))
 except FileNotFoundError:
     TRAINED_REG_MODEL = None
 
-file_IC_matched_max_hg19_exists = exists(FILE_IC_MATCHED_MAX_HG19_PATH_LOCAL)
-file_IC_max_hg19_exists = exists(FILE_IC_MAX_HG19_PATH_LOCAL)
-file_IC_matched_max_grch38_exists = exists(
-    FILE_IC_MATCHED_MAX_GRCH38_PATH_LOCAL)
-file_IC_max_grch38_exists = exists(FILE_IC_MAX_GRCH38_PATH_LOCAL)
-try:
-    if file_IC_matched_max_hg19_exists:
-        IC_MATCHED_MAX_BW_HG19 = pyBigWig.open(
-            FILE_IC_MATCHED_MAX_HG19_PATH_LOCAL)
-    else:
-        IC_MATCHED_MAX_BW_HG19 = pyBigWig.open(
-            FILE_IC_MATCHED_MAX_HG19_PATH_REMOTE)
-except RuntimeError:
-    IC_MATCHED_MAX_BW_HG19 = None
-
-try:
-    if file_IC_max_hg19_exists:
-        IC_MAX_BW_HG19 = pyBigWig.open(FILE_IC_MAX_HG19_PATH_LOCAL)
-    else:
-        IC_MAX_BW_HG19 = pyBigWig.open(FILE_IC_MAX_HG19_PATH_REMOTE)
-except RuntimeError:
-    IC_MAX_BW_HG19 = None
-
-try:
-    if file_IC_matched_max_grch38_exists:
-        IC_MATCHED_MAX_BW_GRCH38 = pyBigWig.open(
-            FILE_IC_MATCHED_MAX_GRCH38_PATH_LOCAL)
-    else:
-        IC_MATCHED_MAX_BW_GRCH38 = pyBigWig.open(
-            FILE_IC_MATCHED_MAX_GRCH38_PATH_REMOTE)
-except RuntimeError:
-    IC_MATCHED_MAX_BW_GRCH38 = None
-
-try:
-    if file_IC_max_grch38_exists:
-        IC_MAX_BW_GRCH38 = pyBigWig.open(FILE_IC_MAX_GRCH38_PATH_LOCAL)
-    else:
-        IC_MAX_BW_GRCH38 = pyBigWig.open(FILE_IC_MAX_GRCH38_PATH_REMOTE)
-except RuntimeError:
-    IC_MAX_BW_GRCH38 = None
+IC_MATCHED_MAX_BW_HG19 = get_bigwig_file(
+    FILE_IC_MATCHED_MAX_HG19_PATH_LOCAL, FILE_IC_MATCHED_MAX_HG19_PATH_REMOTE)
+IC_MAX_BW_HG19 = get_bigwig_file(
+    FILE_IC_MAX_HG19_PATH_LOCAL, FILE_IC_MAX_HG19_PATH_REMOTE)
+IC_MATCHED_MAX_BW_GRCH38 = get_bigwig_file(
+    FILE_IC_MATCHED_MAX_GRCH38_PATH_LOCAL, FILE_IC_MATCHED_MAX_GRCH38_PATH_REMOTE)
+IC_MAX_BW_GRCH38 = get_bigwig_file(
+    FILE_IC_MAX_GRCH38_PATH_LOCAL, FILE_IC_MAX_GRCH38_PATH_REMOTE)
 
 LOCAL_BIGWIGS = {
     'hg19': {
@@ -122,8 +105,6 @@ LOCAL_BIGWIGS = {
         'IC_matched_max': IC_MATCHED_MAX_BW_GRCH38,
         'IC_max': IC_MAX_BW_GRCH38,
     },
-
-
 }
 
 SEARCH_MAX = 9999
