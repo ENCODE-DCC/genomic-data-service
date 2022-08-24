@@ -75,7 +75,7 @@ class RegulomeApp:
 
         try:
             evidence = self.atlas.regulome_evidence(
-                datasets, chrom, int(start), int(end)
+                self.assembly, datasets, chrom, int(start), int(end)
             )
             if not self.matched_pwm_peak_bed_only:
                 result['score'] = self.atlas.regulome_score(
