@@ -4,7 +4,7 @@
 import requests
 from genomic_data_service.region_indexer_elastic_search import RegionIndexerElasticSearch
 from genomic_data_service.region_indexer_task import metadata_doc
-from genomic_data_service.region_indexer import dataset_accession, index_regulome_db, SUPPORTED_CHROMOSOMES, SUPPORTED_ASSEMBLIES
+from genomic_data_service.region_indexer import dataset_accession, index_regulome_db, SUPPORTED_CHROMOSOMES, SUPPORTED_ASSEMBLIES, clean_up, FILE_REQUIRED_FIELDS, DATASET_REQUIRED_FIELDS
 from elasticsearch import Elasticsearch
 import argparse
 
@@ -125,8 +125,11 @@ def re_index_resident(file_accessions):
             chroms = resident['_source']['chroms']
 
             file_metadata = get_metadata(file_accession)
+            file_metadata = clean_up(file_metadata, FILE_REQUIRED_FIELDS)
             dataset_acc = dataset_accession(file_metadata)
             dataset_metadata = get_metadata(dataset_acc)
+            dataset_metadata = clean_up(
+                dataset_metadata, DATASET_REQUIRED_FIELDS)
 
             metadata = metadata_doc(file_uuid, file_metadata, dataset_metadata)
             metadata['chroms'] = chroms

@@ -323,7 +323,7 @@ class RegulomeAtlas(object):
             return 'PWM'
         if collection_type == 'footprints':
             return 'Footprint'
-        if collection_type in ['eqtls', 'dsqtls', 'curated snvs']:
+        if collection_type in ['eqtls', 'caqtls', 'curated snvs']:
             return 'QTL'
         return None
 

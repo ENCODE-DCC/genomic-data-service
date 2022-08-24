@@ -316,6 +316,19 @@ def list_targets(dataset):
 
     return target_labels
 
+# This is to catch files that are in ENCSR533BHN / PMID30650056. This may need to be updated if the metadata at ENCODE is improved.
+# The ancestry info is stored in file aliases for now. It is the token after PMID.
+
+
+def get_ancestry(file_metadata):
+    ancestry = None
+    aliases = file_metadata.get('aliases')
+    if aliases:
+        tag = aliases[0].split('-')[-1]
+        if not tag.startswith('PMID'):
+            ancestry = tag
+    return ancestry
+
 
 def metadata_doc(file_uuid, file_metadata, dataset_metadata):
     meta_doc = {
@@ -346,6 +359,10 @@ def metadata_doc(file_uuid, file_metadata, dataset_metadata):
     if meta_doc['dataset']['collection_type'].lower() in ['footprints', 'pwms']:
         meta_doc['dataset']['documents'] = dataset_metadata.get(
             'documents', [])
+    if file_metadata.get('annotation_type') == 'caQTLs':
+        ancestry = get_ancestry(file_metadata)
+        if ancestry:
+            meta_doc['file']['ancestry'] = ancestry
 
     return meta_doc
 
