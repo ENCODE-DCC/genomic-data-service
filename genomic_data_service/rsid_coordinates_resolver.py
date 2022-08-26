@@ -68,16 +68,16 @@ def get_ensemblid_coordinates(id, assembly):
 
 def get_rsid_coordinates_from_atlas(atlas, assembly, rsid):
     snp = atlas.find_snp(GENOME_TO_ALIAS.get(assembly), rsid)
+    if snp:
+        chrom = snp.get('chrom', None)
+        coordinates = snp.get('coordinates', {})
 
-    chrom = snp.get('chrom', None)
-    coordinates = snp.get('coordinates', {})
-
-    if chrom and coordinates and 'gte' in coordinates and 'lt' in coordinates:
-        return (chrom, coordinates['gte'], coordinates['lt'])
+        if chrom and coordinates and 'gte' in coordinates and 'lt' in coordinates:
+            return (chrom, coordinates['gte'], coordinates['lt'])
 
     log.warning('Could not find %s on %s, using ensemble. Elasticsearch response: %s' % (
         rsid, assembly, snp))
-    return None
+    return (None, None, None)
 
 
 def get_rsid_coordinates_from_ensembl(assembly, rsid):
