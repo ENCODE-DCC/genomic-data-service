@@ -104,7 +104,7 @@ mssh ubuntu@i-foobarbaz123 --profile regulome --region us-west-2
 
 ### Demo deployment
 
-1. Make sure you have activated the virtual environment created above. if you need demo deployment for Regulome or Encoded region search, run the command below. This command will launch one machine for both GDS flask app and Elasticsearch server.
+1. Make sure you have activated the virtual environment created above. if you need demo deployment for Regulome or Encoded region search, set an environment variable **DEMO_INDEXER_PASSWORD** first, the deploy script will use it as password for indexer. Then run the command below. This command will launch one machine for both GDS flask app and Elasticsearch server.
 
     ```bash
     python deploy/deploy.py --demo

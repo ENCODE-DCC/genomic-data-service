@@ -1,22 +1,17 @@
 import argparse
-import datetime
 import getpass
-from logging import exception
 import re
 import subprocess
 import sys
-import time
-
-from base64 import b64encode
+import os
 from os.path import expanduser
-
 import boto3
 
 DEMO_CONFIG = ':deploy/cloud-config-demo.yml'
 MAIN_MACHINE_CONFIG = ':deploy/cloud-config-gds.yml'
 ES_MACHINE_CONFIG = ':deploy/cloud-config-es.yml'
 DEMO_INDEXER_USER = 'indexer'
-DEMO_INDEXER_PASSWORD = 'test'
+DEMO_INDEXER_PASSWORD = os.environ['DEMO_INDEXER_PASSWORD']
 DEMO_MACHINE = 'demo'
 MAIN_MACHINE = 'gds'
 REGULOME_ES_MACHINE = 'regulome_es'
