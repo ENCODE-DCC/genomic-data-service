@@ -127,19 +127,19 @@ def get_coordinates(query_term, assembly='GRCh37', atlas=None):
     chrom, start, end = None, None, None
 
     query_match = re.match(
-        r'^(chr[1-9]|chr1[0-9]|chr2[0-2]|chrx|chry)(?:\s+|:)(\d+)(?:\s+|-)(\d+)',
+        r'^(chr[1-9]|chr1[0-9]|chr2[0-2]|chrx|chry)(?:\s+|:)(\d+)(?:\s+|-)(\d+)$',
         query_term
     )
 
     if query_match:
         chrom, start, end = query_match.groups()
     else:
-        query_match = re.match(r'^rs\d+', query_term)
+        query_match = re.match(r'^rs\d+$', query_term)
         if query_match:
             chrom, start, end = get_rsid_coordinates(query_match.group(0),
                                                      assembly, atlas)
         else:
-            query_match = re.match(r'^ensg\d+', query_term)
+            query_match = re.match(r'^ensg\d+$', query_term)
             if query_match:
                 chrom, start, end = get_ensemblid_coordinates(
                     query_term.upper(), assembly)
@@ -173,7 +173,7 @@ def resolve_coordinates_and_variants(region_queries, assembly, atlas, maf):
             GENOME_TO_ALIAS.get(assembly, 'hg19'), chrom, start, end, maf=maf
         )
 
-        if re.match(r'^rs\d+', region_query.lower()):
+        if re.match(r'^rs\d+$', region_query.lower()):
             snps.append(
                 {
                     'rsid': region_query.lower(),

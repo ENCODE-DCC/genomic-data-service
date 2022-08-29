@@ -41,6 +41,7 @@ def search():
     assembly, from_, size, format_, maf, region_queries = extract_search_params(
         request.args
     )
+
     if assembly not in REGULOME_VALID_ASSEMBLY:
         result = {
             'assembly': assembly,
@@ -51,12 +52,36 @@ def search():
             }
         }
         return jsonify(build_response(result))
+    if not region_queries or len(region_queries) > 1:
+        result = {
+            'assembly': assembly,
+            'region_queries': region_queries,
+            'format': format_,
+            'from': from_,
+            'notifications': {
+                'Failed': 'Received {} region queries. Exact one region or one '
+                'variant can be processed by regulome-search'.format(
+                    len(region_queries)
+                )
+            }
+        }
+        return jsonify(build_response(result))
 
     atlas = RegulomeAtlas(regulome_es)
 
     variants, query_coordinates, notifications = resolve_coordinates_and_variants(
         region_queries, assembly, atlas, maf
     )
+
+    if notifications:
+        result = {
+            'assembly': assembly,
+            'region_queries': region_queries,
+            'format': format_,
+            'from': from_,
+            'notifications': notifications
+        }
+        return jsonify(build_response(result))
 
     total = len(variants)
     from_ = max(from_, 0)
@@ -86,17 +111,7 @@ def search():
             }
             for chrom, start, end in sorted(variants)[from_:to_]
         ],
-        'notifications': notifications
     }
-
-    if len(query_coordinates) != 1:
-        result['notifications'] = {
-            'Failed': 'Received {} region queries. Exact one region or one '
-            'variant can be processed by regulome-search'.format(
-                len(query_coordinates)
-            )
-        }
-        return jsonify(build_response(result))
 
     regulome_score, features, notifications, graph, timing, nearby_snps = search_peaks(
         query_coordinates,
