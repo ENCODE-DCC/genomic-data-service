@@ -111,6 +111,7 @@ def search():
             }
             for chrom, start, end in sorted(variants)[from_:to_]
         ],
+        'notifications': notifications
     }
 
     regulome_score, features, notifications, graph, timing, nearby_snps = search_peaks(
