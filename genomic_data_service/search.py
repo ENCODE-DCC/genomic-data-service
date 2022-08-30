@@ -41,30 +41,25 @@ def search():
     assembly, from_, size, format_, maf, region_queries = extract_search_params(
         request.args
     )
-
+    result = {
+        'assembly': assembly,
+        'region_queries': region_queries,
+        'format': format_,
+        'from': from_,
+        'notifications': {}
+    }
     if assembly not in REGULOME_VALID_ASSEMBLY:
-        result = {
-            'assembly': assembly,
-            'format': format_,
-            'from': from_,
-            'notifications': {
-                'Failed': 'Invalid assembly {}'.format(assembly)
-            }
+        result['notifications'] = {
+            'Failed': 'Invalid assembly {}'.format(assembly)
         }
-        return jsonify(build_response(result))
-    if not region_queries or len(region_queries) > 1:
-        result = {
-            'assembly': assembly,
-            'region_queries': region_queries,
-            'format': format_,
-            'from': from_,
-            'notifications': {
-                'Failed': 'Received {} region queries. Exact one region or one '
-                'variant can be processed by regulome-search'.format(
-                    len(region_queries)
-                )
-            }
+    elif len(region_queries) != 1:
+        result['notifications'] = {
+            'Failed': 'Received {} region queries. Exact one region or one '
+            'variant can be processed by regulome-search'.format(
+                len(region_queries)
+            )
         }
+    if result['notifications']:
         return jsonify(build_response(result))
 
     atlas = RegulomeAtlas(regulome_es)
@@ -74,13 +69,7 @@ def search():
     )
 
     if notifications:
-        result = {
-            'assembly': assembly,
-            'region_queries': region_queries,
-            'format': format_,
-            'from': from_,
-            'notifications': notifications
-        }
+        result['notifications'] = notifications
         return jsonify(build_response(result))
 
     total = len(variants)
