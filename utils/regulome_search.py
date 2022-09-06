@@ -86,6 +86,7 @@ class RegulomeApp:
             return 1, 'Regulome search failed on {}:{}-{}'.format(
                 chrom, start, end
             )
+
         if self.matched_pwm_peak_bed_only:
             if not evidence.get('PWM_matched', []):
                 return 0, ''
@@ -97,6 +98,7 @@ class RegulomeApp:
                         for doc in motif['documents']
                         for alias in doc['aliases']
                     ]
+            motif_peaks = []
             for peak in all_hits.get('peaks', []):
                 dataset = peak['resident_detail']['dataset']
                 if dataset['@id'] not in matched_pwm_dict:
@@ -117,7 +119,11 @@ class RegulomeApp:
                 else:
                     motif_peak['hit_motif_start'] = start - motif_peak['start']
                     motif_peak['hit_motif_end'] = end - motif_peak['start']
-            return 0, self.motif_columns.format(**motif_peak)
+                motif_peaks.append(motif_peak)
+            motif_peaks = [self.motif_columns.format(
+                **motif_peak) for motif_peak in motif_peaks]
+            motif_peaks_table = '\n'.join(motif_peaks)
+            return 0, motif_peaks_table
         if self.return_peaks:
             result['peaks'] = []
             for peak in all_hits.get('peaks', []):
