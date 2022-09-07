@@ -330,6 +330,46 @@ def get_ancestry(file_metadata):
     return ancestry
 
 
+def get_files_for_genome_browser(dataset_metadata, assembly):
+    files = dataset_metadata.get('files', [])
+    files_for_genome_browser = []
+    if files:
+        if assembly == 'hg19':
+            for file in files:
+                if (
+                    (file['file_format'] ==
+                     'bigBed' or file['file_format'] == 'bigWig')
+                    and file.get('preferred_default', False)
+                    and (
+                        file['analyses'][0]['title'] == 'Lab custom hg19'
+                        or file['analyses'][0]['title'] == 'ENCODE3 hg19'
+                    )
+                    and file['status'] != 'revoked'
+                ):
+                    file_obj = get_file_obj_for_genome_browser(file)
+                    files_for_genome_browser.append(file_obj)
+        elif assembly == 'GRCh38':
+            default_analysis_id = dataset_metadata['default_analysis']
+            for file in files:
+                if file.get('preferred_default', False) and (file['file_format'] == 'bigBed' or file['file_format'] == 'bigWig') and file.get('analyses', []) and file['analyses'][0]['@id'] == default_analysis_id:
+                    file_obj = get_file_obj_for_genome_browser(file)
+                    files_for_genome_browser.append(file_obj)
+    return files_for_genome_browser
+
+
+def get_file_obj_for_genome_browser(file):
+    accession = file['accession']
+    href = file.get('href')
+    cloud_metadata = file.get('cloud_metadata')
+    if cloud_metadata:
+        cloud_metadata_url = cloud_metadata.get('url')
+    return {
+        'accession': accession,
+        'href': href,
+        'cloud_metadata_url': cloud_metadata_url
+    }
+
+
 def metadata_doc(file_uuid, file_metadata, dataset_metadata):
     meta_doc = {
         'uuid': file_uuid,
@@ -363,6 +403,11 @@ def metadata_doc(file_uuid, file_metadata, dataset_metadata):
         ancestry = get_ancestry(file_metadata)
         if ancestry:
             meta_doc['file']['ancestry'] = ancestry
+    if file_metadata.get('assay_term_name') in ['ChIP-seq', 'DNase-seq', 'FAIRE-seq']:
+        files_for_genome_browser = get_files_for_genome_browser(
+            dataset_metadata, file_metadata.get('assembly'))
+        if files_for_genome_browser:
+            meta_doc['dataset']['files_for_genome_browser'] = files_for_genome_browser
 
     return meta_doc
 

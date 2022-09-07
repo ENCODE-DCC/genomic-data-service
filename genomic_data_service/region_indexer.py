@@ -103,8 +103,10 @@ DATASET_REQUIRED_FIELDS = [
     'reference_type',
     'biosample_ontology',
     'documents',
-    'description'
+    'description',
     'status',
+    'files',
+    'default_analysis',
 ]
 
 TF_CHIP_SEQ_EXPS_GRCH38_ENDPOINT = 'https://www.encodeproject.org/search/?type=Experiment&control_type!=*&status=released&assay_title=TF+ChIP-seq&assembly=GRCh38&field=files.accession&field=files.preferred_default&field=files.file_format&field=files.analyses.@id&field=default_analysis&format=json&limit=all'
