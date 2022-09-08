@@ -337,13 +337,9 @@ def get_files_for_genome_browser(dataset_metadata, assembly):
         if assembly == 'hg19':
             for file in files:
                 if (
-                    (file['file_format'] ==
-                     'bigBed' or file['file_format'] == 'bigWig')
-                    and file.get('preferred_default', False)
-                    and (
-                        file['analyses'][0]['title'] == 'Lab custom hg19'
-                        or file['analyses'][0]['title'] == 'ENCODE3 hg19'
-                    )
+                    file.get('preferred_default', False)
+                    and (file['file_format'] == 'bigBed' or file['file_format'] == 'bigWig')
+                    and file.get('assembly') == 'hg19'
                     and file['status'] != 'revoked'
                 ):
                     file_obj = get_file_obj_for_genome_browser(file)
@@ -351,7 +347,12 @@ def get_files_for_genome_browser(dataset_metadata, assembly):
         elif assembly == 'GRCh38':
             default_analysis_id = dataset_metadata['default_analysis']
             for file in files:
-                if file.get('preferred_default', False) and (file['file_format'] == 'bigBed' or file['file_format'] == 'bigWig') and file.get('analyses', []) and file['analyses'][0]['@id'] == default_analysis_id:
+                if (
+                    file.get('preferred_default', False)
+                    and (file['file_format'] == 'bigBed' or file['file_format'] == 'bigWig')
+                    and file.get('analyses', [])
+                    and file['analyses'][0]['@id'] == default_analysis_id
+                ):
                     file_obj = get_file_obj_for_genome_browser(file)
                     files_for_genome_browser.append(file_obj)
     return files_for_genome_browser
