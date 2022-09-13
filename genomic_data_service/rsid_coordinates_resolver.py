@@ -311,6 +311,7 @@ def search_peaks(query_coordinates, atlas, assembly, num_variants):
             'targets': peak['resident_detail']['dataset'].get('target', []),
             'method': peak['resident_detail']['dataset']['collection_type'],
             'ancestry': peak['resident_detail']['file'].get('ancestry'),
+            'files_for_genome_browser': peak['resident_detail']['dataset'].get('files_for_genome_browser', []),
             'documents': documents,
             'dataset': resolve_relative_hrefs(peak['resident_detail']['dataset']['@id'], 'dataset'),
             'dataset_rel': peak['resident_detail']['dataset']['@id'],
