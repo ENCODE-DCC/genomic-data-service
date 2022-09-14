@@ -256,6 +256,10 @@ def main():
     ec2_client = _get_ec2_client(main_args)
     if main_args.demo:
         create_instance(ec2_client, main_args, DEMO_MACHINE)
+    elif main_args.es == 'regulome':
+        create_instance(ec2_client, main_args, REGULOME_ES_MACHINE)
+    elif main_args.es == 'encode':
+        create_instance(ec2_client, main_args, ENCODE_ES_MACHINE)
     else:
         instances_gds = create_instance(ec2_client, main_args, MAIN_MACHINE)
         security_group_id = None
@@ -349,6 +353,9 @@ def parse_args():
     )
     parser.add_argument('--demo', action='store_true',
                         help='Deploy a demo for RegulomDB')
+
+    parser.add_argument('--es', default=None, choices=[None, 'regulome', 'encode'],
+                        help='specify if the elasticsearch server is for RegulomeDB or Encode')
 
     args = parser.parse_args()
     if not args.branch:
