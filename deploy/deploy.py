@@ -11,7 +11,6 @@ DEMO_CONFIG = ':deploy/cloud-config-demo.yml'
 MAIN_MACHINE_CONFIG = ':deploy/cloud-config-gds.yml'
 ES_MACHINE_CONFIG = ':deploy/cloud-config-es.yml'
 DEMO_INDEXER_USER = 'indexer'
-DEMO_INDEXER_PASSWORD = os.environ['DEMO_INDEXER_PASSWORD']
 DEMO_MACHINE = 'demo'
 MAIN_MACHINE = 'gds'
 REGULOME_ES_MACHINE = 'regulome_es'
@@ -71,7 +70,7 @@ def _get_bdm(main_args):
     ]
 
 
-def get_user_data(commit, config_file, data_insert, main_args):
+def get_user_data(commit, config_file, data_insert, main_args, demo_indexer_password=None):
     cmd_list = ['git', 'show', commit + config_file]
     config_template = subprocess.check_output(cmd_list).decode('utf-8')
     ssh_pub_key = read_ssh_key()
@@ -93,7 +92,7 @@ def get_user_data(commit, config_file, data_insert, main_args):
     data_insert['S3_AUTH_KEYS'] = auth_keys_dir
     data_insert['REDIS_PORT'] = main_args.redis_port
     data_insert['DEMO_INDEXER_USER'] = DEMO_INDEXER_USER
-    data_insert['DEMO_INDEXER_PASSWORD'] = DEMO_INDEXER_PASSWORD
+    data_insert['DEMO_INDEXER_PASSWORD'] = demo_indexer_password
 
     user_data = config_template % data_insert
     return user_data
@@ -128,7 +127,7 @@ def _get_ec2_client(main_args):
     return ec2
 
 
-def _get_run_args(main_args, instances_tag_data, ec2_name=None):
+def _get_run_args(main_args, instances_tag_data, ec2_name=None, demo_indexer_password=None):
     master_user_data = None
     security_groups = ['ssh-http-https']
     iam_role = 'regulome-instance'
@@ -146,7 +145,7 @@ def _get_run_args(main_args, instances_tag_data, ec2_name=None):
     elif ec2_name == REGULOME_ES_MACHINE or ec2_name == ENCODE_ES_MACHINE:
         config_file = ES_MACHINE_CONFIG
     user_data = get_user_data(
-        instances_tag_data['commit'], config_file, data_insert, main_args
+        instances_tag_data['commit'], config_file, data_insert, main_args, demo_indexer_password=None
     )
     run_args = {
         'count': count,
@@ -173,7 +172,7 @@ def _wait_and_tag_instances(
         print('Instance ready')
 
 
-def create_instance(ec2_client, main_args, ec2_name):
+def create_instance(ec2_client, main_args, ec2_name, demo_indexer_password=None):
     instances_tag_data = _get_instances_tag_data(main_args, ec2_name)
     if instances_tag_data is None:
         sys.exit(10)
@@ -255,7 +254,9 @@ def main():
     main_args = parse_args()
     ec2_client = _get_ec2_client(main_args)
     if main_args.demo:
-        create_instance(ec2_client, main_args, DEMO_MACHINE)
+        DEMO_INDEXER_PASSWORD = os.environ['DEMO_INDEXER_PASSWORD']
+        create_instance(ec2_client, main_args,
+                        DEMO_MACHINE, DEMO_INDEXER_PASSWORD)
     elif main_args.es == 'regulome':
         create_instance(ec2_client, main_args, REGULOME_ES_MACHINE)
     elif main_args.es == 'encode':
