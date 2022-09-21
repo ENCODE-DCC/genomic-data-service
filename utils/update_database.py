@@ -11,9 +11,9 @@ import argparse
 
 ENCODE_URL = 'https://www.encodeproject.org/'
 files = ['ENCFF495KNO', 'ENCFF028UPE', 'ENCFF373HKQ']
-ES_ENDPOINT = 'http://localhost:9201/'
+ES_ENDPOINT = 'https://localhost:9200/'
 ES_URL = ['localhost']
-ES_PORT = 9201
+ES_PORT = 9200
 RESIDENT = 'resident_regionsets/regulomedb/'
 INDEXES = [
     'chr1/',

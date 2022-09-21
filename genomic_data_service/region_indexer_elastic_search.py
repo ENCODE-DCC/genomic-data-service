@@ -1,24 +1,36 @@
-from elasticsearch import Elasticsearch
-from elasticsearch.exceptions import NotFoundError
-from elasticsearch.helpers import bulk
+from opensearchpy import OpenSearch
 
-RESIDENTS_INDEX = 'resident_regionsets'
+
+FILES_INDEX = 'files'
+PEAKS_INDEX_PRE = 'peaks_'
+SNPS_INDEX_PRE = 'snps_'
 REGION_INDEXER_SHARDS = 2
 SEARCH_MAX = 99999
-FOR_REGULOME_DB = 'regulomedb'
-
-INDEX_SETTINGS = {
+SETTINGS = {
     'index': {
         'number_of_shards': REGION_INDEXER_SHARDS,
         'max_result_window': SEARCH_MAX
     }
-}
+},
+
+
+auth = ('admin', 'admin')
 
 
 class RegionIndexerElasticSearch():
-    def __init__(self, es_uri, es_port, supported_chroms, supported_assemblies, use_type=FOR_REGULOME_DB, force_delete=False):
-        self.es = Elasticsearch(port=es_port, hosts=es_uri)
-        self.use_type = use_type
+    def __init__(self, host, port, supported_chroms, supported_assemblies, force_delete=False):
+        self.opensearch = OpenSearch(
+            hosts=[{'host': host, 'port': port}],
+            http_compress=True,  # enables gzip compression for request bodies
+            http_auth=auth,
+            # client_cert = client_cert_path,
+            # client_key = client_key_path,
+            use_ssl=True,
+            verify_certs=False,
+            ssl_assert_hostname=False,
+            ssl_show_warn=False,
+            #ca_certs = ca_certs_path
+        )
         self.chroms = [chrom.lower() for chrom in supported_chroms]
         self.assemblies = [assembly.lower()
                            for assembly in supported_assemblies]
@@ -30,65 +42,55 @@ class RegionIndexerElasticSearch():
 
         self.setup_residents_index()
         self.setup_snps_index()
-        self.setup_regions_index()
+        self.setup_peaks_index()
 
     def destroy_indices(self):
-        if self.es.indices.exists(RESIDENTS_INDEX):
-            self.es.indices.delete(index=RESIDENTS_INDEX)
+        if self.opensearch.indices.exists(FILES_INDEX):
+            self.opensearch.indices.delete(index=FILES_INDEX)
 
         for assembly in self.assemblies:
-            snp_index = 'snp_' + assembly
-            if self.es.indices.exists(snp_index):
-                self.es.indices.delete(index=snp_index)
-
-        for chrom in self.chroms:
-            if self.es.indices.exists(chrom):
-                self.es.indices.delete(index=chrom)
+            snp_index = SNPS_INDEX_PRE + assembly
+            if self.opensearch.indices.exists(snp_index):
+                self.opensearch.indices.delete(index=snp_index)
+            peaks_index_pre = PEAKS_INDEX_PRE + assembly
+            for chrom in self.chroms:
+                peaks_index = peaks_index_pre + '_' + chrom
+                if not self.opensearch.indices.exists(peaks_index):
+                    self.opensearch.indices.delete(index=peaks_index)
 
     def setup_residents_index(self):
-        if not self.es.indices.exists(RESIDENTS_INDEX):
-            self.es.indices.create(index=RESIDENTS_INDEX, body=INDEX_SETTINGS)
-
-        if not self.es.indices.exists_type(index=RESIDENTS_INDEX, doc_type=self.use_type):
-            mapping = self.get_resident_mapping()
-            self.es.indices.put_mapping(
-                index=RESIDENTS_INDEX, doc_type=self.use_type, body=mapping)
+        if not self.opensearch.indices.exists(FILES_INDEX):
+            body = self.get_files_index_body()
+            print('file index body:')
+            print(body)
+            self.opensearch.indices.create(FILES_INDEX, body=body)
 
     def setup_snps_index(self):
         for assembly in self.assemblies:
-            snp_index = 'snp_' + assembly
+            snp_index = SNPS_INDEX_PRE + assembly
+            if not self.opensearch.indices.exists(snp_index):
+                body = self.get_snps_index_body()
+                self.opensearch.indices.create(index=snp_index, body=body)
 
-            if not self.es.indices.exists(snp_index):
-                self.es.indices.create(index=snp_index, body=INDEX_SETTINGS)
-
+    def setup_peaks_index(self):
+        for assembly in self.assemblies:
+            peaks_index_pre = PEAKS_INDEX_PRE + assembly
             for chrom in self.chroms:
-                if not self.es.indices.exists_type(index=snp_index, doc_type=chrom):
-                    mapping = self.get_snp_index_mapping(chrom)
-                    self.es.indices.put_mapping(
-                        index=snp_index, doc_type=chrom, body=mapping)
+                peaks_index = peaks_index_pre + '_' + chrom
+                if not self.opensearch.indices.exists(peaks_index):
+                    body = self.get_peaks_index_body()
+                    self.opensearch.indices.create(
+                        index=peaks_index, body=body)
 
-    def setup_regions_index(self):
-        for chrom in self.chroms:
-            if not self.es.indices.exists(chrom):
-                self.es.indices.create(index=chrom, body=INDEX_SETTINGS)
-
-            for assembly in self.assemblies:
-                if not self.es.indices.exists_type(index=chrom, doc_type=assembly):
-                    mapping = self.get_chrom_index_mapping(assembly)
-                    self.es.indices.put_mapping(
-                        index=chrom, doc_type=assembly, body=mapping)
-
-    def get_resident_mapping(self):
+    def get_peaks_index_body(self):
         return {
-            self.use_type: {'enabled': False}
-        }
-
-    def get_chrom_index_mapping(self, assembly='hg19'):
-        return {
-            assembly: {
-                '_source': {
-                    'enabled': True
-                },
+            'settings': {
+                'index': {
+                    'number_of_shards': REGION_INDEXER_SHARDS,
+                    'max_result_window': SEARCH_MAX
+                }
+            },
+            'mappings': {
                 'properties': {
                     'uuid': {
                         'type': 'keyword'
@@ -97,36 +99,37 @@ class RegionIndexerElasticSearch():
                         'type': 'integer_range'
                     },
                     'strand': {
-                        'type': 'string'  # + - .
+                        'type': 'text'  # + - .
                     },
                     'value': {
-                        'type': 'string'
+                        'type': 'text'
                     },
                     'name': {
-                        'type': 'string'
+                        'type': 'text'
                     },
                     'ensg_id': {
-                        'type': 'string'
+                        'type': 'text'
                     },
                     'p_value': {
                         'type': 'float'
                     },
                     'effect_size': {
-                        'type': 'string'
+                        'type': 'text'
                     }
                 }
             }
         }
 
-    def get_snp_index_mapping(self, chrom='chr1'):
+    def get_snps_index_body(self):
         return {
-            chrom: {
-                '_all': {
-                    'enabled': False
+            'settings': {
+                'index': {
+                    'number_of_shards': REGION_INDEXER_SHARDS,
+                    'max_result_window': SEARCH_MAX
                 },
-                '_source': {
-                    'enabled': True
-                },
+            },
+            'mappings': {
+
                 'properties': {
                     'rsid': {
                         'type': 'keyword'
@@ -149,6 +152,16 @@ class RegionIndexerElasticSearch():
                     'alt_allele_freq': {
                         'enabled': False,
                     },
+                }
+            }
+        }
+
+    def get_files_index_body(self):
+        return {
+            'settings': {
+                'index': {
+                    'number_of_shards': REGION_INDEXER_SHARDS,
+                    'max_result_window': SEARCH_MAX
                 }
             }
         }

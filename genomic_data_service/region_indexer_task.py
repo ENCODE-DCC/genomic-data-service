@@ -1,13 +1,13 @@
 from genomic_data_service import app
 from celery import Celery
-from elasticsearch import Elasticsearch
-from elasticsearch.exceptions import NotFoundError
-from elasticsearch.helpers import bulk
+from opensearchpy.exceptions import NotFoundError
+from opensearchpy.helpers import bulk
 from genomic_data_service.file_opener import LocalFileOpener, S3FileOpener
 from genomic_data_service.parser import SnfParser, RegionParser, FootPrintParser, PWMsParser
 from genomic_data_service.constants import DATASET
 from genomic_data_service.strand import get_matrix_file_download_url, get_matrix_array, get_pwm
 import uuid
+from opensearchpy import OpenSearch
 
 
 def make_celery(app):
@@ -32,8 +32,9 @@ def make_celery(app):
 celery_app = make_celery(app)
 
 
-RESIDENTS_INDEX = 'resident_regionsets'
-FOR_REGULOME_DB = 'regulomedb'
+FILES_INDEX = 'files'
+PEAKS_INDEX_PRE = 'peaks_'
+SNPS_INDEX_PRE = 'snps_'
 
 # TODO: move constants to centralized file
 REGULOME_COLLECTION_TYPES = ['assay_term_name',
@@ -93,6 +94,7 @@ INDEX_COLS = {
         'strand_col': 4,
     },
 }
+auth = ('admin', 'admin')
 
 
 def get_cols_for_index(metadata):
@@ -107,20 +109,18 @@ def get_cols_for_index(metadata):
 def add_to_residence(es, metadata):
     metadata['chroms'] = list(set(metadata['chroms']))
 
-    es.index(index=RESIDENTS_INDEX, doc_type=FOR_REGULOME_DB,
+    es.index(index=FILES_INDEX,
              body=metadata, id=str(metadata['uuid']))
 
 
-def snps_bulk_iterator(snp_index, chrom, snps_for_chrom):
+def snps_bulk_iterator(snp_index, snps_for_chrom):
     for snp in snps_for_chrom:
-        yield {'_index': snp_index.lower(), '_type': chrom.lower(), '_id': snp['rsid'], '_source': snp}
+        yield {'_index': snp_index, '_id': snp['rsid'], '_source': snp}
 
 
 def index_snps(es, snps, metadata, chroms=None):
     assembly = metadata['file']['assembly']
-    snp_index = 'snp_' + assembly.lower()
-
-    metadata['index'] = snp_index
+    assembly = ASSEMBLIES_MAPPING.get(assembly, assembly).lower()
 
     if chroms is None:
         chroms = list(snps.keys())
@@ -128,44 +128,43 @@ def index_snps(es, snps, metadata, chroms=None):
     for chrom in chroms:
         if len(snps[chrom]) == 0:
             continue
-
-        bulk(es, snps_bulk_iterator(snp_index, chrom,
-             snps[chrom]), chunk_size=100000, request_timeout=2000)
+        snp_index = SNPS_INDEX_PRE + assembly.lower()
+        bulk(es, snps_bulk_iterator(
+            snp_index, snps[chrom]), chunk_size=100000, request_timeout=2000)
 
         metadata['chroms'].append(chrom)
 
     return True
 
 
-def region_bulk_iterator(chrom, assembly, uuid, docs_for_chrom):
-    assembly = ASSEMBLIES_MAPPING.get(assembly, assembly).lower()
+def peaks_bulk_iterator(peaks_index, uuid, docs_for_chrom):
 
     for doc in docs_for_chrom:
         doc['uuid'] = uuid
-        yield {'_index': chrom.lower(), '_type': assembly, '_source': doc}
+        yield {'_index': peaks_index, '_source': doc}
 
 
-def index_regions(es, regions, metadata, chroms):
+def index_peaks(es, regions, metadata, chroms):
     uuid = metadata['uuid']
     assembly = metadata['file']['assembly']
+    assembly = ASSEMBLIES_MAPPING.get(assembly, assembly).lower()
 
     if chroms is None:
         chroms = list(regions.keys())
 
     for chrom in list(regions.keys()):
-        chrom_lc = chrom.lower()
 
         if len(regions[chrom]) == 0:
             continue
-
-        bulk(es, region_bulk_iterator(chrom_lc, assembly, uuid,
+        peaks_index = PEAKS_INDEX_PRE + assembly.lower() + '_' + chrom.lower()
+        bulk(es, peaks_bulk_iterator(peaks_index, uuid,
              regions[chrom]), chunk_size=5000, request_timeout=2000)
         metadata['chroms'].append(chrom)
 
     return True
 
 
-def index_regions_from_file(es, file_uuid, file_metadata, dataset_metadata, snp=False):
+def index_peaks_from_file(es, file_uuid, file_metadata, dataset_metadata, snp=False):
     metadata = metadata_doc(file_uuid, file_metadata, dataset_metadata)
     is_snp_reference = dataset_metadata['@type'][0].lower() == 'reference'
     cols_for_index = get_cols_for_index(metadata)
@@ -220,8 +219,8 @@ def index_regions_from_file(es, file_uuid, file_metadata, dataset_metadata, snp=
                         index_snps(es, file_data, metadata,
                                    list(file_data.keys()))
                     else:
-                        index_regions(es, file_data, metadata,
-                                      list(file_data.keys()))
+                        index_peaks(es, file_data, metadata,
+                                    list(file_data.keys()))
                     file_data = {}
 
                 file_data[chrom] = []
@@ -239,7 +238,7 @@ def index_regions_from_file(es, file_uuid, file_metadata, dataset_metadata, snp=
     if is_snp_reference:
         index_snps(es, file_data, metadata, list(file_data.keys()))
     else:
-        index_regions(es, file_data, metadata, list(file_data.keys()))
+        index_peaks(es, file_data, metadata, list(file_data.keys()))
 
     if not file_opener.should_load_file_in_memory() and metadata['chroms'] != chroms:
         print(metadata['file']['@id'] + ' chromosomes ' +
@@ -374,7 +373,6 @@ def get_file_obj_for_genome_browser(file):
 def metadata_doc(file_uuid, file_metadata, dataset_metadata):
     meta_doc = {
         'uuid': file_uuid,
-        'uses': FOR_REGULOME_DB,
         'file': {
             'uuid': file_uuid,
             '@id': file_metadata['@id'],
@@ -414,41 +412,9 @@ def metadata_doc(file_uuid, file_metadata, dataset_metadata):
     return meta_doc
 
 
-def remove_from_es(indexed_file, file_uuid, es):
-    if not indexed_file:
-        print('Trying to drop file: %s  NOT FOUND', file_uuid)
-        return
-
-    if 'index' in indexed_file:
-        es.delete(index=indexed_file['index'])
-    else:
-        for chrom in indexed_file['chroms']:
-            es.delete(index=chrom.lower(),
-                      doc_type=indexed_file['assembly'], id=str(file_uuid))
-
-        es.delete(index=RESIDENTS_INDEX,
-                  doc_type=FOR_REGULOME_DB, id=str(file_uuid))
-
-        return True
-
-
-def remove_snp_from_es(snp_index, file_uuid, es):
-    es.delete(index=snp_index)
-    es.delete(index=RESIDENTS_INDEX,
-              doc_type=FOR_REGULOME_DB, id=str(file_uuid))
-
-
-def remove_region_from_es(file_uuid, assembly, es):
-    for chrom in SUPPORTED_CHROMOSOMES:
-        es.delete(index=chrom.lower(), doc_type=assembly, id=str(file_uuid))
-
-    es.delete(index=RESIDENTS_INDEX,
-              doc_type=FOR_REGULOME_DB, id=str(file_uuid))
-
-
 def file_in_es(file_uuid, es):
     try:
-        return es.get(index=RESIDENTS_INDEX, id=str(file_uuid), doc_type=FOR_REGULOME_DB).get('_source', {})
+        return es.get(index=FILES_INDEX, id=str(file_uuid)).get('_source', {})
     except NotFoundError:
         return None
     except Exception:
@@ -458,27 +424,46 @@ def file_in_es(file_uuid, es):
 
 
 @celery_app.task(bind=True, autoretry_for=(Exception,), retry_kwargs={'max_retries': 5, 'countdown': 2})
-def index_file(self, file_metadata, dataset_metadata, es_hosts, es_port, force_reindex=False):
-    es = Elasticsearch(port=es_port, hosts=es_hosts)
+def index_file(self, file_metadata, dataset_metadata, host, port):
+    es = OpenSearch(
+        hosts=[{'host': host, 'port': port}],
+        http_compress=True,  # enables gzip compression for request bodies
+        http_auth=auth,
+        # client_cert = client_cert_path,
+        # client_key = client_key_path,
+        use_ssl=True,
+        verify_certs=False,
+        ssl_assert_hostname=False,
+        ssl_show_warn=False,
+        #ca_certs = ca_certs_path
+    )
 
     file_uuid = file_metadata['uuid']
 
     indexed_file = file_in_es(file_uuid, es)
 
     if indexed_file:
-        if force_reindex:
-            remove_from_es(indexed_file, file_uuid, es)
-        else:
-            return f'File {file_uuid} is already indexed'
+        return f'File {file_uuid} is already indexed'
 
-    index_regions_from_file(es, file_uuid, file_metadata, dataset_metadata)
+    index_peaks_from_file(es, file_uuid, file_metadata, dataset_metadata)
 
     return f"File {file_uuid} was indexed via {file_metadata['href']}"
 
 
 @celery_app.task(bind=True, autoretry_for=(Exception,), retry_kwargs={'max_retries': 5, 'countdown': 2})
-def index_local_snp_files(self, file_path, file_properties, es_hosts, es_port):
-    es = Elasticsearch(port=es_port, hosts=es_hosts)
+def index_local_snp_files(self, file_path, file_properties, host, port):
+    es = OpenSearch(
+        hosts=[{'host': host, 'port': port}],
+        http_compress=True,  # enables gzip compression for request bodies
+        http_auth=auth,
+        # client_cert = client_cert_path,
+        # client_key = client_key_path,
+        use_ssl=True,
+        verify_certs=False,
+        ssl_assert_hostname=False,
+        ssl_show_warn=False,
+        #ca_certs = ca_certs_path
+    )
     id = uuid.uuid4()
     print('indexing local file ', file_path, id)
     index_regions_from_test_snp_file(es, id, file_path, file_properties)

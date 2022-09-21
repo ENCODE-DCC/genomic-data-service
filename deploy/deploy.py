@@ -238,8 +238,8 @@ def create_security_group(ec2_client, gds_private_ip, main_args):
             IpPermissions=[
                 {
                     'IpProtocol': 'tcp',
-                    'FromPort': 9201,
-                    'ToPort': 9201,
+                    'FromPort': 9200,
+                    'ToPort': 9200,
                     'IpRanges': [{'CidrIp': cidr_ip}],
                 }
             ],

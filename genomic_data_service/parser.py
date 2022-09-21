@@ -35,7 +35,7 @@ class Parser:
     @abc.abstractmethod
     def document_generator(self, line):
         """
-        This method is to used to parse one line in the given file and generate a document for elasticsearch indexing.
+        This method is to used to parse one line in the given file and generate a document for indexing.
         It should return a tuple of chromosome and document: (chrom, doc)
         """
         return

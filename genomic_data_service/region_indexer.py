@@ -130,7 +130,7 @@ parser.add_argument(
     help='Index the files for the assemblies specified')
 
 parser.add_argument(
-    '--port', default=9201,
+    '--port', default=9200,
     help='Index a small number of files for local install')
 
 parser.add_argument(
@@ -363,7 +363,7 @@ def get_encode_accessions_from_portal():
     return encode_accessions
 
 
-def index_regulome_db(es_uri, es_port, encode_accessions, local_files=None, filter_files=False, per_request=350):
+def index_regulome_db(host, port, encode_accessions, local_files=None, filter_files=False, per_request=350):
     print('Number of files for indexing from ENCODE:', len(encode_accessions))
     datasets = {}
     chunks = [
@@ -394,27 +394,27 @@ def index_regulome_db(es_uri, es_port, encode_accessions, local_files=None, filt
             index_file.delay(
                 clean_up(f, FILE_REQUIRED_FIELDS),
                 clean_up(dataset, DATASET_REQUIRED_FIELDS),
-                es_uri,
-                es_port,
+                host,
+                port,
             )
     if local_files:
         for file in local_files:
             index_local_snp_files.delay(
-                file['file_path'], file['file_metadata'], es_uri, es_port)
+                file['file_path'], file['file_metadata'], host, port)
 
 
 if __name__ == '__main__':
 
     args = parser.parse_args()
-    es_uri = args.uri
-    es_port = args.port
+    host = args.uri[0]
+    port = args.port
     is_local_install = args.local
     assemblies = args.assembly
-    print('es uri:', es_uri)
-    print('es port:', es_port)
+    print('OpenSearch host:', host)
+    print('OpenSearchindex_file port:', port)
 
     RegionIndexerElasticSearch(
-        es_uri, es_port, SUPPORTED_CHROMOSOMES, SUPPORTED_ASSEMBLIES
+        host, port, SUPPORTED_CHROMOSOMES, SUPPORTED_ASSEMBLIES
     ).setup_indices()
 
     if not is_local_install:
@@ -427,7 +427,7 @@ if __name__ == '__main__':
                 encode_accessions.extend(get_encode_accessions_from_portal())
             else:
                 raise ValueError(f'Invalid assembly: {assembly}')
-        index_regulome_db(es_uri, es_port, encode_accessions)
+        index_regulome_db(host, port, encode_accessions)
     else:
         encode_accessions = list(pickle.load(
             open(TEST_ENCODE_ACCESSIONS_PATH, 'rb')))
@@ -437,4 +437,4 @@ if __name__ == '__main__':
                 'file_metadata': FILE_HG19
             }
         ]
-        index_regulome_db(es_uri, es_port, encode_accessions, local_files)
+        index_regulome_db(host, port, encode_accessions, local_files)

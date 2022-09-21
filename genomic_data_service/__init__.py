@@ -5,6 +5,7 @@ from genomic_data_service.searches.configs import add_registry
 from genomic_data_service.rnaseq.client import add_rna_client
 from genomic_data_service.rnaseq.rnaget.api import rnaget_api
 import logging
+from opensearchpy import OpenSearch
 
 
 def is_web_app():
@@ -26,15 +27,37 @@ add_rna_client(app)
 
 
 if is_web_app():
-    from elasticsearch import Elasticsearch
 
-    regulome_es = Elasticsearch(
-        port=app.config['REGULOME_ES_PORT'], hosts=app.config['REGULOME_ES_HOSTS']
+    auth = ('admin', 'admin')
+    port = app.config['REGULOME_ES_PORT']
+    hosts = app.config['REGULOME_ES_HOSTS']
+    regulome_es = OpenSearch(
+        hosts=[{'host': hosts[0], 'port': port}],
+        http_compress=True,  # enables gzip compression for request bodies
+        http_auth=auth,
+        # client_cert = client_cert_path,
+        # client_key = client_key_path,
+        use_ssl=True,
+        verify_certs=False,
+        ssl_assert_hostname=False,
+        ssl_show_warn=False,
+        #ca_certs = ca_certs_path
     )
-    region_search_es = Elasticsearch(
-        port=app.config['REGION_SEARCH_ES_PORT'],
-        hosts=app.config['REGION_SEARCH_ES_HOSTS'],
+    port = app.config['REGION_SEARCH_ES_PORT']
+    hosts = app.config['REGION_SEARCH_ES_HOSTS']
+    region_search_es = OpenSearch(
+        hosts=[{'host': hosts[0], 'port': port}],
+        http_compress=True,  # enables gzip compression for request bodies
+        http_auth=auth,
+        # client_cert = client_cert_path,
+        # client_key = client_key_path,
+        use_ssl=True,
+        verify_certs=False,
+        ssl_assert_hostname=False,
+        ssl_show_warn=False,
+        #ca_certs = ca_certs_path
     )
+
     app.url_map.strict_slashes = False
 
     # Enabled endpoints:

@@ -5,10 +5,8 @@ from os.path import exists
 import logging
 from genomic_data_service.constants import GENOME_TO_ALIAS
 
-RESIDENT_REGIONSET_KEY = (
-    'resident_regionsets'  # keeps track of what datsets are resident
-)
-FOR_REGULOME_DB = 'regulomedb'
+FILES_INDEX = 'files'
+
 EVIDENCE_CATEGORIES = [
     'QTL',
     'ChIP',
@@ -116,12 +114,12 @@ class RegulomeAtlas(object):
         self.bigwig_signal_map = LOCAL_BIGWIGS
 
     def snp_es_index_name(self, assembly):
-        return 'snp_' + assembly.lower()
+        return 'snps_' + assembly.lower()
 
     def find_snp(self, assembly, rsid):
         try:
             res = self.es.get(
-                index=self.snp_es_index_name(assembly), doc_type='_all', id=rsid
+                index=self.snp_es_index_name(assembly), id=rsid
             )
         except Exception:
             return None
@@ -134,8 +132,6 @@ class RegulomeAtlas(object):
         try:
             results = self.es.search(
                 index=self.snp_es_index_name(assembly),
-                doc_type=chrom,
-                _source=True,
                 body=range_query,
                 size=max_results,
             )
@@ -148,21 +144,19 @@ class RegulomeAtlas(object):
         self, assembly, chrom, start, end, peaks_too=False, max_results=SEARCH_MAX
     ):
         range_query = self._range_query(start, end, max_results=max_results)
+        peaks_index = 'peaks_' + assembly + '_' + chrom.lower()
 
         results = self.es.search(
-            index=chrom.lower(),
-            doc_type=assembly,
+            index=peaks_index,
             _source=True,
             body=range_query,
             size=max_results,
         )
-
         return list(results['hits']['hits'])
 
     def find_peaks_filtered(self, assembly, chrom, start, end, peaks_too=False):
         peaks = self.find_peaks(assembly, chrom, start,
                                 end, peaks_too=peaks_too)
-
         if not peaks:
             return (peaks, None)
 
@@ -258,9 +252,8 @@ class RegulomeAtlas(object):
         try:
             id_query = {'query': {'ids': {'values': uuids}}}
             res = self.es.search(
-                index=RESIDENT_REGIONSET_KEY,
+                index=FILES_INDEX,
                 body=id_query,
-                doc_type=[FOR_REGULOME_DB],
                 size=max_results,
             )
         except Exception:

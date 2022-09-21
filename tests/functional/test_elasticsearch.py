@@ -42,7 +42,7 @@ def test_indices(regulome_elasticsearch_client):
 
 
 def test_index_regions(regulome_elasticsearch_client):
-    from genomic_data_service.region_indexer_task import index_regions_from_file
+    from genomic_data_service.region_indexer_task import index_peaks_from_file
     from genomic_data_service.region_indexer import encode_graph
 
     query = ['accession=ENCFF760LBY']
@@ -54,7 +54,7 @@ def test_index_regions(regulome_elasticsearch_client):
     dataset_query = [dataset_accession]
     dataset = encode_graph(dataset_query)[0]
     # indexed_file = file_in_es(uuid, regulome_elasticsearch_client.es)
-    index_regions_from_file(
+    index_peaks_from_file(
         regulome_elasticsearch_client.es,
         file_uuid,
         file_properties,

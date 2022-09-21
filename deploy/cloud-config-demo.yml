@@ -19,8 +19,6 @@ runcmd:
 - sed -i -e 's/bind 127\.0\.0\.1/bind 0\.0\.0\.0/' /etc/redis/redis.conf
 - service redis-server restart
 - set -ex
-- update-rc.d elasticsearch defaults
-- service elasticsearch restart
 - sudo -u ubuntu git clone --no-checkout %(GIT_REPO)s /home/ubuntu/genomic-data-service/
 - cd /home/ubuntu/genomic-data-service
 - sudo -u ubuntu git checkout %(COMMIT)s
@@ -43,8 +41,6 @@ runcmd:
 - sudo systemctl enable --now genomic.socket
 - sudo systemctl enable genomic.service
 - sudo systemctl enable nginx.service
-- sudo systemctl enable elasticsearch.service
-- sudo systemctl start elasticsearch.service
 - sudo systemctl start genomic
 - sudo systemctl enable celery.service
 - sudo systemctl start celery
@@ -60,46 +56,6 @@ users:
   inactive: true
   system: true
 write_files:
-- path: /etc/elasticsearch/elasticsearch.yml
-  content: |
-    network.host: 0.0.0.0
-    http.port: 9201
-    thread_pool:
-        search:
-            size: 100
-            queue_size: 2000
-        index:
-            queue_size: 400
-    indices.query.bool.max_clause_count: 8192
-- path: /etc/elasticsearch/jvm.options
-  content: |
-    -Xms8g
-    -Xmx8g
-    -XX:+UseG1GC
-    -XX:CMSInitiatingOccupancyFraction=75
-    -XX:+UseCMSInitiatingOccupancyOnly
-    -XX:+DisableExplicitGC
-    -XX:+AlwaysPreTouch
-    -server
-    -Xss1m
-    -Djava.awt.headless=true
-    -Dfile.encoding=UTF-8
-    -Djna.nosys=true
-    -Djdk.io.permissionsUseCanonicalPath=true
-    -Dio.netty.noUnsafe=true
-    -Dio.netty.noKeySetOptimization=true
-    -Dio.netty.recycler.maxCapacityPerThread=0
-    -Dlog4j.shutdownHookEnabled=false
-    -Dlog4j2.disable.jmx=true
-    -Dlog4j2.formatMsgNoLookups=true
-    -Dlog4j.skipJansi=true
-    -XX:+HeapDumpOnOutOfMemoryError
-- path: /etc/cron.daily/es-logrotate
-  content: |
-    #!/bin/bash
-    /usr/bin/find /var/log/elasticsearch -name elasticsearch-2*.log -mtime +1 -exec /bin/gzip --best {} \;
-  owner: root:root
-  permissions: '0755'
 - path: /etc/cron.d/cloudwatchmon
   content: |
     */5 * * * * nobody /home/ubuntu/genomic-data-service/cloudwatchmon-venv/bin/mon-put-instance-stats.py --mem-util --swap-util --disk-space-util --disk-path=/ --from-cron
