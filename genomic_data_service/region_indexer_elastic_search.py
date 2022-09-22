@@ -1,4 +1,5 @@
-from opensearchpy import OpenSearch
+from opensearchpy import OpenSearch, RequestsHttpConnection, AWSV4SignerAuth
+import boto3
 
 
 FILES_INDEX = 'files'
@@ -14,11 +15,13 @@ SETTINGS = {
 },
 
 
-auth = ('admin', 'admin')
-
-
 class RegionIndexerElasticSearch():
-    def __init__(self, host, port, supported_chroms, supported_assemblies, force_delete=False):
+    def __init__(self, host, port, supported_chroms, supported_assemblies, force_delete=False, opensearch_env='local'):
+        if opensearch_env == 'local':
+            auth = ('admin', 'admin')
+        else:
+            credentials = boto3.Session().get_credentials()
+            auth = AWSV4SignerAuth(credentials, 'us-west-2')
         self.opensearch = OpenSearch(
             hosts=[{'host': host, 'port': port}],
             http_compress=True,  # enables gzip compression for request bodies
@@ -30,6 +33,7 @@ class RegionIndexerElasticSearch():
             ssl_assert_hostname=False,
             ssl_show_warn=False,
             #ca_certs = ca_certs_path
+            connection_class=RequestsHttpConnection,
         )
         self.chroms = [chrom.lower() for chrom in supported_chroms]
         self.assemblies = [assembly.lower()

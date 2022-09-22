@@ -14,6 +14,7 @@ def test_metadata_doc(bed_file, dataset_no_doc_pwms, document_string):
     dataset = dataset_no_doc_pwms
     dataset['documents'].append(document_string)
     meta_doc = metadata_doc(uuid, bed_file, dataset)
+    print(meta_doc)
     assert meta_doc == {
         'dataset': {
             '@id': '/annotations/ENCSR601QZC/',

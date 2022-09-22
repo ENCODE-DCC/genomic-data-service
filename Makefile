@@ -8,7 +8,10 @@ build:
 	python3 ./utils/download_files.py
 
 run:
-	FLASK_APP=$(APP_NAME) FLASK_ENV=development gunicorn --bind 0.0.0.0:5000 wsgi:app
+	FLASK_APP=$(APP_NAME) FLASK_ENV=development OPENSEARCH=aws gunicorn --bind 0.0.0.0:5000 wsgi:app
+
+run_local:
+	FLASK_APP=$(APP_NAME) FLASK_ENV=development OPENSEARCH=local gunicorn --bind 0.0.0.0:5000 wsgi:app
 
 run_docker:
 	FLASK_APP=$(APP_NAME) FLASK_ENV=development GENOMIC_DATA_SERVICE_SETTINGS=../config/development_docker.cfg gunicorn --bind 0.0.0.0:5000 wsgi:app

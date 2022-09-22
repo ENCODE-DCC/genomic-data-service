@@ -8,6 +8,7 @@ User=ubuntu
 Group=ubuntu
 WorkingDirectory=/home/ubuntu/genomic-data-service
 Environment=FLASK_APP=genomic_data_service
+Environment=OPENSEARCH=aws
 Environment=GENOMIC_DATA_SERVICE_SETTINGS=../config/production.cfg
 ExecStart=/home/ubuntu/genomic-data-service/genomic-venv/bin/gunicorn -w 4 --bind unix:/home/ubuntu/genomic-data-service/genomic.sock -m 007 --access-logfile /home/ubuntu/gunicorn-access.log --error-logfile /home/ubuntu/gunicorn-error.log wsgi:app
 Type=simple

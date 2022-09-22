@@ -5,7 +5,8 @@ from genomic_data_service.searches.configs import add_registry
 from genomic_data_service.rnaseq.client import add_rna_client
 from genomic_data_service.rnaseq.rnaget.api import rnaget_api
 import logging
-from opensearchpy import OpenSearch
+from opensearchpy import OpenSearch, RequestsHttpConnection, AWSV4SignerAuth
+import boto3
 
 
 def is_web_app():
@@ -27,8 +28,12 @@ add_rna_client(app)
 
 
 if is_web_app():
-
-    auth = ('admin', 'admin')
+    opensearch_env = environ['OPENSEARCH']
+    if opensearch_env == 'local':
+        auth = ('admin', 'admin')
+    else:
+        credentials = boto3.Session().get_credentials()
+        auth = AWSV4SignerAuth(credentials, 'us-west-2')
     port = app.config['REGULOME_ES_PORT']
     hosts = app.config['REGULOME_ES_HOSTS']
     regulome_es = OpenSearch(
@@ -42,6 +47,7 @@ if is_web_app():
         ssl_assert_hostname=False,
         ssl_show_warn=False,
         #ca_certs = ca_certs_path
+        connection_class=RequestsHttpConnection,
     )
     port = app.config['REGION_SEARCH_ES_PORT']
     hosts = app.config['REGION_SEARCH_ES_HOSTS']
@@ -56,6 +62,7 @@ if is_web_app():
         ssl_assert_hostname=False,
         ssl_show_warn=False,
         #ca_certs = ca_certs_path
+        connection_class=RequestsHttpConnection,
     )
 
     app.url_map.strict_slashes = False

@@ -137,6 +137,10 @@ parser.add_argument(
     '--uri', default=['localhost'], nargs='*',
     help='Index a small number of files for local install')
 
+parser.add_argument(
+    '--opensearch', default='local',
+    help='specify if opensearch is local or on aws')
+
 
 def clean_up(obj, fields):
     clean_obj = {}
@@ -410,11 +414,13 @@ if __name__ == '__main__':
     port = args.port
     is_local_install = args.local
     assemblies = args.assembly
+    opensearch_env = args.opensearch
     print('OpenSearch host:', host)
     print('OpenSearchindex_file port:', port)
+    print('opensearch_env:', opensearch_env)
 
     RegionIndexerElasticSearch(
-        host, port, SUPPORTED_CHROMOSOMES, SUPPORTED_ASSEMBLIES
+        host, port, SUPPORTED_CHROMOSOMES, SUPPORTED_ASSEMBLIES, opensearch_env
     ).setup_indices()
 
     if not is_local_install:
