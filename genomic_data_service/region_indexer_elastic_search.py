@@ -16,7 +16,7 @@ SETTINGS = {
 
 
 class RegionIndexerElasticSearch():
-    def __init__(self, host, port, supported_chroms, supported_assemblies, force_delete=False, opensearch_env='local'):
+    def __init__(self, host, port, supported_chroms, supported_assemblies, opensearch_env='local', force_delete=False):
         if opensearch_env == 'local':
             auth = ('admin', 'admin')
         else:
@@ -65,8 +65,6 @@ class RegionIndexerElasticSearch():
     def setup_residents_index(self):
         if not self.opensearch.indices.exists(FILES_INDEX):
             body = self.get_files_index_body()
-            print('file index body:')
-            print(body)
             self.opensearch.indices.create(FILES_INDEX, body=body)
 
     def setup_snps_index(self):
