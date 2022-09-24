@@ -29,11 +29,9 @@ add_rna_client(app)
 
 if is_web_app():
     opensearch_env = environ['OPENSEARCH']
+    auth = None
     if opensearch_env == 'local':
         auth = ('admin', 'admin')
-    else:
-        credentials = boto3.Session().get_credentials()
-        auth = AWSV4SignerAuth(credentials, 'us-west-2')
     port = app.config['REGULOME_ES_PORT']
     hosts = app.config['REGULOME_ES_HOSTS']
     regulome_es = OpenSearch(

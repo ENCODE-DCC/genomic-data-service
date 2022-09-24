@@ -17,11 +17,9 @@ SETTINGS = {
 
 class RegionIndexerElasticSearch():
     def __init__(self, host, port, supported_chroms, supported_assemblies, opensearch_env='local', force_delete=False):
+        auth = None
         if opensearch_env == 'local':
             auth = ('admin', 'admin')
-        else:
-            credentials = boto3.Session().get_credentials()
-            auth = AWSV4SignerAuth(credentials, 'us-west-2')
         self.opensearch = OpenSearch(
             hosts=[{'host': host, 'port': port}],
             http_compress=True,  # enables gzip compression for request bodies

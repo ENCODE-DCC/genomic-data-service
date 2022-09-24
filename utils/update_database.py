@@ -5,15 +5,16 @@ import requests
 from genomic_data_service.region_indexer_elastic_search import RegionIndexerElasticSearch
 from genomic_data_service.region_indexer_task import metadata_doc
 from genomic_data_service.region_indexer import dataset_accession, index_regulome_db, SUPPORTED_CHROMOSOMES, SUPPORTED_ASSEMBLIES, clean_up, FILE_REQUIRED_FIELDS, DATASET_REQUIRED_FIELDS
-from elasticsearch import Elasticsearch
+from opensearchpy import OpenSearch, RequestsHttpConnection, AWSV4SignerAuth
+import boto3
 import argparse
 
 
 ENCODE_URL = 'https://www.encodeproject.org/'
 files = ['ENCFF495KNO', 'ENCFF028UPE', 'ENCFF373HKQ']
 ES_ENDPOINT = 'https://localhost:9200/'
-ES_URL = ['localhost']
-ES_PORT = 9200
+HOST = 'localhost'
+PORT = 9200
 RESIDENT = 'resident_regionsets/regulomedb/'
 INDEXES = [
     'chr1/',
@@ -43,7 +44,20 @@ INDEXES = [
 
 ]
 
-es = Elasticsearch(ES_ENDPOINT)
+auth = ('admin', 'admin')
+es = OpenSearch(
+    hosts=[{'host': HOST, 'port': PORT}],
+    http_compress=True,  # enables gzip compression for request bodies
+    http_auth=auth,
+    # client_cert = client_cert_path,
+    # client_key = client_key_path,
+    use_ssl=True,
+    verify_certs=False,
+    ssl_assert_hostname=False,
+    ssl_show_warn=False,
+    #ca_certs = ca_certs_path
+    connection_class=RequestsHttpConnection,
+)
 
 
 def get_metadata(accession):
@@ -140,20 +154,10 @@ def re_index_resident(file_accessions):
 
 def add_files(accessions):
     RegionIndexerElasticSearch(
-        ES_URL, ES_PORT, SUPPORTED_CHROMOSOMES, SUPPORTED_ASSEMBLIES
+        HOST, PORT, SUPPORTED_CHROMOSOMES, SUPPORTED_ASSEMBLIES
     ).setup_indices()
-    is_new = True
-    for accession in accessions:
-        resident = get_resident(accession)
-        if not resident or resident.get('found', None) == True:
-            is_new = False
-            if resident.get('found', None) == True:
-                print(accession, 'is already indexed.')
-            print('Abort. Please use a correct list of file accessions')
 
-            break
-    if is_new:
-        index_regulome_db(ES_URL, ES_PORT, accessions, [])
+    index_regulome_db(HOST, PORT, accessions, 'local', [])
 
 
 def main():

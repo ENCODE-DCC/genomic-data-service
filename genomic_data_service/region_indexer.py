@@ -417,7 +417,7 @@ if __name__ == '__main__':
     assemblies = args.assembly
     opensearch_env = args.opensearch
     print('OpenSearch host:', host)
-    print('OpenSearchindex_file port:', port)
+    print('OpenSearch port:', port)
     print('opensearch_env:', opensearch_env)
 
     RegionIndexerElasticSearch(
