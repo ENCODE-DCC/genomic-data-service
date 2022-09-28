@@ -145,6 +145,7 @@ class RegulomeAtlas(object):
     ):
         range_query = self._range_query(start, end, max_results=max_results)
         peaks_index = 'peaks_' + assembly + '_' + chrom.lower()
+        print('peaks_index:', peaks_index)
 
         results = self.es.search(
             index=peaks_index,

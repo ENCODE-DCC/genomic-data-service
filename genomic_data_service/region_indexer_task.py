@@ -7,8 +7,7 @@ from genomic_data_service.parser import SnfParser, RegionParser, FootPrintParser
 from genomic_data_service.constants import DATASET
 from genomic_data_service.strand import get_matrix_file_download_url, get_matrix_array, get_pwm
 import uuid
-from opensearchpy import OpenSearch, RequestsHttpConnection, AWSV4SignerAuth
-import boto3
+from opensearchpy import OpenSearch, RequestsHttpConnection
 
 
 def make_celery(app):
@@ -426,11 +425,9 @@ def file_in_es(file_uuid, es):
 
 @celery_app.task(bind=True, autoretry_for=(Exception,), retry_kwargs={'max_retries': 5, 'countdown': 2})
 def index_file(self, file_metadata, dataset_metadata, host, port, opensearch_env='local'):
+    auth = None
     if opensearch_env == 'local':
         auth = ('admin', 'admin')
-    else:
-        credentials = boto3.Session().get_credentials()
-        auth = AWSV4SignerAuth(credentials, 'us-west-2')
     es = OpenSearch(
         hosts=[{'host': host, 'port': port}],
         http_compress=True,  # enables gzip compression for request bodies
@@ -459,11 +456,9 @@ def index_file(self, file_metadata, dataset_metadata, host, port, opensearch_env
 
 @celery_app.task(bind=True, autoretry_for=(Exception,), retry_kwargs={'max_retries': 5, 'countdown': 2})
 def index_local_snp_files(self, file_path, file_properties, host, port, opensearch_env='local'):
+    auth = None
     if opensearch_env == 'local':
         auth = ('admin', 'admin')
-    else:
-        credentials = boto3.Session().get_credentials()
-        auth = AWSV4SignerAuth(credentials, 'us-west-2')
     es = OpenSearch(
         hosts=[{'host': host, 'port': port}],
         http_compress=True,  # enables gzip compression for request bodies

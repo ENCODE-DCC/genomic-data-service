@@ -1,6 +1,4 @@
-from opensearchpy import OpenSearch, RequestsHttpConnection, AWSV4SignerAuth
-import boto3
-
+from opensearchpy import OpenSearch, RequestsHttpConnection
 
 FILES_INDEX = 'files'
 PEAKS_INDEX_PRE = 'peaks_'

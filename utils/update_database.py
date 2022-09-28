@@ -5,8 +5,7 @@ import requests
 from genomic_data_service.region_indexer_elastic_search import RegionIndexerElasticSearch
 from genomic_data_service.region_indexer_task import metadata_doc
 from genomic_data_service.region_indexer import dataset_accession, index_regulome_db, SUPPORTED_CHROMOSOMES, SUPPORTED_ASSEMBLIES, clean_up, FILE_REQUIRED_FIELDS, DATASET_REQUIRED_FIELDS
-from opensearchpy import OpenSearch, RequestsHttpConnection, AWSV4SignerAuth
-import boto3
+from opensearchpy import OpenSearch, RequestsHttpConnection
 import argparse
 
 

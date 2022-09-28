@@ -5,8 +5,7 @@ from genomic_data_service.searches.configs import add_registry
 from genomic_data_service.rnaseq.client import add_rna_client
 from genomic_data_service.rnaseq.rnaget.api import rnaget_api
 import logging
-from opensearchpy import OpenSearch, RequestsHttpConnection, AWSV4SignerAuth
-import boto3
+from opensearchpy import OpenSearch, RequestsHttpConnection
 
 
 def is_web_app():
