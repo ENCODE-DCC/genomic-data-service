@@ -115,7 +115,7 @@ mssh ubuntu@i-foobarbaz123 --profile regulome --region us-west-2
     ```bash
     cd /home/ubuntu/genomic-data-service
     source genomic-venv/bin/activate
-    python genomic_data_service/region_indexer.py
+    python genomic_data_service/region_indexer.py --opensearch aws --port 443 --uri vpc-regulome-opensearch-only-dml2meoy7wr7detc3avxbunvqy.us-west-2.es.amazonaws.com
 
 3. Or for Encode region search:
 
