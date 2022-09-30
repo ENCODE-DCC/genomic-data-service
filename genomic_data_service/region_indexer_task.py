@@ -1,13 +1,13 @@
 from genomic_data_service import app
 from celery import Celery
-from opensearchpy.exceptions import NotFoundError
-from opensearchpy.helpers import bulk
+from elasticsearch.exceptions import NotFoundError
+from elasticsearch.helpers import bulk
 from genomic_data_service.file_opener import LocalFileOpener, S3FileOpener
 from genomic_data_service.parser import SnfParser, RegionParser, FootPrintParser, PWMsParser
 from genomic_data_service.constants import DATASET
 from genomic_data_service.strand import get_matrix_file_download_url, get_matrix_array, get_pwm
 import uuid
-from opensearchpy import OpenSearch
+from elasticsearch import Elasticsearch
 
 
 def make_celery(app):
@@ -425,18 +425,7 @@ def file_in_es(file_uuid, es):
 
 @celery_app.task(bind=True, autoretry_for=(Exception,), retry_kwargs={'max_retries': 5, 'countdown': 2})
 def index_file(self, file_metadata, dataset_metadata, host, port):
-    es = OpenSearch(
-        hosts=[{'host': host, 'port': port}],
-        http_compress=True,  # enables gzip compression for request bodies
-        http_auth=auth,
-        # client_cert = client_cert_path,
-        # client_key = client_key_path,
-        use_ssl=True,
-        verify_certs=False,
-        ssl_assert_hostname=False,
-        ssl_show_warn=False,
-        #ca_certs = ca_certs_path
-    )
+    es = Elasticsearch([host])
 
     file_uuid = file_metadata['uuid']
 
@@ -452,18 +441,7 @@ def index_file(self, file_metadata, dataset_metadata, host, port):
 
 @celery_app.task(bind=True, autoretry_for=(Exception,), retry_kwargs={'max_retries': 5, 'countdown': 2})
 def index_local_snp_files(self, file_path, file_properties, host, port):
-    es = OpenSearch(
-        hosts=[{'host': host, 'port': port}],
-        http_compress=True,  # enables gzip compression for request bodies
-        http_auth=auth,
-        # client_cert = client_cert_path,
-        # client_key = client_key_path,
-        use_ssl=True,
-        verify_certs=False,
-        ssl_assert_hostname=False,
-        ssl_show_warn=False,
-        #ca_certs = ca_certs_path
-    )
+    es = Elasticsearch([host])
     id = uuid.uuid4()
     print('indexing local file ', file_path, id)
     index_regions_from_test_snp_file(es, id, file_path, file_properties)

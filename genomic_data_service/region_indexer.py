@@ -134,7 +134,7 @@ parser.add_argument(
     help='Index a small number of files for local install')
 
 parser.add_argument(
-    '--uri', default=['localhost'], nargs='*',
+    '--uri', default=['http://localhost:9200'], nargs='*',
     help='Index a small number of files for local install')
 
 
@@ -410,8 +410,8 @@ if __name__ == '__main__':
     port = args.port
     is_local_install = args.local
     assemblies = args.assembly
-    print('OpenSearch host:', host)
-    print('OpenSearchindex_file port:', port)
+    print('Elasticsearch host:', host)
+    print('Elasticsearch index_file port:', port)
 
     RegionIndexerElasticSearch(
         host, port, SUPPORTED_CHROMOSOMES, SUPPORTED_ASSEMBLIES

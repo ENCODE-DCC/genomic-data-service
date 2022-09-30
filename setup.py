@@ -14,7 +14,6 @@ setup(
         'Flask-Migrate==3.1.0',
         'Flask-Script==2.0.6',
         'Flask-Excel==0.0.7',
-        'opensearch-py==2.0.0',
         'requests==2.28.1',
         'pyBigWig==0.3.18',
         'scikit-learn==1.0.1',
@@ -28,7 +27,8 @@ setup(
         'psycopg2==2.9.3',
         'numpy==1.22.2',
         'py2bit==0.3.0',
-        'pytfmpval==0.2.1'
+        'pytfmpval==0.2.1',
+        'elasticsearch==8.4.2',
     ],
     extras_require={
         'test': [

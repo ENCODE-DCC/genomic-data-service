@@ -2,10 +2,10 @@ from flask import Flask, jsonify, make_response
 from os import environ
 
 from genomic_data_service.searches.configs import add_registry
-from genomic_data_service.rnaseq.client import add_rna_client
+#from genomic_data_service.rnaseq.client import add_rna_client
 from genomic_data_service.rnaseq.rnaget.api import rnaget_api
 import logging
-from opensearchpy import OpenSearch
+from elasticsearch import Elasticsearch
 
 
 def is_web_app():
@@ -23,7 +23,7 @@ else:
     app.config.from_pyfile('../config/development.cfg')
 
 add_registry(app)
-add_rna_client(app)
+# add_rna_client(app)
 
 
 if is_web_app():
@@ -31,32 +31,10 @@ if is_web_app():
     auth = ('admin', 'admin')
     port = app.config['REGULOME_ES_PORT']
     hosts = app.config['REGULOME_ES_HOSTS']
-    regulome_es = OpenSearch(
-        hosts=[{'host': hosts[0], 'port': port}],
-        http_compress=True,  # enables gzip compression for request bodies
-        http_auth=auth,
-        # client_cert = client_cert_path,
-        # client_key = client_key_path,
-        use_ssl=True,
-        verify_certs=False,
-        ssl_assert_hostname=False,
-        ssl_show_warn=False,
-        #ca_certs = ca_certs_path
-    )
+    regulome_es = Elasticsearch(hosts)
     port = app.config['REGION_SEARCH_ES_PORT']
     hosts = app.config['REGION_SEARCH_ES_HOSTS']
-    region_search_es = OpenSearch(
-        hosts=[{'host': hosts[0], 'port': port}],
-        http_compress=True,  # enables gzip compression for request bodies
-        http_auth=auth,
-        # client_cert = client_cert_path,
-        # client_key = client_key_path,
-        use_ssl=True,
-        verify_certs=False,
-        ssl_assert_hostname=False,
-        ssl_show_warn=False,
-        #ca_certs = ca_certs_path
-    )
+    region_search_es = Elasticsearch(hosts)
 
     app.url_map.strict_slashes = False
 
@@ -70,11 +48,14 @@ if is_web_app():
     def healthcheck():
         status = {}
         try:
-            status['regulome_es'] = regulome_es.cluster.health()
-            status['region_search_es'] = region_search_es.cluster.health()
+            status['regulome_es'] = dict(regulome_es.cluster.health())
+            status['region_search_es'] = dict(
+                region_search_es.cluster.health())
         except Exception as e:
             status['exception'] = str(e)
 
+        print("status['regulome_es'] !!!!!!!!!!!!!!!!!")
+        print(status)
         response_out = make_response(
             jsonify(status),
             200,
