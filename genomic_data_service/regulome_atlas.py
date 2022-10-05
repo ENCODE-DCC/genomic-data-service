@@ -144,6 +144,7 @@ class RegulomeAtlas(object):
         self, assembly, chrom, start, end, peaks_too=False, max_results=SEARCH_MAX
     ):
         range_query = self._range_query(start, end, max_results=max_results)
+
         peaks_index = 'peaks_' + assembly + '_' + chrom.lower()
 
         results = self.es.search(
@@ -151,7 +152,9 @@ class RegulomeAtlas(object):
             _source=True,
             body=range_query,
             size=max_results,
+
         )
+
         return list(results['hits']['hits'])
 
     def find_peaks_filtered(self, assembly, chrom, start, end, peaks_too=False):
@@ -225,7 +228,7 @@ class RegulomeAtlas(object):
         # only single point intersection
         # use start not end for 0-base open ended
 
-        query = {'query': {'bool': {'filter': []}}, 'size': max_results}
+        query = {'query': {'bool': {'filter': []}}}
 
         if abs(int(end) - int(start)) == 1:
             query_filter = {'term': {'coordinates': start}}
