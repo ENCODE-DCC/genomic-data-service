@@ -37,6 +37,7 @@ SUPPORTED_CHROMOSOMES = [
 
 ENCODE_DOMAIN = 'https://www.encodeproject.org'
 ENCODE_ACCESSIONS_HG19_PATH = 'file_accessions_hg19.pickle'
+ENCODE_ACCESSIONS_REGULOMEDB_2_1_PATH = 'file_accessions_RegulomeDB_2_1.pickle'
 ENCODE_SNP = ['ENCFF904UCL', 'ENCFF578KDT']
 SUPPORTED_ASSEMBLIES = ['hg19', 'GRCh38']
 REGULOME_ALLOWED_STATUSES = ['released', 'archived']
@@ -136,6 +137,12 @@ parser.add_argument(
 parser.add_argument(
     '--uri', default=['localhost'], nargs='*',
     help='Index a small number of files for local install')
+
+parser.add_argument(
+    '--tag',
+    help="Select 'RegulomeDB_2_0' or 'RegulomeDB_2_1' for internal_tags.",
+    choices=['RegulomeDB_2_0', 'RegulomeDB_2_1'],
+)
 
 
 def clean_up(obj, fields):
@@ -309,6 +316,11 @@ def get_caQTL_preferred_default_file_accession(files):
     return None
 
 
+def make_pickle_file(encode_accessions):
+    with open('file_accessions_grch38_only.pickle', 'wb') as file:
+        pickle.dump(encode_accessions, file)
+
+
 def get_encode_accessions_from_portal():
     encode_accessions = []
     # get files in experiment TF ChIP-seq using assembly GRCh38
@@ -359,7 +371,17 @@ def get_encode_accessions_from_portal():
                 for file in files:
                     if file['status'] == 'released':
                         encode_accessions.append(file['accession'])
+    return encode_accessions
 
+
+def get_encode_accessions_from_tag(tag):
+    encode_accessions = []
+    if tag == 'RegulomeDB_2_0':
+        encode_accessions = read_local_accessions_from_pickle(
+            pickle_path=ENCODE_ACCESSIONS_HG19_PATH)
+    elif tag == 'RegulomeDB_2_1':
+        encode_accessions = read_local_accessions_from_pickle(
+            pickle_path=ENCODE_ACCESSIONS_REGULOMEDB_2_1_PATH)
     return encode_accessions
 
 
@@ -410,6 +432,7 @@ if __name__ == '__main__':
     es_port = args.port
     is_local_install = args.local
     assemblies = args.assembly
+    tag = args.tag
     print('es uri:', es_uri)
     print('es port:', es_port)
 
@@ -417,7 +440,10 @@ if __name__ == '__main__':
         es_uri, es_port, SUPPORTED_CHROMOSOMES, SUPPORTED_ASSEMBLIES
     ).setup_indices()
 
-    if not is_local_install:
+    if tag:
+        encode_accessions = get_encode_accessions_from_tag(tag)
+        index_regulome_db(es_uri, es_port, encode_accessions)
+    elif not is_local_install:
         encode_accessions = []
         for assembly in assemblies:
             if assembly == 'hg19':
