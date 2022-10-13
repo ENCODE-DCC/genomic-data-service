@@ -111,6 +111,7 @@ DATASET_REQUIRED_FIELDS = [
 
 TF_CHIP_SEQ_EXPS_GRCH38_ENDPOINT = 'https://www.encodeproject.org/search/?type=Experiment&control_type!=*&status=released&assay_title=TF+ChIP-seq&assembly=GRCh38&field=files.accession&field=files.preferred_default&field=files.file_format&field=files.analyses.@id&field=default_analysis&format=json&limit=all'
 DNASE_SEQ_EXPS_GRCH38_ENDPOINT = 'https://www.encodeproject.org/search/?type=Experiment&control_type!=*&status=released&assay_title=DNase-seq&&assembly=GRCh38&field=files.accession&field=files.preferred_default&field=files.file_format&field=files.analyses.@id&field=default_analysis&format=json&limit=all'
+ATAC_SEQ_EXPS_GRCH38_ENDPOINT = 'https://www.encodeproject.org/search/?type=Experiment&control_type!=*&status=released&perturbed=false&assay_title=ATAC-seq&assembly=GRCh38&field=files.accession&field=files.preferred_default&field=files.file_format&field=files.analyses.@id&field=default_analysis&format=json&limit=all'
 FOOTPRINT_ANNOTATIONS_GRCH38_ENDPOINT = 'https://www.encodeproject.org/search/?type=Annotation&annotation_type=footprints&assembly=GRCh38&field=files.accession&format=json&limit=all'
 PWM_ANNOTATIONS_GRCH38_ENDPOINT = 'https://www.encodeproject.org/search/?type=Annotation&annotation_type=PWMs&assembly=GRCh38&field=files.accession&format=json&limit=all'
 EQTL_ANNOTATIONS_GRCH38_ENDPOINT = 'https://www.encodeproject.org/search/?type=Annotation&annotation_type=eQTLs&assembly=GRCh38&field=files.accession&format=json&limit=all'
@@ -317,6 +318,9 @@ def get_encode_accessions_from_portal():
     # get files in experiment DNase-seq using assembly GRCh38
     experiments.extend(requests.get(
         DNASE_SEQ_EXPS_GRCH38_ENDPOINT).json()['@graph'])
+    # get files in experiment ATAC-seq using assembly GRCh38
+    experiments.extend(requests.get(
+        ATAC_SEQ_EXPS_GRCH38_ENDPOINT).json()['@graph'])
     # get files in footprints
     annotations = requests.get(
         FOOTPRINT_ANNOTATIONS_GRCH38_ENDPOINT).json()['@graph']
