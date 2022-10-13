@@ -36,8 +36,8 @@ SUPPORTED_CHROMOSOMES = [
 ]
 
 ENCODE_DOMAIN = 'https://www.encodeproject.org'
-ENCODE_ACCESSIONS_HG19_PATH = 'file_accessions_hg19.pickle'
-ENCODE_ACCESSIONS_REGULOMEDB_2_1_PATH = 'file_accessions_RegulomeDB_2_1.pickle'
+ENCODE_ACCESSIONS_REGULOMEDB_2_0_HG19_PATH = 'file_accessions_regulomedb_2_0_hg19.pickle'
+ENCODE_ACCESSIONS_REGULOMEDB_2_1_PATH = 'file_accessions_regulomedb_2_1.pickle'
 ENCODE_SNP = ['ENCFF904UCL', 'ENCFF578KDT']
 SUPPORTED_ASSEMBLIES = ['hg19', 'GRCh38']
 REGULOME_ALLOWED_STATUSES = ['released', 'archived']
@@ -378,7 +378,7 @@ def get_encode_accessions_from_tag(tag):
     encode_accessions = []
     if tag == 'RegulomeDB_2_0':
         encode_accessions = read_local_accessions_from_pickle(
-            pickle_path=ENCODE_ACCESSIONS_HG19_PATH)
+            pickle_path=ENCODE_ACCESSIONS_REGULOMEDB_2_0_HG19_PATH)
     elif tag == 'RegulomeDB_2_1':
         encode_accessions = read_local_accessions_from_pickle(
             pickle_path=ENCODE_ACCESSIONS_REGULOMEDB_2_1_PATH)
@@ -448,7 +448,7 @@ if __name__ == '__main__':
         for assembly in assemblies:
             if assembly == 'hg19':
                 encode_accessions.extend(read_local_accessions_from_pickle(
-                    pickle_path=ENCODE_ACCESSIONS_HG19_PATH))
+                    pickle_path=ENCODE_ACCESSIONS_REGULOMEDB_2_0_HG19_PATH))
             elif assembly == 'GRCh38':
                 encode_accessions.extend(get_encode_accessions_from_portal())
             else:
