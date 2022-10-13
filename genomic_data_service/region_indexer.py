@@ -317,7 +317,7 @@ def get_caQTL_preferred_default_file_accession(files):
 
 
 def make_pickle_file(encode_accessions):
-    with open('file_accessions_grch38_only.pickle', 'wb') as file:
+    with open('file_accessions_in_es.pickle', 'wb') as file:
         pickle.dump(encode_accessions, file)
 
 
@@ -453,6 +453,7 @@ if __name__ == '__main__':
                 encode_accessions.extend(get_encode_accessions_from_portal())
             else:
                 raise ValueError(f'Invalid assembly: {assembly}')
+        make_pickle_file(encode_accessions)
         index_regulome_db(es_uri, es_port, encode_accessions)
     else:
         encode_accessions = list(pickle.load(
