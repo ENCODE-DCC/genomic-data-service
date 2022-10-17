@@ -334,7 +334,7 @@ def test_make_a_case(regulome_elasticsearch_client):
         'score': {'probability': '0.13454', 'ranking': '5'},
         'assembly': 'hg19',
         'evidence': {
-            'DNase': [
+            'Chromatin_accessibility': [
                 {
                     'uuid': '473170a0-9eb8-4fe7-ac97-6d35f1837fca',
                     '@id': '/experiments/ENCSR000EIT/',
@@ -367,7 +367,8 @@ def test_make_a_case(regulome_elasticsearch_client):
     }
     atlas = RegulomeAtlas(regulome_elasticsearch_client.es)
     case = atlas.make_a_case(snp)
-    assert case == {'DNase': 'Chromatin_Structure:DNase:|ENCSR000EIT|GM03348|'}
+    assert case == {
+        'Chromatin_accessibility': 'Chromatin_Structure:Chromatin_accessibility:|ENCSR000EIT|GM03348|'}
 
 
 def test_evidence_categories():
@@ -377,7 +378,7 @@ def test_evidence_categories():
     assert res == [
         'QTL',
         'ChIP',
-        'DNase',
+        'Chromatin_accessibility',
         'PWM',
         'Footprint',
         'PWM_matched',
@@ -421,7 +422,7 @@ def test_score_1a():
     characterization = {
         'QTL': {},
         'ChIP': {},
-        'DNase': {},
+        'Chromatin_accessibility': {},
         'PWM_matched': {},
         'Footprint_matched': {},
         'IC_matched_max': 0.0,
@@ -437,7 +438,7 @@ def test_score_1b():
 
     characterization = {
         'QTL': {},
-        'DNase': {},
+        'Chromatin_accessibility': {},
         'ChIP': {},
         'PWM': {},
         'Footprint': {},
@@ -454,7 +455,7 @@ def test_score_1c():
 
     characterization = {
         'QTL': {},
-        'DNase': {},
+        'Chromatin_accessibility': {},
         'ChIP': {},
         'PWM_matched': {},
         'IC_matched_max': 0.0,
@@ -470,7 +471,7 @@ def test_score_1d():
 
     characterization = {
         'QTL': {},
-        'DNase': {},
+        'Chromatin_accessibility': {},
         'ChIP': {},
         'PWM': {},
         'IC_matched_max': 0.0,
@@ -487,7 +488,7 @@ def test_score_1f():
     characterization = {
         'QTL': {},
         'ChIP': {},
-        'DNase': {},
+        'Chromatin_accessibility': {},
         'IC_matched_max': 0.0,
         'IC_max': 0.0,
     }
@@ -530,7 +531,7 @@ def test_score_2a():
 
     characterization = {
         'ChIP': {},
-        'DNase': {},
+        'Chromatin_accessibility': {},
         'PWM_matched': {},
         'Footprint_matched': {},
         'IC_matched_max': 0.0,
@@ -546,7 +547,7 @@ def test_score_2b():
 
     characterization = {
         'ChIP': {},
-        'DNase': {},
+        'Chromatin_accessibility': {},
         'PWM': {},
         'Footprint': {},
         'IC_matched_max': 0.0,
@@ -562,7 +563,7 @@ def test_score_2c():
 
     characterization = {
         'ChIP': {},
-        'DNase': {},
+        'Chromatin_accessibility': {},
         'PWM_matched': {},
         'IC_matched_max': 0.0,
         'IC_max': 0.0,
@@ -577,7 +578,7 @@ def test_score_3a():
 
     characterization = {
         'ChIP': {},
-        'DNase': {},
+        'Chromatin_accessibility': {},
         'PWM': {},
         'IC_matched_max': 0.0,
         'IC_max': 0.0,
@@ -606,7 +607,7 @@ def test_score_4():
 
     characterization = {
         'ChIP': {},
-        'DNase': {},
+        'Chromatin_accessibility': {},
         'IC_matched_max': 0.0,
         'IC_max': 0.0,
     }

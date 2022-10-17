@@ -12,7 +12,7 @@ FOR_REGULOME_DB = 'regulomedb'
 EVIDENCE_CATEGORIES = [
     'QTL',
     'ChIP',
-    'DNase',
+    'Chromatin_accessibility',
     'PWM',
     'Footprint',
     'PWM_matched',
@@ -334,8 +334,8 @@ class RegulomeAtlas(object):
         ).lower()  # resident_regionset dataset
         if collection_type in ['chip-seq', 'binding sites']:
             return 'ChIP'
-        if collection_type == 'dnase-seq':
-            return 'DNase'
+        if collection_type in ['dnase-seq', 'atac-seq']:
+            return 'Chromatin_accessibility'
         if collection_type == 'pwms':
             return 'PWM'
         if collection_type == 'footprints':
@@ -353,7 +353,7 @@ class RegulomeAtlas(object):
             score_category = self._score_category(dataset)
         if score_category == 'ChIP':
             return 'Protein_Binding'
-        if score_category == 'DNase':
+        if score_category == 'Chromatin_accessibility':
             return 'Chromatin_Structure'
         if score_category in ['PWM', 'Footprint']:
             return 'Motifs'
@@ -423,7 +423,7 @@ class RegulomeAtlas(object):
         # Predict as probability of being a regulatory SNP from prediction
         binary_keys = [
             'ChIP',
-            'DNase',
+            'Chromatin_accessibility',
             'PWM',
             'Footprint',
             'QTL',
@@ -431,6 +431,11 @@ class RegulomeAtlas(object):
             'Footprint_matched',
         ]
         query = [int(k in characterization) for k in binary_keys]
+        print('characterization:', characterization)
+        print(characterization.keys())
+        print('Chromatin_accessibility' in characterization)
+        print(int('Chromatin_accessibility' in characterization))
+        print('query:', query)
         numeric_keys = ['IC_max', 'IC_matched_max']
         query += [characterization[k] for k in numeric_keys]
         # The TRAINED_REG_MODEL is a `sklearn.ensemble.forest.RandomForestClassifier`
@@ -449,7 +454,7 @@ class RegulomeAtlas(object):
         ranking = '7'
         if 'QTL' in characterization:
             if 'ChIP' in characterization:
-                if 'DNase' in characterization:
+                if 'Chromatin_accessibility' in characterization:
                     if (
                         'PWM_matched' in characterization
                         and 'Footprint_matched' in characterization
@@ -467,12 +472,12 @@ class RegulomeAtlas(object):
                     ranking = '1e'
                 else:
                     ranking = '1f'
-            elif 'DNase' in characterization:
+            elif 'Chromatin_accessibility' in characterization:
                 ranking = '1f'
             elif 'PWM' in characterization or 'Footprint' in characterization:
                 ranking = '6'
         elif 'ChIP' in characterization:
-            if 'DNase' in characterization:
+            if 'Chromatin_accessibility' in characterization:
                 if (
                     'PWM_matched' in characterization
                     and 'Footprint_matched' in characterization
@@ -490,7 +495,7 @@ class RegulomeAtlas(object):
                 ranking = '3b'
             else:
                 ranking = '5'
-        elif 'DNase' in characterization:
+        elif 'Chromatin_accessibility' in characterization:
             ranking = '5'
         elif 'PWM' in characterization or 'Footprint' in characterization:
             ranking = '6'
