@@ -431,11 +431,6 @@ class RegulomeAtlas(object):
             'Footprint_matched',
         ]
         query = [int(k in characterization) for k in binary_keys]
-        print('characterization:', characterization)
-        print(characterization.keys())
-        print('Chromatin_accessibility' in characterization)
-        print(int('Chromatin_accessibility' in characterization))
-        print('query:', query)
         numeric_keys = ['IC_max', 'IC_matched_max']
         query += [characterization[k] for k in numeric_keys]
         # The TRAINED_REG_MODEL is a `sklearn.ensemble.forest.RandomForestClassifier`
