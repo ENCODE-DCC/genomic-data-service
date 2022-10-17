@@ -61,8 +61,6 @@ class RegionIndexerElasticSearch():
     def setup_residents_index(self):
         if not self.opensearch.indices.exists(FILES_INDEX):
             body = self.get_files_index_body()
-            print('file index body:')
-            print(body)
             self.opensearch.indices.create(FILES_INDEX, body=body)
 
     def setup_snps_index(self):

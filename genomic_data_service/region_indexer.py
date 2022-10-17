@@ -411,7 +411,7 @@ if __name__ == '__main__':
     is_local_install = args.local
     assemblies = args.assembly
     print('OpenSearch host:', host)
-    print('OpenSearchindex_file port:', port)
+    print('OpenSearch port:', port)
 
     RegionIndexerElasticSearch(
         host, port, SUPPORTED_CHROMOSOMES, SUPPORTED_ASSEMBLIES
