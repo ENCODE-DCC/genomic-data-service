@@ -165,6 +165,11 @@ def resolve_coordinates_and_variants(region_queries, assembly, atlas, maf):
         except:
             notifications[region_query] = 'Failed: invalid region input'
             continue
+        if start == end:
+            notifications[region_query] = (
+                'Failed: coordinates start and end can not be the same.'
+            )
+            continue
 
         query_coordinates.append(
             '{}:{}-{}'.format(chrom, int(start), int(end)))
