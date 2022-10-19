@@ -299,7 +299,7 @@ def parse_args():
         return 'False'
 
     def check_volume_size(value):
-        allowed_values = ['120', '200', '500']
+        allowed_values = ['120', '200', '500', '600']
         if not value.isdigit() or value not in allowed_values:
             raise argparse.ArgumentTypeError(
                 "%s' is not in [%s]."
@@ -340,9 +340,9 @@ def parse_args():
     parser.add_argument('--redis-port', default=6379, help='Redis Port.')
     parser.add_argument(
         '--volume-size',
-        default=500,
+        default=600,
         type=check_volume_size,
-        help='Size of disk. Allowed values 120, 200, and 500',
+        help='Size of disk. Allowed values 120, 200, 500 and 600',
     )
     parser.add_argument(
         '--availability-zone', default='us-west-2a', help='Set EC2 availabilty zone'
