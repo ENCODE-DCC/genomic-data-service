@@ -68,6 +68,10 @@ INDEX_COLS = {
         'strand_col': 5,
         'value_col': 6
     },
+    'atac-seq': {
+        'strand_col': 5,
+        'value_col': 6
+    },
     'faire-seq': {
         'strand_col': 5,
         'value_col': 6
