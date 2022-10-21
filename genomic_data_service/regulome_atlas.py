@@ -3,6 +3,8 @@ import math
 import pyBigWig
 from os.path import exists
 import logging
+from genomic_data_service.constants import ORGANS
+import numpy as np
 from genomic_data_service.constants import GENOME_TO_ALIAS
 
 RESIDENT_REGIONSET_KEY = (
@@ -87,6 +89,13 @@ try:
 except FileNotFoundError:
     TRAINED_REG_MODEL = None
 
+
+try:
+    TRAINED_TISSUE_SPECIFIC_MODEL = pickle.load(
+        open('./ml_models/TURF_tissue_specific_sklearn_1.0.pkl', 'rb'))
+except FileNotFoundError:
+    TRAINED_TISSUE_SPECIFIC_MODEL = None
+
 IC_MATCHED_MAX_BW_HG19 = get_bigwig_file(
     FILE_IC_MATCHED_MAX_HG19_PATH_LOCAL, FILE_IC_MATCHED_MAX_HG19_PATH_REMOTE)
 IC_MAX_BW_HG19 = get_bigwig_file(
@@ -108,6 +117,11 @@ LOCAL_BIGWIGS = {
 }
 
 SEARCH_MAX = 9999
+
+HISTONE_MARKS = ['H3K27ac', 'H3K36me3', 'H3K4me1', 'H3K4me3', 'H3K27me3']
+
+TISSUE_SPECIFIC_FEATURE_KEYS = [
+    'H3K27ac', 'H3K36me3', 'H3K4me1', 'H3K4me3', 'H3K27me3', 'DNase', 'Footprint']
 
 
 class RegulomeAtlas(object):
@@ -222,7 +236,6 @@ class RegulomeAtlas(object):
                 logging.error(
                     'failure to read bigwig file for evidence %s for %s:%s:%s', k, chrom, start, end)
                 evidence[k] = 0.0
-
         return evidence
 
     @staticmethod
@@ -332,6 +345,8 @@ class RegulomeAtlas(object):
         collection_type = dataset.get(
             'collection_type', ''
         ).lower()  # resident_regionset dataset
+        if collection_type == 'histone chip-seq':
+            return dataset.get('target_label')
         if collection_type in ['chip-seq', 'binding sites']:
             return 'ChIP'
         if collection_type == 'dnase-seq':
@@ -433,6 +448,21 @@ class RegulomeAtlas(object):
         query = [int(k in characterization) for k in binary_keys]
         numeric_keys = ['IC_max', 'IC_matched_max']
         query += [characterization[k] for k in numeric_keys]
+        tissue_specific_query = {}
+        for organ in ORGANS:
+            tissue_specific_query[organ] = [0]*7
+        for i in range(len(TISSUE_SPECIFIC_FEATURE_KEYS)):
+            if TISSUE_SPECIFIC_FEATURE_KEYS[i] in characterization:
+                datasets = characterization[TISSUE_SPECIFIC_FEATURE_KEYS[i]]
+                organs = []
+                for dataset in datasets:
+                    organs.extend(
+                        dataset['biosample_ontology'].get('organ_slims', []))
+                organs = list(set(organs))
+                for organ in organs:
+                    if organ in ORGANS:
+                        tissue_specific_query[organ][i] = 1
+
         # The TRAINED_REG_MODEL is a `sklearn.ensemble.forest.RandomForestClassifier`
         # https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html
         # In general, the input of the `predict_proba` method is a matrix of
@@ -444,8 +474,8 @@ class RegulomeAtlas(object):
         # `TRAINED_REG_MODEL.predict_proba([query])` is numpy array of
         # shape = [1, 2]. Specifically, the second column is the probability we
         # would like to output. So `[:, 1][0]` will be the desired score.
-        probability = str(
-            round(TRAINED_REG_MODEL.predict_proba([query])[:, 1][0], 5))
+        probability = round(
+            TRAINED_REG_MODEL.predict_proba([query])[:, 1][0], 5)
         ranking = '7'
         if 'QTL' in characterization:
             if 'ChIP' in characterization:
@@ -494,7 +524,14 @@ class RegulomeAtlas(object):
             ranking = '5'
         elif 'PWM' in characterization or 'Footprint' in characterization:
             ranking = '6'
-        return {'probability': probability, 'ranking': ranking}
+        tissue_specific_scores = {}
+        for tissue, binary_values in tissue_specific_query.items():
+            tissue_specific_score = np.mean(np.array([list(TRAINED_TISSUE_SPECIFIC_MODEL[c].predict_proba(
+                [binary_values])[:, 1]) for c in TRAINED_TISSUE_SPECIFIC_MODEL.keys()]), axis=0)
+            tissue_specific_scores[tissue] = str(
+                round(tissue_specific_score[0] * probability, 5))
+        probability = str(probability)
+        return {'probability': probability, 'ranking': ranking, 'tissue_specific_scores': tissue_specific_scores}
 
     def regulome_score(self, datasets, evidence):
         """Calculate RegulomeDB score based upon hits and voodoo"""

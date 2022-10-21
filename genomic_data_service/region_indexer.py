@@ -100,11 +100,12 @@ DATASET_REQUIRED_FIELDS = [
     'targets',
     'biosample_ontology',
     'assay_term_name',
+    'assay_title',
     'annotation_type',
     'reference_type',
     'biosample_ontology',
     'documents',
-    'description',
+    'replicates',
     'status',
     'files',
     'default_analysis',
@@ -117,7 +118,10 @@ PWM_ANNOTATIONS_GRCH38_ENDPOINT = 'https://www.encodeproject.org/search/?type=An
 EQTL_ANNOTATIONS_GRCH38_ENDPOINT = 'https://www.encodeproject.org/search/?type=Annotation&annotation_type=eQTLs&assembly=GRCh38&field=files.accession&format=json&limit=all'
 CAQTL_ANNOTATIONS_GRCH38_ENDPOINT = 'https://www.encodeproject.org/search/?type=Annotation&annotation_type=caQTLs&assembly=GRCh38&&field=files.accession&field=files.status&field=files.preferred_default&format=json&limit=all'
 CHROMATIN_STATE_FILES_GRCH38_ENDPOINT = 'https://www.encodeproject.org/search/?type=File&output_type=semi-automated+genome+annotation&status=released&assembly=GRCh38&lab.title=Manolis+Kellis%2C+Broad&file_format=bed&format=json&limit=all'
-
+HISTONE_CHIP_SEQ_EXPS_GRCH38_ENDPOINT = (
+    'https://www.encodeproject.org/search/?control_type!=*&status=released&perturbed=false&assay_title=Histone+ChIP-seq&target.label=H3K27ac&target.label=H3K36me3&target.label=H3K4me3&target.label=H3K4me1&target.label=H3K27me3&replicates.library.biosample.donor.organism.scientific_name=Homo+sapiens&assembly=GRCh38&files.file_type=bed+narrowPeak&type=Experiment&files.analyses.status=released&files.preferred_default=true&limit=all&format=json'
+    + '&field=files.accession&field=files.preferred_default&field=files.file_format&field=files.analyses.@id&field=default_analysis'
+)
 parser = argparse.ArgumentParser(
     description='indexing files for genomic data service.'
 )
@@ -329,6 +333,9 @@ def get_encode_accessions_from_portal():
     # get files in experiment DNase-seq using assembly GRCh38
     experiments.extend(requests.get(
         DNASE_SEQ_EXPS_GRCH38_ENDPOINT).json()['@graph'])
+    # get files in experiment histone ChIP-seq using assembly GRCh38
+    experiments.extend(requests.get(
+        HISTONE_CHIP_SEQ_EXPS_GRCH38_ENDPOINT).json()['@graph'])
     # get files in footprints
     annotations = requests.get(
         FOOTPRINT_ANNOTATIONS_GRCH38_ENDPOINT).json()['@graph']
@@ -412,7 +419,6 @@ def index_regulome_db(es_uri, es_port, encode_accessions, local_files=None, filt
                     f"========= No dataset {dataset_accession(f)} found for file {f['accession']}"
                 )
                 continue
-
             index_file.delay(
                 clean_up(f, FILE_REQUIRED_FIELDS),
                 clean_up(dataset, DATASET_REQUIRED_FIELDS),

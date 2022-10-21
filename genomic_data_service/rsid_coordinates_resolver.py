@@ -314,6 +314,8 @@ def search_peaks(query_coordinates, atlas, assembly, num_variants):
             'value': peak['_source'].get('value'),
             'file': peak['resident_detail']['file']['@id'].split('/')[2],
             'targets': peak['resident_detail']['dataset'].get('target', []),
+            'target_label': peak['resident_detail']['dataset'].get('target_label'),
+            'disease_term_name': peak['resident_detail']['dataset'].get('disease_term_name'),
             'method': peak['resident_detail']['dataset']['collection_type'],
             'ancestry': peak['resident_detail']['file'].get('ancestry'),
             'files_for_genome_browser': peak['resident_detail']['dataset'].get('files_for_genome_browser', []),
