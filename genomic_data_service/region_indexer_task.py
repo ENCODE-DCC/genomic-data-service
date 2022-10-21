@@ -316,6 +316,60 @@ def list_targets(dataset):
 
     return target_labels
 
+# This is to catch files that are in ENCSR533BHN / PMID30650056. This may need to be updated if the metadata at ENCODE is improved.
+# The ancestry info is stored in file aliases for now. It is the token after PMID.
+
+
+def get_ancestry(file_metadata):
+    ancestry = None
+    aliases = file_metadata.get('aliases')
+    if aliases:
+        tag = aliases[0].split('-')[-1]
+        if not tag.startswith('PMID'):
+            ancestry = tag
+    return ancestry
+
+
+def get_files_for_genome_browser(dataset_metadata, assembly):
+    files = dataset_metadata.get('files', [])
+    files_for_genome_browser = []
+    if files:
+        if assembly == 'hg19':
+            for file in files:
+                if (
+                    file.get('preferred_default', False)
+                    and (file['file_format'] == 'bigBed' or file['file_format'] == 'bigWig')
+                    and file.get('assembly') == 'hg19'
+                    and file['status'] != 'revoked'
+                ):
+                    file_obj = get_file_obj_for_genome_browser(file)
+                    files_for_genome_browser.append(file_obj)
+        elif assembly == 'GRCh38':
+            default_analysis_id = dataset_metadata['default_analysis']
+            for file in files:
+                if (
+                    file.get('preferred_default', False)
+                    and (file['file_format'] == 'bigBed' or file['file_format'] == 'bigWig')
+                    and file.get('analyses', [])
+                    and file['analyses'][0]['@id'] == default_analysis_id
+                ):
+                    file_obj = get_file_obj_for_genome_browser(file)
+                    files_for_genome_browser.append(file_obj)
+    return files_for_genome_browser
+
+
+def get_file_obj_for_genome_browser(file):
+    accession = file['accession']
+    href = file.get('href')
+    cloud_metadata = file.get('cloud_metadata')
+    if cloud_metadata:
+        cloud_metadata_url = cloud_metadata.get('url')
+    return {
+        'accession': accession,
+        'href': href,
+        'cloud_metadata_url': cloud_metadata_url
+    }
+
 
 def get_target_label(dataset):
     target_label = None
@@ -377,6 +431,16 @@ def metadata_doc(file_uuid, file_metadata, dataset_metadata):
     if meta_doc['dataset']['collection_type'].lower() in ['footprints', 'pwms']:
         meta_doc['dataset']['documents'] = dataset_metadata.get(
             'documents', [])
+    if file_metadata.get('annotation_type') == 'caQTLs':
+        ancestry = get_ancestry(file_metadata)
+        if ancestry:
+            meta_doc['file']['ancestry'] = ancestry
+    # We only collect files info for genome browser for those three type of experiments
+    if file_metadata.get('assay_term_name') in ['ChIP-seq', 'DNase-seq', 'FAIRE-seq']:
+        files_for_genome_browser = get_files_for_genome_browser(
+            dataset_metadata, file_metadata.get('assembly'))
+        if files_for_genome_browser:
+            meta_doc['dataset']['files_for_genome_browser'] = files_for_genome_browser
 
     return meta_doc
 

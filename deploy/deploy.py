@@ -1,22 +1,17 @@
 import argparse
-import datetime
 import getpass
-from logging import exception
 import re
 import subprocess
 import sys
-import time
-
-from base64 import b64encode
+import os
 from os.path import expanduser
-
 import boto3
 
 DEMO_CONFIG = ':deploy/cloud-config-demo.yml'
 MAIN_MACHINE_CONFIG = ':deploy/cloud-config-gds.yml'
 ES_MACHINE_CONFIG = ':deploy/cloud-config-es.yml'
 DEMO_INDEXER_USER = 'indexer'
-DEMO_INDEXER_PASSWORD = 'test'
+DEMO_INDEXER_PASSWORD = os.environ['DEMO_INDEXER_PASSWORD']
 DEMO_MACHINE = 'demo'
 MAIN_MACHINE = 'gds'
 REGULOME_ES_MACHINE = 'regulome_es'
@@ -261,6 +256,10 @@ def main():
     ec2_client = _get_ec2_client(main_args)
     if main_args.demo:
         create_instance(ec2_client, main_args, DEMO_MACHINE)
+    elif main_args.es == 'regulome':
+        create_instance(ec2_client, main_args, REGULOME_ES_MACHINE)
+    elif main_args.es == 'encode':
+        create_instance(ec2_client, main_args, ENCODE_ES_MACHINE)
     else:
         instances_gds = create_instance(ec2_client, main_args, MAIN_MACHINE)
         security_group_id = None
@@ -354,6 +353,9 @@ def parse_args():
     )
     parser.add_argument('--demo', action='store_true',
                         help='Deploy a demo for RegulomDB')
+
+    parser.add_argument('--es', default=None, choices=[None, 'regulome', 'encode'],
+                        help='specify if the elasticsearch server is for RegulomeDB or Encode')
 
     args = parser.parse_args()
     if not args.branch:

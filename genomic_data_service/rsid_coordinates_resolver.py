@@ -68,16 +68,16 @@ def get_ensemblid_coordinates(id, assembly):
 
 def get_rsid_coordinates_from_atlas(atlas, assembly, rsid):
     snp = atlas.find_snp(GENOME_TO_ALIAS.get(assembly), rsid)
+    if snp:
+        chrom = snp.get('chrom', None)
+        coordinates = snp.get('coordinates', {})
 
-    chrom = snp.get('chrom', None)
-    coordinates = snp.get('coordinates', {})
-
-    if chrom and coordinates and 'gte' in coordinates and 'lt' in coordinates:
-        return (chrom, coordinates['gte'], coordinates['lt'])
+        if chrom and coordinates and 'gte' in coordinates and 'lt' in coordinates:
+            return (chrom, coordinates['gte'], coordinates['lt'])
 
     log.warning('Could not find %s on %s, using ensemble. Elasticsearch response: %s' % (
         rsid, assembly, snp))
-    return None
+    return (None, None, None)
 
 
 def get_rsid_coordinates_from_ensembl(assembly, rsid):
@@ -127,19 +127,19 @@ def get_coordinates(query_term, assembly='GRCh37', atlas=None):
     chrom, start, end = None, None, None
 
     query_match = re.match(
-        r'^(chr[1-9]|chr1[0-9]|chr2[0-2]|chrx|chry)(?:\s+|:)(\d+)(?:\s+|-)(\d+)',
+        r'^(chr[1-9]|chr1[0-9]|chr2[0-2]|chrx|chry)(?:\s+|:)(\d+)(?:\s+|-)(\d+)$',
         query_term
     )
 
     if query_match:
         chrom, start, end = query_match.groups()
     else:
-        query_match = re.match(r'^rs\d+', query_term)
+        query_match = re.match(r'^rs\d+$', query_term)
         if query_match:
             chrom, start, end = get_rsid_coordinates(query_match.group(0),
                                                      assembly, atlas)
         else:
-            query_match = re.match(r'^ensg\d+', query_term)
+            query_match = re.match(r'^ensg\d+$', query_term)
             if query_match:
                 chrom, start, end = get_ensemblid_coordinates(
                     query_term.upper(), assembly)
@@ -165,6 +165,11 @@ def resolve_coordinates_and_variants(region_queries, assembly, atlas, maf):
         except:
             notifications[region_query] = 'Failed: invalid region input'
             continue
+        if start == end:
+            notifications[region_query] = (
+                'Failed: coordinates start and end can not be the same.'
+            )
+            continue
 
         query_coordinates.append(
             '{}:{}-{}'.format(chrom, int(start), int(end)))
@@ -173,7 +178,7 @@ def resolve_coordinates_and_variants(region_queries, assembly, atlas, maf):
             GENOME_TO_ALIAS.get(assembly, 'hg19'), chrom, start, end, maf=maf
         )
 
-        if re.match(r'^rs\d+', region_query.lower()):
+        if re.match(r'^rs\d+$', region_query.lower()):
             snps.append(
                 {
                     'rsid': region_query.lower(),
@@ -287,7 +292,7 @@ def search_peaks(query_coordinates, atlas, assembly, num_variants):
         )
         datasets = all_hits.get('datasets', [])
         evidence = atlas.regulome_evidence(
-            datasets, chrom, start, end
+            assembly, datasets, chrom, start, end
         )
         regulome_score = atlas.regulome_score(
             datasets, evidence
@@ -312,6 +317,8 @@ def search_peaks(query_coordinates, atlas, assembly, num_variants):
             'target_label': peak['resident_detail']['dataset'].get('target_label'),
             'disease_term_name': peak['resident_detail']['dataset'].get('disease_term_name'),
             'method': peak['resident_detail']['dataset']['collection_type'],
+            'ancestry': peak['resident_detail']['file'].get('ancestry'),
+            'files_for_genome_browser': peak['resident_detail']['dataset'].get('files_for_genome_browser', []),
             'documents': documents,
             'dataset': resolve_relative_hrefs(peak['resident_detail']['dataset']['@id'], 'dataset'),
             'dataset_rel': peak['resident_detail']['dataset']['@id'],

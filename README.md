@@ -104,7 +104,7 @@ mssh ubuntu@i-foobarbaz123 --profile regulome --region us-west-2
 
 ### Demo deployment
 
-1. Make sure you have activated the virtual environment created above. if you need demo deployment for Regulome or Encoded region search, run the command below. This command will launch one machine for both GDS flask app and Elasticsearch server.
+1. Make sure you have activated the virtual environment created above. if you need demo deployment for Regulome or Encoded region search, set an environment variable **DEMO_INDEXER_PASSWORD** first, the deploy script will use it as password for indexer. Then run the command below. This command will launch one machine for both GDS flask app and Elasticsearch server.
 
     ```bash
     python deploy/deploy.py --demo
@@ -177,3 +177,19 @@ mssh ubuntu@i-foobarbaz123 --profile regulome --region us-west-2
 8. To deploy a regulome demo that uses your new deployment as backend, you need to edit <https://github.com/ENCODE-DCC/regulome-encoded/blob/dev/ini-templates/production-template.ini> and change the `genomic_data_service_url` to point to the instance running the flask app.
 
 9. To deploy an encoded demo that uses your new deployment as the region-search backend, you need to edit <https://github.com/ENCODE-DCC/encoded/blob/dev/conf/pyramid/demo.ini> and change the `genomic_data_service` to point to the instance running the flask app.
+
+### ElasticSearch server only deployment
+
+1. if you just want to deploy an ElasticSearch server only, for RegulomeDB:
+
+    ```bash
+    python deploy/deploy.py --es regulome
+    ```
+
+2. For Encode:
+
+    ```bash
+    python deploy/deploy.py --es encode
+    ```
+
+3. Follow the instruction in Production grade deployment above to create a password for accessing the indexer and Start indexer on the this ES machine.

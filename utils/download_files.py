@@ -3,7 +3,7 @@ from pathlib import Path
 
 BUCKET_NAME = 'regulome-ml-models'
 OBJECT_NAMES = ['rf_model1.0.1.sav', 'TURF_tissue_specific_sklearn_1.0.pkl', 'bigwig_files/IC_matched_max.bw',
-                'bigwig_files/IC_max.bw', 'two_bit_files/hg38.2bit', 'two_bit_files/hg19.2bit']
+                'bigwig_files/IC_max.bw', 'bigwig_files/IC_matched_max_GRCh38.bw', 'bigwig_files/IC_max_GRCh38.bw', 'two_bit_files/hg38.2bit', 'two_bit_files/hg19.2bit']
 LOCAL_DIR = Path('./ml_models/')
 BIGWIG_DIR = LOCAL_DIR.joinpath('bigwig_files')
 TWOBIT_DIR = LOCAL_DIR.joinpath('two_bit_files')
@@ -13,6 +13,8 @@ PATH_TO_S3_KEY = {Path('./ml_models/rf_model1.0.1.sav'): 'rf_model1.0.1.sav',
                   Path('./ml_models/TURF_tissue_specific_sklearn_1.0.pkl'): 'TURF_tissue_specific_sklearn_1.0.pkl',
                   Path('./ml_models/bigwig_files/IC_matched_max.bw'): 'bigwig_files/IC_matched_max.bw',
                   Path('./ml_models/bigwig_files/IC_max.bw'): 'bigwig_files/IC_max.bw',
+                  Path('./ml_models/bigwig_files/IC_matched_max_GRCh38.bw'): 'bigwig_files/IC_matched_max_GRCh38.bw',
+                  Path('./ml_models/bigwig_files/IC_max_GRCh38.bw'): 'bigwig_files/IC_max_GRCh38.bw',
                   Path('./ml_models/two_bit_files/hg38.2bit'): 'two_bit_files/hg38.2bit',
                   Path('./ml_models/two_bit_files/hg19.2bit'): 'two_bit_files/hg19.2bit', }
 

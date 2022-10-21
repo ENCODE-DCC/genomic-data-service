@@ -682,6 +682,7 @@ def test_regulome_search_total_0(test_client):
     response = test_client.get('search/?regions=rs56116432&genome=GRCh37')
     assert response.status_code == 200
     res = response.json
-    assert res['query_coordinates'] == []
+    assert res['region_queries'] == ['rs56116432']
     assert res['assembly'] == 'GRCh37'
-    assert res['total'] == 0
+    assert res['notifications'] == {
+        'rs56116432': 'Failed: invalid region input'}
