@@ -37,3 +37,6 @@ DATASET = {
 TWO_BIT_HG38_FILE_PATH = 'ml_models/two_bit_files/hg38.2bit'
 TWO_BIT_HG19_FILE_PATH = 'ml_models/two_bit_files/hg19.2bit'
 REGULOME_VALID_ASSEMBLY = ['GRCh37', 'GRCh38', 'hg19']
+
+ORGANS = ['adipose tissue', 'adrenal gland', 'arterial blood vessel', 'blood', 'blood vessel', 'bone element', 'bone marrow', 'brain', 'breast', 'colon', 'connective tissue', 'ear', 'embryo', 'endocrine gland', 'epithelium', 'esophagus', 'exocrine gland', 'extraembryonic component', 'eye', 'gonad', 'heart', 'immune organ', 'intestine', 'kidney', 'large intestine',
+          'limb', 'liver', 'lung', 'lymph node', 'lymphoid tissue', 'mammary gland', 'mouth', 'musculature of body', 'nerve', 'ovary', 'pancreas', 'penis', 'placenta', 'prostate gland', 'skin of body', 'skin of prepuce of penis', 'small intestine', 'spinal cord', 'spleen', 'stomach', 'testis', 'thymus', 'thyroid gland', 'uterus', 'vagina', 'vasculature']

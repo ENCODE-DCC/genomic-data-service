@@ -662,10 +662,8 @@ def test_regulome_summary_tsv(test_client):
     response = test_client.get(
         'summary/?regions=rs10823321%0D%0Ars185797602&genome=GRCh37&maf=0.01&format=tsv'
     )
-    assert (
-        response.get_data().decode('utf-8')
-        == 'chrom\tstart\tend\trsids\tprobability\tranking\tChIP\tChromatin_accessibility\tFootprint\tFootprint_matched\tIC_matched_max\tIC_max\tPWM\tPWM_matched\tQTL\nchr10\t70989234\t70989235\trs185797602\t0.14657\t5\tFalse\tTrue\tFalse\tFalse\t0.0\t1.7799999713897705\tFalse\tFalse\tFalse\nchr10\t70989269\t70989270\trs10823321\t0.31478\t5\tFalse\tTrue\tFalse\tFalse\t1.7799999713897705\t1.7799999713897705\tFalse\tFalse\tFalse'
-    )
+    assert response.get_data().decode(
+        'utf-8')[0:163] == 'chrom\tstart\tend\trsids\tprobability\tranking\ttissue_specific_scores\tChIP\tChromatin_accessibility\tFootprint\tFootprint_matched\tIC_matched_max\tIC_max\tPWM\tPWM_matched\tQTL'
     assert response.status_code == 200
     assert response.headers['Content-Type'] == 'text/tsv'
 

@@ -375,6 +375,30 @@ def get_file_obj_for_genome_browser(file):
     }
 
 
+def get_target_label(dataset):
+    target_label = None
+    target = dataset.get('target', dataset.get('targets'))
+    if target:
+        if isinstance(target, dict):
+            target_label = target['label']
+        if isinstance(target, list) and target:
+            labels = []
+            for item in target:
+                labels.append(item['label'])
+            target_label = ', '.join(labels)
+    return target_label
+
+
+def get_disease_term_name(dataset_metadata):
+    disease_term_name = None
+    replicates = dataset_metadata.get('replicates', [])
+    if replicates:
+        library = replicates[0].get('library')
+        biosample = library.get('biosample')
+        disease_term_name = biosample.get('disease_term_name')
+    return disease_term_name
+
+
 def metadata_doc(file_uuid, file_metadata, dataset_metadata):
     meta_doc = {
         'uuid': file_uuid,
@@ -388,18 +412,25 @@ def metadata_doc(file_uuid, file_metadata, dataset_metadata):
             'uuid': dataset_metadata['uuid'],
             '@id': dataset_metadata['@id'],
             'target': list_targets(dataset_metadata),
+            'target_label': get_target_label(dataset_metadata),
+            'disease_term_name': get_disease_term_name(dataset_metadata),
             'biosample_ontology': dataset_metadata.get('biosample_ontology', {}),
             'biosample_term_name': dataset_metadata.get('biosample_ontology', {}).get('term_name'),
-            'documents': [],
-            'description': dataset_metadata.get('description'),
+            'documents': []
         },
         'dataset_type': dataset_metadata['@type'][0]
     }
-
-    for prop in REGULOME_COLLECTION_TYPES:
-        prop_value = dataset_metadata.get(prop)
-        if prop_value:
-            meta_doc['dataset']['collection_type'] = prop_value
+    assay_title = dataset_metadata.get('assay_title')
+    if assay_title == 'Histone ChIP-seq':
+        meta_doc['dataset']['collection_type'] = assay_title
+    else:
+        # regulome use three type of datasets: experiments, annotations and references. experiements has property assay_term_name, annotations has property annotation_type, references has property reference_type.
+        # Those properties will be indexed as dataset collection_type in regulome datase base.
+        # Annotations can have both assay_term_name and annotation_type, for example, imputations and gkm-SVMs, but we don't use those datasets in regulome.
+        for prop in REGULOME_COLLECTION_TYPES:
+            prop_value = dataset_metadata.get(prop)
+            if prop_value:
+                meta_doc['dataset']['collection_type'] = prop_value
 
     if meta_doc['dataset']['collection_type'].lower() in ['footprints', 'pwms']:
         meta_doc['dataset']['documents'] = dataset_metadata.get(

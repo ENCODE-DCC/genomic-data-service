@@ -19,11 +19,12 @@ def test_metadata_doc(bed_file, dataset_no_doc_pwms, document_string):
             '@id': '/annotations/ENCSR601QZC/',
             'biosample_ontology': {},
             'biosample_term_name': None,
+            'disease_term_name': None,
             'collection_type': 'PWMs',
             'documents': ['/documents/49f43842-5ab4-4aa1-a6f4-2b1234955d93/'],
             'target': [],
-            'uuid': '19b2ffe1-a645-4da5-ac4e-631f1629dca0',
-            'description': None
+            'target_label': None,
+            'uuid': '19b2ffe1-a645-4da5-ac4e-631f1629dca0'
         },
         'dataset_type': 'Annotation',
         'file': {
