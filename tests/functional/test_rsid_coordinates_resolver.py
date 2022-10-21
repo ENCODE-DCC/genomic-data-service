@@ -502,7 +502,7 @@ def test_evidence_to_features():
         'QTL': True,
         'Footprint': True,
         'PWM': True,
-        'DNase': True,
+        'Chromatin_accessibility': True,
     }
     features = evidence_to_features(evidence)
     assert features['ChIP'] == True
@@ -513,4 +513,4 @@ def test_evidence_to_features():
     assert features['QTL'] == True
     assert features['Footprint'] == True
     assert features['PWM'] == True
-    assert features['DNase'] == True
+    assert features['Chromatin_accessibility'] == True

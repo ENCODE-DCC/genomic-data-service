@@ -68,6 +68,10 @@ INDEX_COLS = {
         'strand_col': 5,
         'value_col': 6
     },
+    'atac-seq': {
+        'strand_col': 5,
+        'value_col': 6
+    },
     'faire-seq': {
         'strand_col': 5,
         'value_col': 6
@@ -435,8 +439,8 @@ def metadata_doc(file_uuid, file_metadata, dataset_metadata):
         ancestry = get_ancestry(file_metadata)
         if ancestry:
             meta_doc['file']['ancestry'] = ancestry
-    # We only collect files info for genome browser for those three type of experiments
-    if file_metadata.get('assay_term_name') in ['ChIP-seq', 'DNase-seq', 'FAIRE-seq']:
+    # We only collect files info for genome browser for those four type of experiments
+    if file_metadata.get('assay_term_name') in ['ChIP-seq', 'DNase-seq', 'FAIRE-seq', 'ATAC-seq']:
         files_for_genome_browser = get_files_for_genome_browser(
             dataset_metadata, file_metadata.get('assembly'))
         if files_for_genome_browser:

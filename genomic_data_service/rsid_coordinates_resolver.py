@@ -250,7 +250,7 @@ def region_get_hits(atlas, assembly, chrom, start, end, peaks_too=False):
 def evidence_to_features(evidence):
     features = {
         'ChIP': False,
-        'DNase': False,
+        'Chromatin_accessibility': False,
         'PWM': False,
         'Footprint': False,
         'QTL': False,
