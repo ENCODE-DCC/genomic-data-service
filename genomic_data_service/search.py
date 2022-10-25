@@ -77,7 +77,6 @@ def search():
         result['notifications'] = {
             'Failed': '{}. {}'.format(key, value)
         }
-        result['total'] = 0
         return jsonify(build_response(result))
 
     total = len(variants)
