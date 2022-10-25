@@ -71,7 +71,7 @@ def search():
 
     if notifications:
         result['notifications'] = {
-            'Failed': '{}'.format(notifications)
+            'Failed': notifications
         }
         result['total'] = 0
         return jsonify(build_response(result))
