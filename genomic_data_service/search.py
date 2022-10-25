@@ -47,6 +47,7 @@ def search():
         'format': format_,
         'from': from_,
         'notifications': {},
+        'query_coordinates': [],
         'total': 0,
         'variants': []
     }
