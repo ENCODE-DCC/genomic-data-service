@@ -46,7 +46,9 @@ def search():
         'region_queries': region_queries,
         'format': format_,
         'from': from_,
-        'notifications': {}
+        'notifications': {},
+        'total': 0,
+        'variants': []
     }
     if assembly not in REGULOME_VALID_ASSEMBLY:
         result['notifications'] = {
@@ -60,7 +62,6 @@ def search():
             )
         }
     if result['notifications']:
-        result['total'] = 0
         return jsonify(build_response(result))
 
     atlas = RegulomeAtlas(regulome_es)
@@ -70,8 +71,10 @@ def search():
     )
 
     if notifications:
+        key = list(notifications.keys())[0]
+        value = list(notifications.values())[0]
         result['notifications'] = {
-            'Failed': notifications
+            'Failed': '{}. {}'.format(key, value)
         }
         result['total'] = 0
         return jsonify(build_response(result))
