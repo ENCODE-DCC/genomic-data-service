@@ -60,6 +60,7 @@ def search():
             )
         }
     if result['notifications']:
+        result['total'] = 0
         return jsonify(build_response(result))
 
     atlas = RegulomeAtlas(regulome_es)
@@ -69,7 +70,10 @@ def search():
     )
 
     if notifications:
-        result['notifications'] = notifications
+        result['notifications'] = {
+            'Failed': '{}'.format(notifications[0])
+        }
+        result['total'] = 0
         return jsonify(build_response(result))
 
     total = len(variants)
