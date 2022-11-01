@@ -46,7 +46,10 @@ def search():
         'region_queries': region_queries,
         'format': format_,
         'from': from_,
-        'notifications': {}
+        'notifications': {},
+        'query_coordinates': [],
+        'total': 0,
+        'variants': []
     }
     if assembly not in REGULOME_VALID_ASSEMBLY:
         result['notifications'] = {
@@ -69,7 +72,11 @@ def search():
     )
 
     if notifications:
-        result['notifications'] = notifications
+        key = list(notifications.keys())[0]
+        value = list(notifications.values())[0]
+        result['notifications'] = {
+            'Failed': '{}. {}'.format(key, value)
+        }
         return jsonify(build_response(result))
 
     total = len(variants)

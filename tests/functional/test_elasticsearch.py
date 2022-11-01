@@ -685,4 +685,5 @@ def test_regulome_search_total_0(test_client):
     assert res['region_queries'] == ['rs56116432']
     assert res['assembly'] == 'GRCh37'
     assert res['notifications'] == {
-        'rs56116432': 'Failed: invalid region input'}
+        'Failed': 'rs56116432. Failed: invalid region input'
+    }
