@@ -89,12 +89,11 @@ try:
 except FileNotFoundError:
     TRAINED_REG_MODEL = None
 
-
 try:
-    TRAINED_TISSUE_SPECIFIC_MODEL = pickle.load(
-        open('./ml_models/TURF_tissue_specific_sklearn_1.0.pkl', 'rb'))
+    TRAINED_TISSUE_SPECIFIC_TABLE = pickle.load(
+        open('./ml_models/TURF_tissueSp_scores_table.pkl', 'rb'))
 except FileNotFoundError:
-    TRAINED_TISSUE_SPECIFIC_MODEL = None
+    TRAINED_TISSUE_SPECIFIC_TABLE = None
 
 IC_MATCHED_MAX_BW_HG19 = get_bigwig_file(
     FILE_IC_MATCHED_MAX_HG19_PATH_LOCAL, FILE_IC_MATCHED_MAX_HG19_PATH_REMOTE)
@@ -526,10 +525,11 @@ class RegulomeAtlas(object):
             ranking = '6'
         tissue_specific_scores = {}
         for tissue, binary_values in tissue_specific_query.items():
-            tissue_specific_score = np.mean(np.array([list(TRAINED_TISSUE_SPECIFIC_MODEL[c].predict_proba(
-                [binary_values])[:, 1]) for c in TRAINED_TISSUE_SPECIFIC_MODEL.keys()]), axis=0)
+            # get tissue specific scores from lookup table (keys: tuples)
+            tissue_specific_score = TRAINED_TISSUE_SPECIFIC_TABLE[tuple(
+                binary_values)]
             tissue_specific_scores[tissue] = str(
-                round(tissue_specific_score[0] * probability, 5))
+                round(tissue_specific_score * probability, 5))
         probability = str(probability)
         return {'probability': probability, 'ranking': ranking, 'tissue_specific_scores': tissue_specific_scores}
 
