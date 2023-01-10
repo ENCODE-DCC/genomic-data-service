@@ -305,8 +305,7 @@ def search_peaks(query_coordinates, atlas, assembly, num_variants):
     for peak in all_hits.get('peaks', []):
         documents = [resolve_relative_hrefs(
             document, 'document') for document in peak['resident_detail']['dataset']['documents']]
-
-        peak_details.append({
+        peak_detail = {
             'chrom': peak['_index'],
             'start': peak['_source']['coordinates']['gte'],
             'end': peak['_source']['coordinates']['lt'],
@@ -323,7 +322,10 @@ def search_peaks(query_coordinates, atlas, assembly, num_variants):
             'dataset': resolve_relative_hrefs(peak['resident_detail']['dataset']['@id'], 'dataset'),
             'dataset_rel': peak['resident_detail']['dataset']['@id'],
             'biosample_ontology': resolve_relative_hrefs(peak['resident_detail']['dataset']['biosample_ontology'], 'biosample_ontology'),
-        })
+        }
+        if peak_detail['method'] == 'footprints':
+            peak_detail['footprint_assay_term_name'] = peak['resident_detail']['dataset']['footprint_assay_term_name']
+        peak_details.append(peak_detail)
 
     graph = peak_details
 
