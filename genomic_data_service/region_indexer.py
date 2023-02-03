@@ -357,10 +357,11 @@ def get_encode_accessions_from_portal():
 
     for experiment in experiments:
         files = experiment.get('files', [])
-        default_analysis_id = experiment['default_analysis']
-        for file in files:
-            if is_preferred_default_bed_from_default_analysis(default_analysis_id, file):
-                encode_accessions.append(file['accession'])
+        default_analysis_id = experiment.get('default_analysis')
+        if default_analysis_id:
+            for file in files:
+                if is_preferred_default_bed_from_default_analysis(default_analysis_id, file):
+                    encode_accessions.append(file['accession'])
 
     for annotation in annotations:
         files = annotation.get('files', [])
