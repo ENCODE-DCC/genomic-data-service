@@ -3,6 +3,7 @@ from genomic_data_service.region_indexer_elastic_search import (
     RegionIndexerElasticSearch,
 )
 import requests
+from requests.adapters import HTTPAdapter, Retry
 import pickle
 from genomic_data_service.constants import FILE_HG19
 import argparse
@@ -123,6 +124,7 @@ HISTONE_CHIP_SEQ_EXPS_GRCH38_ENDPOINT = (
     'https://www.encodeproject.org/search/?control_type!=*&status=released&perturbed=false&assay_title=Histone+ChIP-seq&target.label=H3K27ac&target.label=H3K36me3&target.label=H3K4me3&target.label=H3K4me1&target.label=H3K27me3&replicates.library.biosample.donor.organism.scientific_name=Homo+sapiens&assembly=GRCh38&files.file_type=bed+narrowPeak&type=Experiment&files.analyses.status=released&files.preferred_default=true&limit=all&format=json'
     + '&field=files.accession&field=files.preferred_default&field=files.file_format&field=files.analyses.@id&field=default_analysis'
 )
+
 parser = argparse.ArgumentParser(
     description='indexing files for genomic data service.'
 )
@@ -148,6 +150,11 @@ parser.add_argument(
     help="Select 'RegulomeDB_2_0' or 'RegulomeDB_2_1' for internal_tags.",
     choices=['RegulomeDB_2_0', 'RegulomeDB_2_1'],
 )
+
+session = requests.Session()
+retries = Retry(total=5, backoff_factor=1,
+                status_forcelist=[500, 502, 503, 504])
+session.mount('https://', HTTPAdapter(max_retries=retries))
 
 
 def clean_up(obj, fields):
@@ -185,7 +192,7 @@ def encode_graph(query):
     query += ['field=*', 'limit=all', 'format=json']
 
     endpoint = f"{ENCODE_DOMAIN}/search/?{'&'.join(query)}"
-    return requests.get(endpoint).json()['@graph']
+    return session.get(endpoint).json()['@graph']
 
 
 def need_to_fetch_documents(dataset):
@@ -218,7 +225,7 @@ def fetch_documents(dataset):
     documents = []
     for document_id in dataset.get('documents', []):
         endpoint = f'{ENCODE_DOMAIN}{document_id}?format=json'
-        documents.append(requests.get(endpoint).json())
+        documents.append(session.get(endpoint).json())
 
     dataset['documents'] = documents
 
@@ -329,31 +336,31 @@ def make_pickle_file(encode_accessions):
 def get_encode_accessions_from_portal():
     encode_accessions = []
     # get files in experiment TF ChIP-seq using assembly GRCh38
-    experiments = requests.get(
+    experiments = session.get(
         TF_CHIP_SEQ_EXPS_GRCH38_ENDPOINT).json()['@graph']
     # get files in experiment DNase-seq using assembly GRCh38
-    experiments.extend(requests.get(
+    experiments.extend(session.get(
         DNASE_SEQ_EXPS_GRCH38_ENDPOINT).json()['@graph'])
     # get files in experiment ATAC-seq using assembly GRCh38
-    experiments.extend(requests.get(
+    experiments.extend(session.get(
         ATAC_SEQ_EXPS_GRCH38_ENDPOINT).json()['@graph'])
     # get files in experiment histone ChIP-seq using assembly GRCh38
-    experiments.extend(requests.get(
+    experiments.extend(session.get(
         HISTONE_CHIP_SEQ_EXPS_GRCH38_ENDPOINT).json()['@graph'])
     # get files in footprints
-    annotations = requests.get(
+    annotations = session.get(
         FOOTPRINT_ANNOTATIONS_GRCH38_ENDPOINT).json()['@graph']
     # get files in PWMs
-    annotations.extend(requests.get(
+    annotations.extend(session.get(
         PWM_ANNOTATIONS_GRCH38_ENDPOINT).json()['@graph'])
     # get files in eQTLs
-    annotations.extend(requests.get(
+    annotations.extend(session.get(
         EQTL_ANNOTATIONS_GRCH38_ENDPOINT).json()['@graph'])
     # get files for chromatin state for grch38
-    chromatin_state_files = requests.get(
+    chromatin_state_files = session.get(
         CHROMATIN_STATE_FILES_GRCH38_ENDPOINT).json()['@graph']
     # get ds_qtl annotations for grch38
-    ds_qtls = requests.get(CAQTL_ANNOTATIONS_GRCH38_ENDPOINT).json()['@graph']
+    ds_qtls = session.get(CAQTL_ANNOTATIONS_GRCH38_ENDPOINT).json()['@graph']
 
     for experiment in experiments:
         files = experiment.get('files', [])
