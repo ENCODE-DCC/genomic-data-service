@@ -423,16 +423,19 @@ def metadata_doc(file_uuid, file_metadata, dataset_metadata):
     assay_title = dataset_metadata.get('assay_title')
     if assay_title == 'Histone ChIP-seq':
         meta_doc['dataset']['collection_type'] = assay_title
+    # footprints have both assay_term_name(a list) and annotation_type
     elif dataset_metadata.get('annotation_type') == 'footprints':
         meta_doc['dataset']['collection_type'] = 'footprints'
-        if dataset_metadata.get('assay_term_name') and 'ATAC-seq' in dataset_metadata.get('assay_term_name'):
-            meta_doc['dataset']['footprint_assay_term_name'] = 'ATAC-seq'
-        else:
-            meta_doc['dataset']['footprint_assay_term_name'] = 'DNase-seq'
+        assay_term_name = dataset_metadata.get('assay_term_name')
+        if assay_term_name:
+            if 'ATAC-seq' in assay_term_name:
+                meta_doc['dataset']['footprint_assay_term_name'] = 'ATAC-seq'
+            elif 'DNase-seq' in assay_term_name:
+                meta_doc['dataset']['footprint_assay_term_name'] = 'DNase-seq'
     else:
         # regulome use three type of datasets: experiments, annotations and references. experiements has property assay_term_name, annotations has property annotation_type, references has property reference_type.
         # Those properties will be indexed as dataset collection_type in regulome datase base.
-        # Annotations can have both assay_term_name and annotation_type, for example, imputations and gkm-SVMs, but we don't use those datasets in regulome.
+        # Annotations can have both assay_term_name and annotation_type, for example, footprints, imputations and gkm-SVMs, we have footprints in regulome.
         for prop in REGULOME_COLLECTION_TYPES:
             prop_value = dataset_metadata.get(prop)
             if prop_value:
