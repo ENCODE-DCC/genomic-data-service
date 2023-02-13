@@ -39,6 +39,7 @@ SUPPORTED_CHROMOSOMES = [
 ENCODE_DOMAIN = 'https://www.encodeproject.org'
 ENCODE_ACCESSIONS_REGULOMEDB_2_0_HG19_PATH = 'file_accessions_regulomedb_2_0_hg19.pickle'
 ENCODE_ACCESSIONS_REGULOMEDB_2_1_PATH = 'file_accessions_regulomedb_2_1.pickle'
+ENCODE_ACCESSIONS_REGULOMEDB_2_2_PATH = 'file_accessions_regulomedb_2_2.pickle'
 ENCODE_SNP = ['ENCFF904UCL', 'ENCFF578KDT']
 SUPPORTED_ASSEMBLIES = ['hg19', 'GRCh38']
 REGULOME_ALLOWED_STATUSES = ['released', 'archived']
@@ -148,7 +149,7 @@ parser.add_argument(
 parser.add_argument(
     '--tag',
     help="Select 'RegulomeDB_2_0' or 'RegulomeDB_2_1' for internal_tags.",
-    choices=['RegulomeDB_2_0', 'RegulomeDB_2_1'],
+    choices=['RegulomeDB_2_0', 'RegulomeDB_2_1', 'RegulomeDB_2_2'],
 )
 
 session = requests.Session()
@@ -401,6 +402,9 @@ def get_encode_accessions_from_tag(tag):
     elif tag == 'RegulomeDB_2_1':
         encode_accessions = read_local_accessions_from_pickle(
             pickle_path=ENCODE_ACCESSIONS_REGULOMEDB_2_1_PATH)
+    elif tag == 'RegulomeDB_2_2':
+        encode_accessions = read_local_accessions_from_pickle(
+            pickle_path=ENCODE_ACCESSIONS_REGULOMEDB_2_2_PATH)
     return encode_accessions
 
 
