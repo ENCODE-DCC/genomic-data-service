@@ -148,7 +148,7 @@ parser.add_argument(
 
 parser.add_argument(
     '--tag',
-    help="Select 'RegulomeDB_2_0' or 'RegulomeDB_2_1' for internal_tags.",
+    help="Select 'RegulomeDB_2_0', 'RegulomeDB_2_1' or 'RegulomeDB_2_2' for internal_tags.",
     choices=['RegulomeDB_2_0', 'RegulomeDB_2_1', 'RegulomeDB_2_2'],
 )
 
