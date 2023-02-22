@@ -76,25 +76,29 @@ class SnfParser(Parser):
         for alt_allele in alt_alleles:
             alt_allele_freq_map[alt_allele] = {}
         if freq_tag:
-            alt_allele_freqs = set()
+            maf = 0
             for population_freq in freq_tag.split('|'):
+                allele_freqs = []
                 population, freqs = population_freq.split(':')
                 ref_freq, *alt_freqs = freqs.split(',')
                 try:
                     ref_allele_freq_map[ref_allele][population] = float(
                         ref_freq)
+                    allele_freqs.append(float(ref_freq))
                 except ValueError:
                     ref_allele_freq_map[ref_allele][population] = None
                 for allele, freq_str in zip(alt_alleles, alt_freqs):
                     try:
                         freq = float(freq_str)
                         alt_allele_freq_map[allele][population] = freq
-                        alt_allele_freqs.add(freq)
+                        allele_freqs.append(freq)
                     except (TypeError, ValueError):
                         alt_allele_freq_map[allele][population] = None
-
-            if alt_allele_freqs:
-                snp_doc['maf'] = max(alt_allele_freqs)
+                # maf is the 2nd most common allele frequency in a given population
+                if len(allele_freqs) > 1:
+                    # take the max maf across all populations
+                    maf = max(maf, sorted(allele_freqs, reverse=True)[1])
+            snp_doc['maf'] = maf
         snp_doc['ref_allele_freq'] = ref_allele_freq_map
         snp_doc['alt_allele_freq'] = alt_allele_freq_map
         return (chrom, snp_doc)
