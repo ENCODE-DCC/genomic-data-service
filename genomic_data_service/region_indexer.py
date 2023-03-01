@@ -4,9 +4,11 @@ from genomic_data_service.region_indexer_elastic_search import (
 )
 import requests
 from requests.adapters import HTTPAdapter, Retry
+from requests.exceptions import JSONDecodeError
 import pickle
 from genomic_data_service.constants import FILE_HG19
 import argparse
+import logging
 
 
 SUPPORTED_CHROMOSOMES = [
@@ -48,6 +50,7 @@ REGULOME_COLLECTION_TYPES = ['assay_term_name',
 REGULOME_DATASET_TYPES = ['Experiment', 'Annotation', 'Reference']
 TEST_SNP_FILE = 'snp_for_local_install.bed.gz'
 TEST_ENCODE_ACCESSIONS_PATH = 'encode_accessions_for_local_install.pickle'
+MAX_RETRIES = 675
 
 REGULOME_REGION_REQUIREMENTS = {
     'chip-seq': {
@@ -153,7 +156,7 @@ parser.add_argument(
 )
 
 session = requests.Session()
-retries = Retry(total=5, backoff_factor=1,
+retries = Retry(total=MAX_RETRIES, backoff_factor=1,
                 status_forcelist=[500, 502, 503, 504])
 session.mount('https://', HTTPAdapter(max_retries=retries))
 
@@ -193,7 +196,14 @@ def encode_graph(query):
     query += ['field=*', 'limit=all', 'format=json']
 
     endpoint = f"{ENCODE_DOMAIN}/search/?{'&'.join(query)}"
-    return session.get(endpoint).json()['@graph']
+    try:
+        response = session.get(endpoint)
+        graph = response.json()['@graph']
+        return graph
+    except JSONDecodeError as e:
+        logging.error(
+            f'Can not get graph for query {query}. The status code is {response.status_code}. The text is {response.text}')
+        raise JSONDecodeError()
 
 
 def need_to_fetch_documents(dataset):
