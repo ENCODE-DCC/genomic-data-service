@@ -116,16 +116,12 @@ def summary():
         start = variant['start']
         end = variant['end']
 
-        # parse_region_query makes sure variants returned are all scorable
-#        try:
         all_hits = region_get_hits(atlas, assembly, chrom, start, end)
+        datasets = all_hits.get('datasets', [])
         evidence = atlas.regulome_evidence(
-            assembly, all_hits['datasets'], chrom, int(start), int(end))
-        regulome_score = atlas.regulome_score(all_hits['datasets'], evidence)
+            assembly, datasets, chrom, int(start), int(end))
+        regulome_score = atlas.regulome_score(datasets, evidence)
         features = evidence_to_features(evidence)
-#        except Exception as e:
-#            features = {}
-#            regulome_score = {}
 
         if table_download:
             if not table:
