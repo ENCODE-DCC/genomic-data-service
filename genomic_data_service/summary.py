@@ -103,7 +103,7 @@ def summary():
             result['notifications'] = {'Failed': 'No variants found'}
         return jsonify(build_response(result))
 
-    if len(result['variants']) == 1:
+    if len(result['variants']) == 1 and not result['notifications']:
         return build_redirect_to_search(result['variants'], result['assembly'])
 
     table_download = format_ in ['tsv', 'bed']
