@@ -367,7 +367,7 @@ def raw_human_genes():
                 'ENSEMBL:ENSG00000260442'
             ],
             'geneid': '100289092',
-            'name':'ATP2A1 antisense RNA 1',
+            'name': 'ATP2A1 antisense RNA 1',
             'organism': {
                 'scientific_name': 'Homo sapiens'
             },
