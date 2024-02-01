@@ -11,6 +11,59 @@ from genomic_data_service.constants import (
 
 log = logging.getLogger(__name__)
 
+CHR_GRCH38 = [
+    'nc_000001.11',
+    'nc_000002.12',
+    'nc_000003.12',
+    'nc_000004.12',
+    'nc_000005.10',
+    'nc_000006.12',
+    'nc_000007.14',
+    'nc_000008.11',
+    'nc_000009.12',
+    'nc_000010.11',
+    'nc_000011.10',
+    'nc_000012.12',
+    'nc_000013.11',
+    'nc_000014.9',
+    'nc_000015.10',
+    'nc_000016.10',
+    'nc_000017.11',
+    'nc_000018.10',
+    'nc_000019.10',
+    'nc_000020.11',
+    'nc_000021.9',
+    'nc_000022.11',
+    'nc_000023.11',
+    'nc_000024.10',
+]
+CHR_GRCH37 = [
+    'nc_000001.10',
+    'nc_000002.11',
+    'nc_000003.11',
+    'nc_000004.11',
+    'nc_000005.9',
+    'nc_000006.11',
+    'nc_000007.13',
+    'nc_000008.10',
+    'nc_000009.11',
+    'nc_000010.10',
+    'nc_000011.9',
+    'nc_000012.11',
+    'nc_000013.10',
+    'nc_000014.8',
+    'nc_000015.9',
+    'nc_000016.9',
+    'nc_000017.10',
+    'nc_000018.9',
+    'nc_000019.9',
+    'nc_000020.10',
+    'nc_000021.9',
+    'nc_000022.10',
+    'nc_000023.10',
+    'nc_000024.9',
+]
+
 
 def ensembl_assembly_mapper(location, species, input_assembly, output_assembly):
     # maps location on GRCh38 to hg19 for example
@@ -121,6 +174,30 @@ def get_rsid_coordinates(rsid, assembly, atlas=None, webfetch=True):
     return (chrom, start, end)
 
 
+def get_chrom_from_chrom_ref(chrom_ref):
+    chr_num = int(chrom_ref.split('.')[0].split('_')[-1])
+    if chr_num == 23:
+        chr_num = 'X'
+    elif chr_num == 24:
+        chr_num = 'Y'
+    chrom = 'chr' + str(chr_num)
+    return chrom
+
+
+def get_spdi_coordinates(chrom_ref, spdi_suffix):
+    chrom = get_chrom_from_chrom_ref(chrom_ref)
+    start = int(spdi_suffix.split(':')[0])
+    end = start + 1
+    return (chrom, start, end)
+
+
+def get_hgvs_coordinates(chrom_ref, hgvs_suffix):
+    chrom = get_chrom_from_chrom_ref(chrom_ref)
+    start = int(hgvs_suffix[2: len(hgvs_suffix)-3]) - 1
+    end = start + 1
+    return (chrom, start, end)
+
+
 def get_coordinates(query_term, assembly='GRCh37', atlas=None):
     query_term = query_term.lower()
 
@@ -143,11 +220,26 @@ def get_coordinates(query_term, assembly='GRCh37', atlas=None):
             if query_match:
                 chrom, start, end = get_ensemblid_coordinates(
                     query_term.upper(), assembly)
-
-    try:
-        start, end = int(start), int(end)
-    except (ValueError, TypeError):
-        raise ValueError('Region "{}" is not recognizable.'.format(query_term))
+            else:
+                tokens = query_term.split(':', 1)
+                if (assembly == 'GRCh38' and tokens[0] in CHR_GRCH38) or (assembly in ['GRCh37', 'hg19'] and tokens[0] in CHR_GRCH37):
+                    query_match = re.match(
+                        r'^[0-9]+:(a|c|g|t|u|r|y|k|m|s|w|b|d|h|v|n):(a|c|g|t|u|r|y|k|m|s|w|b|d|h|v|n)', tokens[-1])
+                    if query_match:
+                        chrom, start, end = get_spdi_coordinates(
+                            tokens[0], tokens[1])
+                    else:
+                        query_match = re.match(
+                            r'^g.[0-9]+(a|c|g|t|u|r|y|k|m|s|w|b|d|h|v|n)>(a|c|g|t|u|r|y|k|m|s|w|b|d|h|v|n)', tokens[-1])
+                        if query_match:
+                            chrom, start, end = get_hgvs_coordinates(
+                                tokens[0], tokens[1])
+    if type(start) != int and type(end) != int:
+        try:
+            start, end = int(start), int(end)
+        except (ValueError, TypeError):
+            raise ValueError(
+                'Region "{}" is not recognizable.'.format(query_term))
 
     chrom = chrom.replace('x', 'X').replace('y', 'Y')
 
