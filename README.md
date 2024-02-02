@@ -24,7 +24,7 @@ pip install boto3
 Download machine learning models:
 
 ```bash
-python utils/download_files
+python utils/download_files.py
 ```
 
 ### Indexing
