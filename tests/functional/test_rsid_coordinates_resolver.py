@@ -8,6 +8,9 @@ from genomic_data_service.rsid_coordinates_resolver import (
     get_rsid_coordinates,
     get_coordinates,
     evidence_to_features,
+    get_chrom_from_chrom_ref,
+    get_spdi_coordinates,
+    get_hgvs_coordinates,
 )
 
 
@@ -465,6 +468,18 @@ def test_get_coordinates():
     assert start == 5894499
     assert end == 5894500
 
+    query_term = 'NC_000009.11:4575119:G:A'
+    chrom, start, end = get_coordinates(query_term)
+    assert chrom == 'chr9'
+    assert start == 4575119
+    assert end == 4575120
+
+    query_term = 'NC_000009.11:g.4575120G>A'
+    chrom, start, end = get_coordinates(query_term)
+    assert chrom == 'chr9'
+    assert start == 4575119
+    assert end == 4575120
+
 
 def test_get_coordinates_rsid(mocker):
     query_term = 'rs56116432'
@@ -514,3 +529,33 @@ def test_evidence_to_features():
     assert features['Footprint'] == True
     assert features['PWM'] == True
     assert features['Chromatin_accessibility'] == True
+
+
+def test_get_chrom_from_chrom_ref():
+    chrom_ref = 'NC_000023.11'
+    chrom = get_chrom_from_chrom_ref(chrom_ref)
+    assert chrom == 'chrX'
+    chrom_ref = 'NC_000024.10'
+    chrom = get_chrom_from_chrom_ref(chrom_ref)
+    assert chrom == 'chrY'
+    chrom_ref = 'NC_000001.11'
+    chrom = get_chrom_from_chrom_ref(chrom_ref)
+    assert chrom == 'chr1'
+
+
+def test_get_spdi_coordinates():
+    chrom_ref = 'NC_000009.12'
+    spdi_suffix = '4575119:G:A'
+    chrom, start, end = get_spdi_coordinates(chrom_ref, spdi_suffix)
+    assert chrom == 'chr9'
+    assert start == 4575119
+    assert end == 4575120
+
+
+def test_get_hgvs_coordinates():
+    chrom_ref = 'NC_000009.12'
+    hgvs_suffix = 'g.4575120G>A'
+    chrom, start, end = get_hgvs_coordinates(chrom_ref, hgvs_suffix)
+    assert chrom == 'chr9'
+    assert start == 4575119
+    assert end == 4575120
