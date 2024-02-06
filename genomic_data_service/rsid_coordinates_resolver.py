@@ -250,7 +250,6 @@ def resolve_coordinates_and_variants(region_queries, assembly, atlas, maf):
     variants = {}
     notifications = {}
     query_coordinates = []
-
     for region_query in region_queries:
         try:
             chrom, start, end = get_coordinates(region_query, assembly, atlas)
@@ -265,22 +264,12 @@ def resolve_coordinates_and_variants(region_queries, assembly, atlas, maf):
 
         query_coordinates.append(
             '{}:{}-{}'.format(chrom, int(start), int(end)))
-
+        # if the region is only one base long, we ignore maf score.
+        if (int(end) - int(start)) == 1:
+            maf = None
         snps = atlas.find_snps(
             GENOME_TO_ALIAS.get(assembly, 'hg19'), chrom, start, end, maf=maf
         )
-
-        if re.match(r'^rs\d+$', region_query.lower()):
-            snps.append(
-                {
-                    'rsid': region_query.lower(),
-                    'chrom': chrom,
-                    'coordinates': {
-                        'gte': start,
-                        'lt': end,
-                    }
-                }
-            )
 
         if not snps:
             if (int(end) - int(start)) > 1:
@@ -289,7 +278,10 @@ def resolve_coordinates_and_variants(region_queries, assembly, atlas, maf):
                 )
                 continue
             else:
-                variants[(chrom, int(start), int(end))] = set()
+                # we keep the region in the variant as long as it is only one base long, even no snps returned.
+                variants[(chrom, int(start), int(end))] = {
+                    'rsids': set(),
+                }
 
         for snp in snps:
             coord = (
@@ -298,10 +290,13 @@ def resolve_coordinates_and_variants(region_queries, assembly, atlas, maf):
                 snp['coordinates']['lt']
             )
             if coord in variants:
-                variants[coord].add(snp['rsid'])
+                variants[coord]['rsids'].add(snp['rsid'])
             else:
-                variants[coord] = {snp['rsid']}
-
+                variants[coord] = {}
+                variants[coord]['rsids'] = {snp['rsid']}
+            if snp.get('variation_type') == 'SNV':
+                variants[coord]['ref'] = list(snp['ref_allele_freq'].keys())
+                variants[coord]['alt'] = list(snp['alt_allele_freq'].keys())
     return (variants, query_coordinates, notifications)
 
 

@@ -91,7 +91,9 @@ def summary():
                 'chrom': chrom,
                 'start': start,
                 'end': end,
-                'rsids': sorted(variants[(chrom, start, end)])
+                'rsids': sorted(variants[(chrom, start, end)]['rsids']),
+                'ref': variants[(chrom, start, end)].get('ref', []),
+                'alt': variants[(chrom, start, end)].get('alt', []),
             }
             for chrom, start, end in sorted(variants)[from_:to_]
         ],
