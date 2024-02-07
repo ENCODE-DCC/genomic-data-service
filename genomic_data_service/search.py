@@ -70,7 +70,11 @@ def search():
     variants, query_coordinates, notifications = resolve_coordinates_and_variants(
         region_queries, assembly, atlas, maf
     )
-
+    if query_coordinates and (not is_snp(query_coordinates[0])):
+        result['notifications'] = {
+            'Failed': 'Invalid query coordinates {}.'.format(query_coordinates[0])
+        }
+        return jsonify(build_response(result))
     if notifications:
         key = list(notifications.keys())[0]
         value = list(notifications.values())[0]
@@ -193,3 +197,10 @@ def get_sequence(assembly, coordinate, window=50):
     }
     seq_reader.close()
     return sequence
+
+
+def is_snp(coordinate):
+    start, end = coordinate.split(':')[-1].split('-')
+    if int(end) - int(start) != 1:
+        return False
+    return True
