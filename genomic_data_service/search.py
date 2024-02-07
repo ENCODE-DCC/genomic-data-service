@@ -70,7 +70,7 @@ def search():
     variants, query_coordinates, notifications = resolve_coordinates_and_variants(
         region_queries, assembly, atlas, maf
     )
-    if not is_snp(query_coordinates[0]):
+    if query_coordinates and (not is_snp(query_coordinates[0])):
         result['notifications'] = {
             'Failed': 'Invalid query coordinates {}.'.format(query_coordinates[0])
         }
