@@ -13,6 +13,7 @@ def is_web_app():
 
 app = Flask(__name__)
 app.register_blueprint(rnaget_api)
+logging.basicConfig(level=logging.NOTSET)
 
 
 if 'GENOMIC_DATA_SERVICE_SETTINGS' in environ:
@@ -38,6 +39,7 @@ if is_web_app():
     app.url_map.strict_slashes = False
 
     # Enabled endpoints:
+    import genomic_data_service.catalog
     import genomic_data_service.search
     import genomic_data_service.summary
     import genomic_data_service.rnaseq.views
