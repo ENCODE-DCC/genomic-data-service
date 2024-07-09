@@ -21,7 +21,7 @@ setup(
         'gunicorn==20.1.0',
         'boto3==1.20.46',
         'redis==4.1.2',
-        'celery==4.4.6',
+        'celery>=4.4.6',
         'flower==0.9.4',
         'snovault-search==1.0.5',
         'sqlalchemy==1.3.22',

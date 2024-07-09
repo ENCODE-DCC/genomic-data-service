@@ -5,7 +5,8 @@ from genomic_data_service import regulome_es, app
 from genomic_data_service.regulome_atlas import RegulomeAtlas
 from genomic_data_service.rsid_coordinates_resolver import resolve_coordinates_and_variants, region_get_hits, evidence_to_features
 from genomic_data_service.request_utils import validate_search_request, extract_search_params
-from genomic_data_service.constants import REGULOME_VALID_ASSEMBLY
+from genomic_data_service.constants import REGULOME_VALID_ASSEMBLY, FREQ_SOURCES
+from genomic_data_service.catalog import get_variants_from_catalog
 
 
 def build_response(block):
@@ -30,7 +31,8 @@ def build_download(table, format_):
 
 def build_redirect_to_search(variants, assembly):
     regions = [
-        '{}:{}-{}'.format(v['chrom'], v['start'], v['end'])
+        v['spdi'] if v.get(
+            'spdi') else '{}:{}-{}'.format(v['chrom'], v['start'], v['end'])
         for v in variants
     ][0]
 
@@ -46,7 +48,7 @@ def summary():
     if not valid:
         raise BadRequest(error_msg)
 
-    assembly, from_, size, format_, maf, region_queries = extract_search_params(
+    assembly, from_, size, format_, source, maf, region_queries = extract_search_params(
         request.args
     )
 
@@ -60,12 +62,26 @@ def summary():
             }
         }
         return jsonify(build_response(result))
-
+    if source not in FREQ_SOURCES:
+        result = {
+            'source': source,
+            'format': format_,
+            'from': from_,
+            'notifications': {
+                'Failed': 'Invalid source {}'.format(source)
+            }
+        }
+        return jsonify(build_response(result))
     atlas = RegulomeAtlas(regulome_es)
+    if assembly == 'GRCh38':
+        variants, query_coordinates, notifications = get_variants_from_catalog(
+            region_queries, source, maf
+        )
 
-    variants, query_coordinates, notifications = resolve_coordinates_and_variants(
-        region_queries, assembly, atlas, maf
-    )
+    else:
+        variants, query_coordinates, notifications = resolve_coordinates_and_variants(
+            region_queries, assembly, atlas, maf
+        )
 
     total = len(variants)
     from_ = max(from_, 0)
@@ -86,7 +102,14 @@ def summary():
         'format': format_.lower(),
         'from': from_,
         'total': total,
-        'variants': [
+        'region_queries': region_queries,
+        'notifications': notifications
+    }
+
+    if assembly == 'GRCh38':
+        result['variants'] = variants[from_:to_]
+    else:
+        result['variants'] = [
             {
                 'chrom': chrom,
                 'start': start,
@@ -96,9 +119,7 @@ def summary():
                 'alt': variants[(chrom, start, end)].get('alt', []),
             }
             for chrom, start, end in sorted(variants)[from_:to_]
-        ],
-        'notifications': notifications
-    }
+        ]
 
     if not result['variants']:
         if not result['notifications']:

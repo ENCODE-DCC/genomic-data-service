@@ -15,7 +15,8 @@ def extract_search_params(params):
     assembly = params.get('genome')
     from_ = params.get('from', type=int) or 0
     format = params.get('format', 'json')
-    maf = params.get('maf', None)
+    maf = params.get('maf', 0.01)
+    source = params.get('source', 'bravo_af')
 
     regions = params.get('regions', [])
     if regions:
@@ -28,4 +29,4 @@ def extract_search_params(params):
                       for region_query in re.split(r'[\r\n]+', query)
                       if not re.match(r'^(#.*)|(\s*)$', region_query)]
 
-    return assembly, from_, size, format, maf, region_queries
+    return assembly, from_, size, format, source, maf, region_queries
