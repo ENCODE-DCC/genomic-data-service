@@ -64,6 +64,105 @@ CHR_GRCH37 = [
     'nc_000024.9',
 ]
 
+CATALOG_API_FREQ = 'http://54.213.162.5:2025/api/variants/freq?page=0&maximum_af=1'
+CATALOG_API_VARIANTS = 'http://54.213.162.5:2025/api/variants?page=0'
+
+
+def get_variants_from_catalog(region_queries, source='bravo_af', maf=0.01):
+    """
+    This function use catalog api to query SNPs for give region querys.
+    :param region_queries: list of region queries
+    :param source: source of the variants
+    :param maf: minimum allele frequency
+    :return: a list of variants sorted by chrom and start position
+    there are two APIs to use.
+    If the query is coordiantes, it is more than one base long, and source and maf is defined, we use variantByFrequencySource endpoint.
+    Otherwise, we use variants endpoint.
+    Those two endpoint return all types of variants, so we need to filter for only SNPs.
+    Notification need to be added when:
+    1. the region query is not in the valid format(only coordinates, rsid, spdi and hgvs is allowed).
+    2. the start and end are the same.
+    3. no known variants matching query coordinates found.
+    If the coordinates is one base long, even though no viariants are found, it will not generate notification.
+    Instead, we will still add this coordinates to variants list.
+    If you search for rsid, spdi or hgvs, even though the variant is not a SNP, it will still return the variant.
+    """
+    region_queries = list(set(region_queries))
+    notifications = {}
+    query_coordinates = []
+    variants = []
+    api_base = CATALOG_API_VARIANTS
+    api = ''
+    for region_query in region_queries:
+        is_single_base = False
+        # example of region_query: chr1:10000-10001
+        if re.match(r'^(chr[1-9]|chr1[0-9]|chr2[0-2]|chrx|chry)(?:\s+|:)(\d+)(?:\s+|-)(\d+)$', region_query):
+            chrom = region_query.split(':')[0]
+            start_end = region_query.split(':')[-1].split('-')
+            start = int(start_end[0])
+            end = int(start_end[1])
+            if end - start <= 0:
+                notifications[region_query] = (
+                    'Failed: coordinates start should be smaller than coordinates end.'
+                )
+                continue
+            if end - start > 1:
+                api_base = CATALOG_API_FREQ
+                api = f'{api_base}&region={region_query}&source={source}&minimum_af={maf}'
+            else:
+                is_single_base = True
+                api = api_base + '&region={}'.format(region_query)
+
+        # example of region_query: rs4970774
+        elif re.match(r'^rs\d+$', region_query):
+            api = api_base + '&rsid={}'.format(region_query)
+        # example of region_query: NC_000001.11:109726205:A:T
+        elif re.match(r'^NC_\d{6}\.\d{1,2}:\d+:\w:\w$', region_query):
+            api = api_base + '&spdi={}'.format(region_query)
+        # example of region_query: NC_000001.11:g.109726206A>T
+        elif re.match(r'^NC_\d{6}\.\d{1,2}:g\.\d+\w>\w$', region_query):
+            api = api_base + '&hgvs={}'.format(region_query)
+        else:
+            notifications[region_query] = 'Failed: invalid region input'
+            return
+
+        res = requests.get(api).json()
+        if res:
+            res = [variant for variant in res if len(
+                variant['ref']) == 1 and len(variant['alt']) == 1]
+            for variant in res:
+                variants.append({
+                    'chrom': variant['chr'],
+                    'start': variant['pos'],
+                    'end': variant['pos'] + 1,
+                    'rsid': variant['rsid'],
+                    'ref': variant['ref'],
+                    'alt': variant['alt'],
+                    'hgvs': variant['hgvs'],
+                    'spdi': variant['spdi']
+                })
+                query_coordinates.append(
+                    '{}:{}-{}'.format(variant['chr'], variant['pos'], variant['pos'] + 1))
+        else:
+            if is_single_base:
+                variants.append({
+                    'chrom': chrom,
+                    'start': start,
+                    'end': end,
+                    'rsid': list(),
+                    'ref': list(),
+                    'alt': list(),
+                    'hgvs': None,
+                    'spdi': None
+                })
+                query_coordinates.append(region_query)
+            else:
+                notifications[region_query] = f'Failed: no known SNPs matching {region_query} found.'
+
+    variants = sorted(variants, key=lambda variant: (
+        variant['chrom'], variant['start'], variant['ref'], variant['alt']))
+    return (variants, list(set(query_coordinates)), notifications)
+
 
 def ensembl_assembly_mapper(location, species, input_assembly, output_assembly):
     # maps location on GRCh38 to hg19 for example

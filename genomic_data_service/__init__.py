@@ -39,7 +39,6 @@ if is_web_app():
     app.url_map.strict_slashes = False
 
     # Enabled endpoints:
-    import genomic_data_service.catalog
     import genomic_data_service.search
     import genomic_data_service.summary
     import genomic_data_service.rnaseq.views

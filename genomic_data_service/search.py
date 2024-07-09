@@ -4,10 +4,9 @@ from werkzeug.exceptions import BadRequest
 from genomic_data_service import regulome_es, app
 from genomic_data_service.region_service import RegionService
 from genomic_data_service.regulome_atlas import RegulomeAtlas
-from genomic_data_service.rsid_coordinates_resolver import resolve_coordinates_and_variants, search_peaks
+from genomic_data_service.rsid_coordinates_resolver import resolve_coordinates_and_variants, search_peaks, get_variants_from_catalog
 from genomic_data_service.request_utils import validate_search_request, extract_search_params
 from genomic_data_service.constants import REGULOME_VALID_ASSEMBLY, TWO_BIT_HG19_FILE_PATH, TWO_BIT_HG38_FILE_PATH
-from genomic_data_service.catalog import get_variants_from_catalog
 import py2bit
 
 
