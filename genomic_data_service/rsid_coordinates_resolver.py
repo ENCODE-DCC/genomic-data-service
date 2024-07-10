@@ -94,6 +94,7 @@ def get_variants_from_catalog(region_queries, source='bravo_af', maf=0.01):
     api_base = CATALOG_API_VARIANTS
     api = ''
     for region_query in region_queries:
+        logging.info(f'region query: {region_query}')
         is_single_base = False
         # example of region_query: chr1:10000-10001
         if re.match(r'^(chr[1-9]|chr1[0-9]|chr2[0-2]|chrx|chry)(?:\s+|:)(\d+)(?:\s+|-)(\d+)$', region_query):
@@ -127,10 +128,13 @@ def get_variants_from_catalog(region_queries, source='bravo_af', maf=0.01):
             return
 
         res = requests.get(api).json()
+        res = [variant for variant in res if len(
+            variant['ref']) == 1 and len(variant['alt']) == 1]
         if res:
-            res = [variant for variant in res if len(
-                variant['ref']) == 1 and len(variant['alt']) == 1]
             for variant in res:
+                freq = variant['annotations'].copy()
+                if freq.get('GENCODE_category'):
+                    del freq['GENCODE_category']
                 variants.append({
                     'chrom': variant['chr'],
                     'start': variant['pos'],
@@ -139,7 +143,9 @@ def get_variants_from_catalog(region_queries, source='bravo_af', maf=0.01):
                     'ref': variant['ref'],
                     'alt': variant['alt'],
                     'hgvs': variant['hgvs'],
-                    'spdi': variant['spdi']
+                    'spdi': variant['spdi'],
+                    'gencode_category': variant['annotations'].get('GENCODE_category'),
+                    'freq': freq,
                 })
                 query_coordinates.append(
                     '{}:{}-{}'.format(variant['chr'], variant['pos'], variant['pos'] + 1))
@@ -153,7 +159,9 @@ def get_variants_from_catalog(region_queries, source='bravo_af', maf=0.01):
                     'ref': list(),
                     'alt': list(),
                     'hgvs': None,
-                    'spdi': None
+                    'spdi': None,
+                    'gencode_category': None,
+                    'freq': {}
                 })
                 query_coordinates.append(region_query)
             else:
