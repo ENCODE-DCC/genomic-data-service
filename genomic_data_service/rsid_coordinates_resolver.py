@@ -74,46 +74,48 @@ def get_variants_from_catalog(region_queries, source='bravo_af', maf=0.01):
         else:
             notifications[region_query] = 'Failed: invalid region input'
             continue
-        logging.info(f'api: {api}')
-        res = requests.get(api).json()
-        res = [variant for variant in res if len(
-            variant['ref']) == 1 and len(variant['alt']) == 1]
-        if res:
-            for variant in res:
-                freq = variant['annotations'].copy()
-                if freq.get('GENCODE_category'):
-                    del freq['GENCODE_category']
-                variants.append({
-                    'chrom': variant['chr'],
-                    'start': variant['pos'],
-                    'end': variant['pos'] + 1,
-                    'rsids': variant['rsid'],
-                    'ref': variant['ref'],
-                    'alt': variant['alt'],
-                    'hgvs': variant['hgvs'],
-                    'spdi': variant['spdi'],
-                    'gencode_category': variant['annotations'].get('GENCODE_category'),
-                    'freq': freq,
-                })
-                query_coordinates.append(
-                    '{}:{}-{}'.format(variant['chr'], variant['pos'], variant['pos'] + 1))
-        else:
-            if is_single_base:
-                variants.append({
-                    'chrom': chrom,
-                    'start': start,
-                    'end': end,
-                    'rsids': list(),
-                    'ref': list(),
-                    'alt': list(),
-                    'hgvs': None,
-                    'spdi': None,
-                    'gencode_category': None,
-                    'freq': {}
-                })
-                query_coordinates.append(region_query)
+        try:
+            res = requests.get(api).json()
+            res = [variant for variant in res if len(
+                variant['ref']) == 1 and len(variant['alt']) == 1]
+            if res:
+                for variant in res:
+                    freq = variant['annotations'].copy()
+                    if freq.get('GENCODE_category'):
+                        del freq['GENCODE_category']
+                    variants.append({
+                        'chrom': variant['chr'],
+                        'start': variant['pos'],
+                        'end': variant['pos'] + 1,
+                        'rsids': variant['rsid'],
+                        'ref': variant['ref'],
+                        'alt': variant['alt'],
+                        'hgvs': variant['hgvs'],
+                        'spdi': variant['spdi'],
+                        'gencode_category': variant['annotations'].get('GENCODE_category'),
+                        'freq': freq,
+                    })
+                    query_coordinates.append(
+                        '{}:{}-{}'.format(variant['chr'], variant['pos'], variant['pos'] + 1))
             else:
-                notifications[region_query] = f'Failed: no known SNPs matching {region_query} found.'
+                if is_single_base:
+                    variants.append({
+                        'chrom': chrom,
+                        'start': start,
+                        'end': end,
+                        'rsids': list(),
+                        'ref': list(),
+                        'alt': list(),
+                        'hgvs': None,
+                        'spdi': None,
+                        'gencode_category': None,
+                        'freq': {}
+                    })
+                    query_coordinates.append(region_query)
+                else:
+                    notifications[region_query] = f'Failed: no known SNPs matching {region_query} found.'
+        except Exception as e:
+            notifications[region_query] = f'Failed: try again later: {e}'
 
     variants = sorted(variants, key=lambda variant: (
         variant['chrom'], variant['start'], variant['ref'], variant['alt']))
