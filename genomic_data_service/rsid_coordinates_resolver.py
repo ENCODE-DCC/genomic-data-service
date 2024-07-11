@@ -3,6 +3,10 @@ import requests
 import time
 import logging
 from genomic_data_service.constants import (
+    CATALOG_API_FREQ,
+    CATALOG_API_VARIANTS,
+    CHR_GRCH37,
+    CHR_GRCH38,
     GENOME_TO_ALIAS,
     GENOME_TO_SPECIES,
     ENSEMBL_URL,
@@ -11,81 +15,26 @@ from genomic_data_service.constants import (
 
 log = logging.getLogger(__name__)
 
-CHR_GRCH38 = [
-    'nc_000001.11',
-    'nc_000002.12',
-    'nc_000003.12',
-    'nc_000004.12',
-    'nc_000005.10',
-    'nc_000006.12',
-    'nc_000007.14',
-    'nc_000008.11',
-    'nc_000009.12',
-    'nc_000010.11',
-    'nc_000011.10',
-    'nc_000012.12',
-    'nc_000013.11',
-    'nc_000014.9',
-    'nc_000015.10',
-    'nc_000016.10',
-    'nc_000017.11',
-    'nc_000018.10',
-    'nc_000019.10',
-    'nc_000020.11',
-    'nc_000021.9',
-    'nc_000022.11',
-    'nc_000023.11',
-    'nc_000024.10',
-]
-CHR_GRCH37 = [
-    'nc_000001.10',
-    'nc_000002.11',
-    'nc_000003.11',
-    'nc_000004.11',
-    'nc_000005.9',
-    'nc_000006.11',
-    'nc_000007.13',
-    'nc_000008.10',
-    'nc_000009.11',
-    'nc_000010.10',
-    'nc_000011.9',
-    'nc_000012.11',
-    'nc_000013.10',
-    'nc_000014.8',
-    'nc_000015.9',
-    'nc_000016.9',
-    'nc_000017.10',
-    'nc_000018.9',
-    'nc_000019.9',
-    'nc_000020.10',
-    'nc_000021.9',
-    'nc_000022.10',
-    'nc_000023.10',
-    'nc_000024.9',
-]
-
-CATALOG_API_FREQ = 'http://54.213.162.5:2025/api/variants/freq?page=0&maximum_af=1'
-CATALOG_API_VARIANTS = 'http://54.213.162.5:2025/api/variants?page=0'
-
 
 def get_variants_from_catalog(region_queries, source='bravo_af', maf=0.01):
     """
     This function use catalog api to query SNPs for give region querys.
     :param region_queries: list of region queries
-    :param source: source of the variants
+    :param source: source of the variants frequency
     :param maf: minimum allele frequency
-    :return: a list of variants sorted by chrom and start position
+    :return: a list of variants sorted by chrom, start position, ref and alt.
     there are two APIs to use.
-    If the query is coordiantes, it is more than one base long, and source and maf is defined, we use variantByFrequencySource endpoint.
+    If the query is coordiantes, it is more than one base long, we use variantByFrequencySource endpoint.
+    The source and maf have default values, but can be changed by user input.
     Otherwise, we use variants endpoint.
-    Those two endpoint return all types of variants, so we need to filter for only SNPs.
+    Those two endpoints return all types of variants, so we need to filter for only SNPs.
+    The max limit for the two endpoints is 500.
     Notification need to be added when:
     1. the region query is not in the valid format(only coordinates, rsid, spdi and hgvs is allowed).
     2. the start and end are the same.
     3. no known variants matching query coordinates found.
     If the coordinates is one base long, even though no viariants are found, it will not generate notification.
     Instead, we will still add this coordinates to variants list.
-    If you search for rsid, spdi or hgvs, even though the variant is not a SNP, it will still return the variant.
     """
     region_queries = list(set(region_queries))
     notifications = {}
@@ -94,7 +43,6 @@ def get_variants_from_catalog(region_queries, source='bravo_af', maf=0.01):
     api_base = CATALOG_API_VARIANTS
     api = ''
     for region_query in region_queries:
-        logging.info(f'region query: {region_query}')
         is_single_base = False
         # example of region_query: chr1:10000-10001
         if re.match(r'^(chr[1-9]|chr1[0-9]|chr2[0-2]|chrx|chry)(?:\s+|:)(\d+)(?:\s+|-)(\d+)$', region_query):
@@ -125,8 +73,8 @@ def get_variants_from_catalog(region_queries, source='bravo_af', maf=0.01):
             api = api_base + '&hgvs={}'.format(region_query)
         else:
             notifications[region_query] = 'Failed: invalid region input'
-            return
-
+            continue
+        logging.info(f'api: {api}')
         res = requests.get(api).json()
         res = [variant for variant in res if len(
             variant['ref']) == 1 and len(variant['alt']) == 1]
