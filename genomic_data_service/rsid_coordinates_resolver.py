@@ -72,7 +72,7 @@ def get_variants_from_catalog(region_queries, source='bravo_af', maf=0.01):
         elif re.match(r'^NC_\d{6}\.\d{1,2}:g\.\d+\w>\w$', region_query):
             api = api_base + '&hgvs={}'.format(region_query)
         else:
-            notifications[region_query] = 'Failed: invalid region input'
+            notifications[region_query] = 'Failed: invalid region input, only coordinates, rsID, SPDI and HGVS is allowed, and only SNVs are allowed for SPDI and HGVS.'
             continue
         try:
             res = requests.get(api).json()
