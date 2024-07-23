@@ -1,10 +1,10 @@
 import time
-from flask import jsonify, request
+from flask import jsonify, request, redirect, url_for
 from werkzeug.exceptions import BadRequest
 from genomic_data_service import regulome_es, app
 from genomic_data_service.region_service import RegionService
 from genomic_data_service.regulome_atlas import RegulomeAtlas
-from genomic_data_service.rsid_coordinates_resolver import resolve_coordinates_and_variants, search_peaks
+from genomic_data_service.rsid_coordinates_resolver import resolve_coordinates_and_variants, search_peaks, get_variants_from_catalog
 from genomic_data_service.request_utils import validate_search_request, extract_search_params
 from genomic_data_service.constants import REGULOME_VALID_ASSEMBLY, TWO_BIT_HG19_FILE_PATH, TWO_BIT_HG38_FILE_PATH
 import py2bit
@@ -19,6 +19,10 @@ def build_response(block):
             'title': 'Genomic Region Search',
         }
     }
+
+
+def build_redirect_to_summary(region_queries, assembly):
+    return redirect(url_for('summary', genome=assembly, regions=region_queries), code=302)
 
 
 @app.route('/search/', methods=['GET'])
@@ -38,7 +42,7 @@ def search():
     if not valid:
         raise BadRequest(error_msg)
 
-    assembly, from_, size, format_, maf, region_queries = extract_search_params(
+    assembly, from_, size, format_, source, maf, region_queries = extract_search_params(
         request.args
     )
     result = {
@@ -67,9 +71,13 @@ def search():
 
     atlas = RegulomeAtlas(regulome_es)
 
-    variants, query_coordinates, notifications = resolve_coordinates_and_variants(
-        region_queries, assembly, atlas, maf
-    )
+    if assembly == 'GRCh38':
+        variants, query_coordinates, notifications = get_variants_from_catalog(
+            region_queries, source, maf)
+    else:
+        variants, query_coordinates, notifications = resolve_coordinates_and_variants(
+            region_queries, assembly, atlas, maf
+        )
     if query_coordinates and (not is_snp(query_coordinates[0])):
         result['notifications'] = {
             'Failed': 'Invalid query coordinates {}.'.format(query_coordinates[0])
@@ -84,6 +92,9 @@ def search():
         return jsonify(build_response(result))
 
     total = len(variants)
+    if total > 1:
+        return build_redirect_to_summary(region_queries, assembly)
+
     from_ = max(from_, 0)
 
     if size in ('all', ''):
@@ -102,7 +113,13 @@ def search():
         'format': format_,
         'from': from_,
         'total': total,
-        'variants': [
+        'notifications': notifications
+    }
+
+    if assembly == 'GRCh38':
+        result['variants'] = variants[from_:to_]
+    else:
+        result['variants'] = [
             {
                 'chrom': chrom,
                 'start': start,
@@ -112,9 +129,7 @@ def search():
                 'alt': variants[(chrom, start, end)].get('alt', []),
             }
             for chrom, start, end in sorted(variants)[from_:to_]
-        ],
-        'notifications': notifications
-    }
+        ]
 
     regulome_score, features, notifications, graph, timing, nearby_snps = search_peaks(
         query_coordinates,

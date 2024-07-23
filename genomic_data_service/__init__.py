@@ -13,6 +13,7 @@ def is_web_app():
 
 app = Flask(__name__)
 app.register_blueprint(rnaget_api)
+logging.basicConfig(level=logging.NOTSET)
 
 
 if 'GENOMIC_DATA_SERVICE_SETTINGS' in environ:

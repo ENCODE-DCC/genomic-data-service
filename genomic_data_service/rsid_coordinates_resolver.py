@@ -3,6 +3,10 @@ import requests
 import time
 import logging
 from genomic_data_service.constants import (
+    CATALOG_API_FREQ,
+    CATALOG_API_VARIANTS,
+    CHR_GRCH37,
+    CHR_GRCH38,
     GENOME_TO_ALIAS,
     GENOME_TO_SPECIES,
     ENSEMBL_URL,
@@ -11,58 +15,111 @@ from genomic_data_service.constants import (
 
 log = logging.getLogger(__name__)
 
-CHR_GRCH38 = [
-    'nc_000001.11',
-    'nc_000002.12',
-    'nc_000003.12',
-    'nc_000004.12',
-    'nc_000005.10',
-    'nc_000006.12',
-    'nc_000007.14',
-    'nc_000008.11',
-    'nc_000009.12',
-    'nc_000010.11',
-    'nc_000011.10',
-    'nc_000012.12',
-    'nc_000013.11',
-    'nc_000014.9',
-    'nc_000015.10',
-    'nc_000016.10',
-    'nc_000017.11',
-    'nc_000018.10',
-    'nc_000019.10',
-    'nc_000020.11',
-    'nc_000021.9',
-    'nc_000022.11',
-    'nc_000023.11',
-    'nc_000024.10',
-]
-CHR_GRCH37 = [
-    'nc_000001.10',
-    'nc_000002.11',
-    'nc_000003.11',
-    'nc_000004.11',
-    'nc_000005.9',
-    'nc_000006.11',
-    'nc_000007.13',
-    'nc_000008.10',
-    'nc_000009.11',
-    'nc_000010.10',
-    'nc_000011.9',
-    'nc_000012.11',
-    'nc_000013.10',
-    'nc_000014.8',
-    'nc_000015.9',
-    'nc_000016.9',
-    'nc_000017.10',
-    'nc_000018.9',
-    'nc_000019.9',
-    'nc_000020.10',
-    'nc_000021.9',
-    'nc_000022.10',
-    'nc_000023.10',
-    'nc_000024.9',
-]
+
+def get_variants_from_catalog(region_queries, source='bravo_af', maf=0.01):
+    """
+    This function use catalog api to query SNPs for give region querys.
+    :param region_queries: list of region queries
+    :param source: source of the variants frequency
+    :param maf: minimum allele frequency
+    :return: a list of variants sorted by chrom, start position, ref and alt.
+    there are two APIs to use.
+    If the query is coordiantes, it is more than one base long, we use variantByFrequencySource endpoint.
+    The source and maf have default values, but can be changed by user input.
+    Otherwise, we use variants endpoint.
+    Those two endpoints return all types of variants, so we need to filter for only SNPs.
+    The max limit for the two endpoints is 500.
+    Notification need to be added when:
+    1. the region query is not in the valid format(only coordinates, rsid, spdi and hgvs is allowed).
+    2. the start and end are the same.
+    3. no known variants matching query coordinates found.
+    If the coordinates is one base long, even though no viariants are found, it will not generate notification.
+    Instead, we will still add this coordinates to variants list.
+    """
+    region_queries = list(set(region_queries))
+    notifications = {}
+    query_coordinates = []
+    variants = []
+    api_base = CATALOG_API_VARIANTS
+    api = ''
+    for region_query in region_queries:
+        is_single_base = False
+        # example of region_query: chr1:10000-10001
+        if re.match(r'^(chr[1-9]|chr1[0-9]|chr2[0-2]|chrx|chry)(?:\s+|:)(\d+)(?:\s+|-)(\d+)$', region_query):
+            chrom = region_query.split(':')[0]
+            start_end = region_query.split(':')[-1].split('-')
+            start = int(start_end[0])
+            end = int(start_end[1])
+            if end - start <= 0:
+                notifications[region_query] = (
+                    'Failed: coordinates start should be smaller than coordinates end.'
+                )
+                continue
+            if end - start > 1:
+                api_base = CATALOG_API_FREQ
+                api = f'{api_base}&region={region_query}&source={source}&minimum_af={maf}'
+            else:
+                is_single_base = True
+                api = api_base + '&region={}'.format(region_query)
+
+        # example of region_query: rs4970774
+        elif re.match(r'^rs\d+$', region_query):
+            api = api_base + '&rsid={}'.format(region_query)
+        # example of region_query: NC_000001.11:109726205:A:T
+        elif re.match(r'^NC_\d{6}\.\d{1,2}:\d+:\w:\w$', region_query):
+            api = api_base + '&spdi={}'.format(region_query)
+        # example of region_query: NC_000001.11:g.109726206A>T
+        elif re.match(r'^NC_\d{6}\.\d{1,2}:g\.\d+\w>\w$', region_query):
+            api = api_base + '&hgvs={}'.format(region_query)
+        else:
+            notifications[region_query] = 'Failed: invalid region input, only coordinates, rsID, SPDI and HGVS is allowed, and only SNVs are allowed for SPDI and HGVS.'
+            continue
+        try:
+            res = requests.get(api).json()
+            res = [variant for variant in res if len(
+                variant['ref']) == 1 and len(variant['alt']) == 1]
+            if res:
+                for variant in res:
+                    freq = variant['annotations'].copy()
+                    if freq.get('GENCODE_category'):
+                        del freq['GENCODE_category']
+                    variants.append({
+                        'chrom': variant['chr'],
+                        'start': variant['pos'],
+                        'end': variant['pos'] + 1,
+                        'rsids': variant['rsid'],
+                        'ref': variant['ref'],
+                        'alt': variant['alt'],
+                        'hgvs': variant['hgvs'],
+                        'spdi': variant['spdi'],
+                        'gencode_category': variant['annotations'].get('GENCODE_category'),
+                        'freq': freq,
+                    })
+                    query_coordinates.append(
+                        '{}:{}-{}'.format(variant['chr'], variant['pos'], variant['pos'] + 1))
+            else:
+                if is_single_base:
+                    variants.append({
+                        'chrom': chrom,
+                        'start': start,
+                        'end': end,
+                        'rsids': list(),
+                        'ref': list(),
+                        'alt': list(),
+                        'hgvs': None,
+                        'spdi': None,
+                        'gencode_category': None,
+                        'freq': {}
+                    })
+                    query_coordinates.append(region_query)
+                else:
+                    notifications[region_query] = f'Failed: no known SNPs matching {region_query} found.'
+        except Exception as e:
+            notifications[region_query] = f'Failed: try again later: {e}'
+
+    variants = sorted(variants, key=lambda variant: (
+        variant['chrom'], variant['start'], variant['ref'], variant['alt']))
+    return (variants, list(set(query_coordinates)), notifications)
 
 
 def ensembl_assembly_mapper(location, species, input_assembly, output_assembly):
