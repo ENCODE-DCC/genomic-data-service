@@ -96,5 +96,5 @@ CHR_GRCH37 = [
     'nc_000024.9',
 ]
 
-CATALOG_API_FREQ = 'https://api-dev.catalog.igvf.org/api/variants/freq?page=0&maximum_af=1&limit=500'
-CATALOG_API_VARIANTS = 'https://api-dev.catalog.igvf.org/api/variants?page=0&limit=500'
+CATALOG_API_FREQ = 'https://api.catalog.igvf.org/api/variants/freq?page=0&maximum_af=1&limit=500'
+CATALOG_API_VARIANTS = 'https://api.catalog.igvf.org/api/variants?page=0&limit=500'
