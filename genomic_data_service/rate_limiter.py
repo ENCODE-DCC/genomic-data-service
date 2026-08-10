@@ -1,4 +1,4 @@
-"""Token-bucket rate limiting for outbound requests to the ENCODE portal.
+"""Rate limiting for outbound requests to the ENCODE portal.
 
 The indexer (``region_indexer.py``) and the Celery workers (``strand.py``) both
 make requests to ``www.encodeproject.org``. To avoid being a "noisy neighbor"
@@ -6,15 +6,16 @@ they share a single, approximate requests-per-second budget.
 
 Two backends are provided:
 
-* :class:`_RedisTokenBucket` -- a distributed token bucket whose state lives in
-  Redis so that the main process and every Celery worker draw from one shared
-  budget. Refill and consume happen atomically inside a Lua script, using the
-  Redis server clock so client clock skew does not matter.
+* :class:`_RedisFixedWindow` -- a distributed limiter whose state lives in Redis
+  so the main process and every Celery worker share one budget. It uses a
+  per-second counter (``INCR`` on a ``key:<epoch_second>`` key, which is atomic
+  on its own -- no Lua needed). A fixed window can admit up to ~2x the rate
+  across a window boundary; that is acceptable for an approximate throttle.
 * :class:`_InProcessTokenBucket` -- a thread-safe in-process fallback used when
   no Redis URL is configured or Redis is unreachable.
 
 Use :func:`get_portal_limiter` to build the appropriate limiter. All limiters
-expose ``acquire(tokens=1)`` which blocks until a token is available.
+expose ``acquire(tokens=1)`` which blocks until a request may proceed.
 """
 
 import math
@@ -61,64 +62,30 @@ class _InProcessTokenBucket:
             time.sleep(sleep_for)
 
 
-# Atomically refill and consume a token bucket stored in a Redis hash.
-# Uses the Redis server clock (TIME) so client clock skew is irrelevant.
-# Returns {allowed, wait_seconds_as_string}.
-_REDIS_LUA = """
-local key = KEYS[1]
-local rate = tonumber(ARGV[1])
-local capacity = tonumber(ARGV[2])
-local requested = tonumber(ARGV[3])
+class _RedisFixedWindow:
+    """Distributed fixed-window rate limiter shared across processes via Redis.
 
-local t = redis.call('TIME')
-local now = tonumber(t[1]) + tonumber(t[2]) / 1000000
+    One counter per clock-second: ``INCR`` is atomic, so no read-modify-write
+    coordination (or Lua) is required. When a second's counter exceeds the
+    budget, callers wait until the next second and try again.
+    """
 
-local data = redis.call('HMGET', key, 'tokens', 'ts')
-local tokens = tonumber(data[1])
-local ts = tonumber(data[2])
-if tokens == nil then
-    tokens = capacity
-    ts = now
-end
-
-local elapsed = now - ts
-if elapsed < 0 then elapsed = 0 end
-tokens = math.min(capacity, tokens + elapsed * rate)
-
-local allowed = 0
-local wait = 0
-if tokens >= requested then
-    tokens = tokens - requested
-    allowed = 1
-else
-    wait = (requested - tokens) / rate
-end
-
-redis.call('HSET', key, 'tokens', tokens, 'ts', now)
--- expire idle keys so they don't linger forever
-redis.call('PEXPIRE', key, math.ceil((capacity / rate) * 1000) + 1000)
-
-return {allowed, tostring(wait)}
-"""
-
-
-class _RedisTokenBucket:
-    """Distributed token bucket shared across processes via Redis."""
-
-    def __init__(self, redis_client, key, rate, capacity):
+    def __init__(self, redis_client, key, rps):
         self.redis = redis_client
         self.key = key
-        self.rate = float(rate)
-        self.capacity = float(capacity)
-        self._script = redis_client.register_script(_REDIS_LUA)
+        # Whole requests per one-second window.
+        self.rps = max(1, int(math.ceil(rps)))
 
     def acquire(self, tokens=1):
         while True:
+            now = time.time()
+            window = int(now)
+            window_key = f'{self.key}:{window}'
             try:
-                allowed, wait = self._script(
-                    keys=[self.key],
-                    args=[self.rate, self.capacity, tokens],
-                )
+                count = self.redis.incr(window_key)
+                if count == 1:
+                    # Expire a little past the window so keys clean themselves up.
+                    self.redis.expire(window_key, 2)
             except Exception as e:
                 # Never let a Redis hiccup block indexing; degrade to no limit.
                 logger.warning(
@@ -127,14 +94,12 @@ class _RedisTokenBucket:
                 )
                 return
 
-            if int(allowed) == 1:
+            if count <= self.rps:
                 return
 
-            if isinstance(wait, bytes):
-                wait = wait.decode()
-            wait = float(wait)
-            # Small jitter avoids many waiters waking simultaneously.
-            time.sleep(max(wait, 0.005) + random.uniform(0, 0.01))
+            # Over budget for this second: wait out the rest of it (plus jitter
+            # so many waiters don't all wake on the exact boundary).
+            time.sleep(max(0.0, window + 1 - now) + random.uniform(0, 0.05))
 
 
 def get_portal_limiter(
@@ -143,14 +108,13 @@ def get_portal_limiter(
     """Build a limiter capping requests at approximately ``rps`` per second.
 
     ``rps`` <= 0 (or ``None``) disables rate limiting. When ``redis_url`` is
-    provided and reachable, a shared Redis-backed bucket is returned; otherwise
-    an in-process bucket is used. ``burst`` sets the bucket capacity (max
-    instantaneous burst); it defaults to ``ceil(rps)``.
+    provided and reachable, a shared Redis-backed limiter is returned; otherwise
+    an in-process token bucket is used. ``burst`` sets the in-process bucket
+    capacity (max instantaneous burst) and defaults to ``ceil(rps)``; it has no
+    effect on the Redis fixed-window backend.
     """
     if not rps or rps <= 0:
         return _NoopLimiter()
-
-    capacity = float(burst) if burst else max(1.0, math.ceil(rps))
 
     if redis_url:
         try:
@@ -161,16 +125,17 @@ def get_portal_limiter(
             )
             client.ping()
             logger.info(
-                'Portal rate limiter: using shared Redis bucket at %.3g req/s '
-                '(burst %.3g).', rps, capacity
+                'Portal rate limiter: using shared Redis window at %.3g req/s.',
+                rps,
             )
-            return _RedisTokenBucket(client, key, rps, capacity)
+            return _RedisFixedWindow(client, key, rps)
         except Exception as e:
             logger.warning(
                 'Portal rate limiter: Redis unavailable (%s); falling back to '
                 'in-process limiter.', e
             )
 
+    capacity = float(burst) if burst else max(1.0, math.ceil(rps))
     logger.info(
         'Portal rate limiter: using in-process bucket at %.3g req/s '
         '(burst %.3g).', rps, capacity
