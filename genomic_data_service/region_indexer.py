@@ -1,7 +1,9 @@
+from genomic_data_service import app
 from genomic_data_service.region_indexer_task import index_file, index_local_snp_files
 from genomic_data_service.region_indexer_elastic_search import (
     RegionIndexerElasticSearch,
 )
+from genomic_data_service.rate_limiter import get_portal_limiter
 import requests
 from requests.adapters import HTTPAdapter, Retry
 from requests.exceptions import JSONDecodeError
@@ -155,7 +157,39 @@ parser.add_argument(
     choices=['RegulomeDB_2_0', 'RegulomeDB_2_1', 'RegulomeDB_2_2'],
 )
 
-session = requests.Session()
+parser.add_argument(
+    '--rps', type=float, default=None,
+    help='Approximate max requests per second to the ENCODE portal. '
+         'Defaults to the PORTAL_RPS config value (10). Use 0 to disable.')
+
+parser.add_argument(
+    '--redis-url', default=None,
+    help='Redis URL backing the shared portal rate limiter (main process and '
+         'Celery workers share one budget). Defaults to CELERY_BROKER_URL. '
+         'Pass an empty string to use an in-process limiter instead.')
+
+
+class RateLimitedSession(requests.Session):
+    """A requests Session that blocks on a rate limiter before each request.
+
+    Wrapping at the session level means every existing ``session.get(...)`` call
+    site is throttled without modification. Note: urllib3 Retry back-off sleeps
+    happen inside the mounted adapter, below this override, so retried requests
+    are not counted by the limiter -- acceptable since retries are the exception
+    and are already spaced by the Retry back-off factor.
+    """
+
+    def __init__(self, *args, limiter=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.limiter = limiter
+
+    def request(self, *args, **kwargs):
+        if self.limiter is not None:
+            self.limiter.acquire()
+        return super().request(*args, **kwargs)
+
+
+session = RateLimitedSession()
 retries = Retry(total=MAX_RETRIES, backoff_factor=1,
                 status_forcelist=[500, 502, 503, 504])
 session.mount('https://', HTTPAdapter(max_retries=retries))
@@ -467,6 +501,15 @@ if __name__ == '__main__':
     tag = args.tag
     print('es uri:', es_uri)
     print('es port:', es_port)
+
+    rps = args.rps if args.rps is not None else app.config.get(
+        'PORTAL_RPS', 10.0)
+    redis_url = (
+        args.redis_url if args.redis_url is not None
+        else app.config.get('CELERY_BROKER_URL')
+    )
+    session.limiter = get_portal_limiter(rps, redis_url=redis_url or None)
+    print('portal max requests/second:', rps)
 
     RegionIndexerElasticSearch(
         es_uri, es_port, SUPPORTED_CHROMOSOMES, SUPPORTED_ASSEMBLIES
