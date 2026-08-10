@@ -4,6 +4,28 @@ from pytfmpval import tfmp
 import logging
 
 
+_portal_limiter = None
+
+
+def _get_portal_limiter():
+    """Lazily build the shared portal rate limiter from app config.
+
+    Built on first use (not import time) to avoid Redis connection attempts
+    during import/tests. Celery workers share the same Redis-backed budget as
+    the indexer's main process.
+    """
+    global _portal_limiter
+    if _portal_limiter is None:
+        from genomic_data_service import app
+        from genomic_data_service.rate_limiter import get_portal_limiter
+
+        _portal_limiter = get_portal_limiter(
+            app.config.get('PORTAL_RPS', 10.0),
+            redis_url=app.config.get('CELERY_BROKER_URL'),
+        )
+    return _portal_limiter
+
+
 def get_matrix_file_download_url(dataset_metadata):
     documents = dataset_metadata['documents']
     try:
@@ -20,6 +42,7 @@ def get_matrix_file_download_url(dataset_metadata):
 
 # get position count matrix
 def get_matrix_array(matrix_file_download_url):
+    _get_portal_limiter().acquire()
     data = requests.get(matrix_file_download_url).text.splitlines()[1:]
     # Creates a row X col list, all set to 0
     row = len(data[0].split()[2:-1])
